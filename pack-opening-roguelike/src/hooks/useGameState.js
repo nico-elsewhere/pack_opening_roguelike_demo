@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { createDeck, generatePack, calculateCardPP } from '../utils/cards';
+import { createDeck, generatePack, calculateCardPP, generateRuneEffect } from '../utils/cards';
 
 const INITIAL_PP = 100;
 const PP_PER_SECOND = 0.5;
@@ -11,6 +11,7 @@ export const useGameState = () => {
   const [equippedRunes, setEquippedRunes] = useState([]);
   const [deckTemplate] = useState(createDeck());
   const [currentPack, setCurrentPack] = useState(null);
+  const [currentPackPPValues, setCurrentPackPPValues] = useState([]);
   const [totalCardsOpened, setTotalCardsOpened] = useState(0);
   
   const lastUpdateTime = useRef(Date.now());
@@ -42,28 +43,44 @@ export const useGameState = () => {
     
     setPP(prevPP => prevPP - PACK_COST);
     const pack = generatePack(5, deckTemplate);
-    setCurrentPack(pack);
     
     let totalPPGained = 0;
     const newCollection = { ...collection };
+    const packPPValues = [];
     
     pack.forEach(card => {
       const cardId = card.id;
       if (newCollection[cardId]) {
+        // Preserve existing effect for runes
+        const existingEffect = newCollection[cardId].effect;
         newCollection[cardId].xp += 50;
         if (newCollection[cardId].xp >= newCollection[cardId].xpToNextLevel) {
           newCollection[cardId].level += 1;
           newCollection[cardId].xp = 0;
           newCollection[cardId].xpToNextLevel = newCollection[cardId].level * 100;
+          // Update effect multipliers/values when leveling up
+          if (existingEffect) {
+            if (existingEffect.type === 'suit_bonus') {
+              existingEffect.multiplier = 1 + (0.2 * newCollection[cardId].level);
+            } else if (existingEffect.type === 'rank_bonus') {
+              existingEffect.multiplier = 1 + (0.3 * newCollection[cardId].level);
+            } else if (existingEffect.type === 'pp_generation') {
+              existingEffect.bonusPP = 0.1 * newCollection[cardId].level;
+            }
+          }
         }
+        newCollection[cardId].effect = existingEffect;
       } else {
         newCollection[cardId] = { ...card };
       }
       
       const ppGained = calculateCardPP(newCollection[cardId], equippedRunes);
+      packPPValues.push(ppGained);
       totalPPGained += ppGained;
     });
     
+    setCurrentPack(pack);
+    setCurrentPackPPValues(packPPValues);
     setPP(prevPP => prevPP + totalPPGained);
     setCollection(newCollection);
     setTotalCardsOpened(prev => prev + pack.length);
@@ -85,27 +102,13 @@ export const useGameState = () => {
     return true;
   };
   
-  const generateRuneEffect = (card) => {
-    const effectTypes = ['suit_bonus', 'rank_bonus', 'pp_generation'];
-    const type = effectTypes[Math.floor(Math.random() * effectTypes.length)];
-    
-    switch (type) {
-      case 'suit_bonus':
-        return { type, suit: card.suit, multiplier: 1 + (0.2 * card.level) };
-      case 'rank_bonus':
-        return { type, rank: card.rank, multiplier: 1 + (0.3 * card.level) };
-      case 'pp_generation':
-        return { type, bonusPP: 0.1 * card.level };
-      default:
-        return { type: 'none' };
-    }
-  };
   
   return {
     pp: Math.floor(pp),
     collection,
     equippedRunes,
     currentPack,
+    currentPackPPValues,
     totalCardsOpened,
     canOpenPack: pp >= PACK_COST,
     packCost: PACK_COST,

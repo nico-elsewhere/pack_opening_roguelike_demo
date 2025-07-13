@@ -26,9 +26,32 @@ export const generatePack = (packSize = 5, deckTemplate) => {
   const pack = [];
   for (let i = 0; i < packSize; i++) {
     const randomCard = deckTemplate[Math.floor(Math.random() * deckTemplate.length)];
-    pack.push({ ...randomCard });
+    const card = { ...randomCard };
+    
+    // Generate rune effect once when creating the pack
+    if (card.isRune) {
+      card.effect = generateRuneEffect(card);
+    }
+    
+    pack.push(card);
   }
   return pack;
+};
+
+export const generateRuneEffect = (card) => {
+  const effectTypes = ['suit_bonus', 'rank_bonus', 'pp_generation'];
+  const type = effectTypes[Math.floor(Math.random() * effectTypes.length)];
+  
+  switch (type) {
+    case 'suit_bonus':
+      return { type, suit: card.suit, multiplier: 1 + (0.2 * card.level) };
+    case 'rank_bonus':
+      return { type, rank: card.rank, multiplier: 1 + (0.3 * card.level) };
+    case 'pp_generation':
+      return { type, bonusPP: 0.1 * card.level };
+    default:
+      return { type: 'none' };
+  }
 };
 
 export const calculateCardPP = (card, runeEffects = []) => {

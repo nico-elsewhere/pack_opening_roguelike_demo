@@ -11,6 +11,7 @@ function App() {
     collection,
     equippedRunes,
     currentPack,
+    currentPackPPValues,
     totalCardsOpened,
     canOpenPack,
     packCost,
@@ -67,6 +68,7 @@ function App() {
           <Collection 
             collection={collection} 
             onCardClick={handleCardClick}
+            equippedRunes={equippedRunes}
           />
         </div>
       </div>
@@ -75,6 +77,8 @@ function App() {
         <PackOpening 
           pack={currentPack} 
           onClose={() => setCurrentPack(null)}
+          equippedRunes={equippedRunes}
+          cardPPValues={currentPackPPValues}
         />
       )}
     </div>

@@ -1,8 +1,9 @@
 import React from 'react';
 import Card from './Card';
 
-const Collection = ({ collection, onCardClick }) => {
+const Collection = ({ collection, onCardClick, equippedRunes }) => {
   const collectionArray = Object.values(collection);
+  const equippedRuneIds = equippedRunes.map(r => r.id);
   
   return (
     <div className="collection">
@@ -11,8 +12,10 @@ const Collection = ({ collection, onCardClick }) => {
         {collectionArray.map(card => (
           <Card 
             key={card.id} 
-            card={card} 
+            card={{...card, effect: equippedRunes.find(r => r.id === card.id)?.effect}}
             onClick={onCardClick}
+            showProgress={true}
+            isEquipped={equippedRuneIds.includes(card.id)}
           />
         ))}
       </div>
