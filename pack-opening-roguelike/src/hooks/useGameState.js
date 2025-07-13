@@ -95,8 +95,8 @@ export const useGameState = () => {
     if (equippedRunes.find(r => r.id === cardId)) {
       setEquippedRunes(equippedRunes.filter(r => r.id !== cardId));
     } else {
-      const runeEffect = generateRuneEffect(card);
-      setEquippedRunes([...equippedRunes, { ...card, effect: runeEffect }]);
+      // Use the existing effect from the card
+      setEquippedRunes([...equippedRunes, { ...card }]);
     }
     
     return true;
