@@ -1,9 +1,10 @@
 .game-board {
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  gap: 1.5rem;
+  padding: 0;
+  gap: 0;
 }
 
 /* Board Header */
@@ -11,7 +12,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
 }
 
 .board-title {
@@ -49,10 +51,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 0;
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0;
+  border: none;
   position: relative;
   overflow: hidden;
 }

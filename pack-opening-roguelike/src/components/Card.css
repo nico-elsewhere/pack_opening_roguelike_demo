@@ -1,0 +1,233 @@
+.card {
+  width: 120px;
+  height: 168px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #333;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  color: #000;
+  will-change: transform;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.card.rune {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: white;
+  border-color: #6c3483;
+  box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
+}
+
+.card.equipped {
+  transform: scale(0.9);
+}
+
+.rune-slot .card {
+  transform: scale(0.85);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.card-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.large-suit {
+  font-size: 42px;
+}
+
+.rune-indicator {
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.card-bottom {
+  padding: 8px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pp-value {
+  font-weight: bold;
+  color: #f39c12;
+}
+
+.card.rune .pp-value {
+  color: #f1c40f;
+}
+
+.level {
+  background: #2ecc71;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.red {
+  color: #e74c3c;
+}
+
+.black {
+  color: #2c3e50;
+}
+
+.equipped-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(46, 204, 113, 0.9);
+  color: white;
+  text-align: center;
+  padding: 2px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  z-index: 10;
+}
+
+.rune-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  margin-bottom: 8px;
+  z-index: 100;
+}
+
+.rune-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.card:hover .rune-tooltip {
+  opacity: 1;
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-progress {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.current-level {
+  color: #2ecc71;
+  font-weight: bold;
+}
+
+.xp-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.next-level {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+  transition: width 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.level-bonus {
+  font-size: 11px;
+  color: #f39c12;
+  text-align: center;
+}
+
+.card-container:hover .progress-fill {
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+}
+
+.rune .card-progress {
+  border-color: rgba(155, 89, 182, 0.3);
+  background: rgba(155, 89, 182, 0.1);
+}

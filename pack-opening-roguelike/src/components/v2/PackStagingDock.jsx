@@ -42,7 +42,9 @@ const PackStagingDock = ({
                 className="inventory-pack"
                 style={{ transform: `translateY(${i * -2}px)` }}
               >
-                <div className="pack-mini">🎴</div>
+                <div className="pack-mini">
+                  <div className="pack-symbol">✦</div>
+                </div>
               </div>
             ))}
           </div>
@@ -66,7 +68,9 @@ const PackStagingDock = ({
                     onClick={() => unstagePack(stagedPacks[index].id)}
                   >
                     <div className="pack-card">
-                      <div className="pack-back">🎴</div>
+                      <div className="pack-back">
+                        <div className="pack-symbol">✦</div>
+                      </div>
                     </div>
                     <div className="remove-hint">×</div>
                   </div>
