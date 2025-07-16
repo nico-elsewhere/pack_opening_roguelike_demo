@@ -1,33 +1,47 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import { useGameState } from './hooks/useGameState';
 import PackOpening from './components/PackOpening';
 import Collection from './components/Collection';
 import RuneSlots from './components/RuneSlots';
+import Navigation from './components/Navigation';
+import PPDisplay from './components/PPDisplay';
+import Home from './components/Home';
+import Shop from './components/Shop';
 
 function App() {
   const {
     pp,
+    ppPerSecond,
     collection,
     equippedRunes,
     currentPack,
     currentPackPPValues,
     totalCardsOpened,
+    ownedPacks,
+    currentScreen,
+    setCurrentScreen,
+    canBuyPack,
     canOpenPack,
     packCost,
+    buyPack,
     openPack,
     equipRune,
-    setCurrentPack
+    setCurrentPack,
+    packSlots,
+    packSlotCost,
+    buyPackSlot,
+    runeSlots,
+    runeSlotCost,
+    buyRuneSlot,
+    stagedPacks,
+    openedCards,
+    stagePack,
+    unstagePack,
+    openAllStagedPacks,
+    clearOpenedCards
   } = useGameState();
 
-  const [activeTab, setActiveTab] = useState('collection');
-
-  const handleOpenPack = () => {
-    const result = openPack();
-    if (result) {
-      console.log(`Opened pack! Gained ${result.totalPPGained} PP`);
-    }
-  };
 
   const handleCardClick = (card) => {
     if (card.isRune) {
@@ -37,41 +51,54 @@ function App() {
 
   return (
     <div className="app">
-      <div className="game-header">
-        <div className="pp-display">
-          PP: {pp}
-        </div>
-        <div className="stats">
-          <div>Cards Opened: {totalCardsOpened}</div>
-          <div>Unique Cards: {Object.keys(collection).length}/52</div>
-        </div>
-      </div>
-
+      <Navigation currentScreen={currentScreen} setCurrentScreen={setCurrentScreen} />
+      
       <div className="main-content">
-        <div className="left-section">
-          <div className="pack-section">
-            <h1>Pack Opening Roguelike</h1>
-            <button 
-              className="open-pack-button"
-              onClick={handleOpenPack}
-              disabled={!canOpenPack}
-            >
-              Open Pack
-            </button>
-            <div className="pack-cost">Cost: {packCost} PP</div>
-          </div>
-
-          <RuneSlots equippedRunes={equippedRunes} />
-        </div>
-
-        <div className="right-section">
-          <Collection 
-            collection={collection} 
-            onCardClick={handleCardClick}
+        {currentScreen === 'home' && (
+          <Home 
+            ownedPacks={ownedPacks}
+            totalCardsOpened={totalCardsOpened}
+            stagedPacks={stagedPacks}
+            stagePack={stagePack}
+            unstagePack={unstagePack}
+            openAllStagedPacks={openAllStagedPacks}
+            openedCards={openedCards}
+            clearOpenedCards={clearOpenedCards}
+            packSlots={packSlots}
             equippedRunes={equippedRunes}
+            currentPackPPValues={currentPackPPValues}
+            runeSlots={runeSlots}
           />
-        </div>
+        )}
+        
+        {currentScreen === 'collection' && (
+          <div className="collection-screen">
+            <RuneSlots equippedRunes={equippedRunes} maxSlots={runeSlots} />
+            <Collection 
+              collection={collection} 
+              onCardClick={handleCardClick}
+              equippedRunes={equippedRunes}
+            />
+          </div>
+        )}
+        
+        {currentScreen === 'shop' && (
+          <Shop 
+            canBuyPack={canBuyPack}
+            packCost={packCost}
+            buyPack={buyPack}
+            pp={pp}
+            packSlots={packSlots}
+            packSlotCost={packSlotCost}
+            buyPackSlot={buyPackSlot}
+            runeSlots={runeSlots}
+            runeSlotCost={runeSlotCost}
+            buyRuneSlot={buyRuneSlot}
+          />
+        )}
       </div>
+      
+      <PPDisplay pp={pp} ppPerSecond={ppPerSecond} />
 
       {currentPack && (
         <PackOpening 

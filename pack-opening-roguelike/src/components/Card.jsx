@@ -16,10 +16,12 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
     switch (card.effect.type) {
       case 'suit_bonus':
         return `${card.effect.suit} cards +${Math.round((card.effect.multiplier - 1) * 100)}% PP`;
-      case 'rank_bonus':
-        return `${card.effect.rank} cards +${Math.round((card.effect.multiplier - 1) * 100)}% PP`;
       case 'pp_generation':
         return `+${card.effect.bonusPP.toFixed(1)} PP/sec`;
+      case 'suit_count_mult':
+        return `${card.effect.suit} cards +${Math.round(card.effect.multiplierPerCard * 100)}% per ${card.effect.suit}`;
+      case 'suit_chance':
+        return `+${Math.round(card.effect.chanceBonus * 100)}% ${card.effect.suit} chance`;
       default:
         return 'Unknown effect';
     }

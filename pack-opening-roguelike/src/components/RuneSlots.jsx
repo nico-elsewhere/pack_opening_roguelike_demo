@@ -29,10 +29,12 @@ const formatRuneEffect = (effect) => {
   switch (effect.type) {
     case 'suit_bonus':
       return `${effect.suit} cards +${Math.round((effect.multiplier - 1) * 100)}% PP`;
-    case 'rank_bonus':
-      return `${effect.rank} cards +${Math.round((effect.multiplier - 1) * 100)}% PP`;
     case 'pp_generation':
       return `+${effect.bonusPP.toFixed(1)} PP/sec`;
+    case 'suit_count_mult':
+      return `${effect.suit} cards +${Math.round(effect.multiplierPerCard * 100)}% per ${effect.suit}`;
+    case 'suit_chance':
+      return `+${Math.round(effect.chanceBonus * 100)}% ${effect.suit} chance`;
     default:
       return 'Unknown effect';
   }

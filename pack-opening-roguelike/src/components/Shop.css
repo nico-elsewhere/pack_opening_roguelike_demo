@@ -1,0 +1,121 @@
+.shop {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.shop-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #e1bee7;
+  margin-bottom: 3rem;
+  text-shadow: 0 2px 10px rgba(225, 190, 231, 0.4);
+  font-family: serif;
+}
+
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  justify-content: center;
+}
+
+.shop-item {
+  background: rgba(106, 27, 154, 0.2);
+  border: 2px solid #6a1b9a;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.shop-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(106, 27, 154, 0.4);
+}
+
+.pack-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.pack-card-back {
+  width: 100px;
+  height: 140px;
+  background: linear-gradient(135deg, #4a148c, #6a1b9a);
+  border: 3px solid #8e24aa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(142, 36, 170, 0.5);
+}
+
+.pack-design {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.mystic-symbol {
+  font-size: 3rem;
+  color: #e1bee7;
+  text-shadow: 0 0 20px rgba(225, 190, 231, 0.8);
+}
+
+.shop-item h3 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pack-description {
+  color: #ce93d8;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
+.buy-button {
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, #8e24aa, #ab47bc);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.buy-button:hover:not(.disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(142, 36, 170, 0.5);
+}
+
+.buy-button.disabled {
+  background: #424242;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.shop-item.upgrade {
+  background: rgba(142, 36, 170, 0.15);
+  border-color: #ab47bc;
+}
+
+.upgrade-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.current-status {
+  color: #81c784;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}

@@ -18,101 +18,27 @@ body {
 
 .app {
   height: 100vh;
-  padding: 15px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #2e1a47 0%, #1a0033 100%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 10px;
 }
 
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  margin-bottom: 15px;
-  flex-shrink: 0;
-}
-
-.pp-display {
-  font-size: 24px;
-  font-weight: bold;
-  color: #f39c12;
-}
-
-.stats {
-  text-align: right;
-  font-size: 14px;
-  opacity: 0.8;
-}
 
 .main-content {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
   flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  padding-bottom: 100px;
 }
 
-.left-section {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 15px;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.right-section {
-  min-height: 0;
+.collection-screen {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-}
-
-.pack-section {
-  text-align: center;
+  gap: 20px;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.pack-section h1 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 2em;
-}
-
-.open-pack-button {
-  padding: 20px 40px;
-  font-size: 24px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.open-pack-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-}
-
-.open-pack-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-  opacity: 0.5;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .card {
@@ -211,7 +137,8 @@ body {
 }
 
 .collection {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(106, 27, 154, 0.1);
+  border: 2px solid #6a1b9a;
   border-radius: 15px;
   padding: 20px;
   flex: 1;
@@ -236,7 +163,8 @@ body {
 }
 
 .rune-slots {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(106, 27, 154, 0.1);
+  border: 2px solid #6a1b9a;
   border-radius: 15px;
   padding: 20px;
   overflow-y: auto;
@@ -360,11 +288,6 @@ body {
   transform: translateY(-2px);
 }
 
-.pack-cost {
-  margin-top: 10px;
-  font-size: 16px;
-  opacity: 0.8;
-}
 
 .total-pp-gained {
   font-size: 20px;
@@ -547,54 +470,3 @@ body {
   bottom: -25px;
 }
 
-@media (max-width: 1400px) {
-  .main-content {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 15px;
-  }
-  
-  .left-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
-    gap: 15px;
-  }
-  
-  .right-section {
-    height: 100%;
-  }
-  
-  .collection {
-    height: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .app {
-    padding: 10px;
-  }
-  
-  .game-header {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-  
-  .left-section {
-    flex-direction: column;
-  }
-  
-  .pack-section {
-    padding: 20px;
-  }
-  
-  .pack-section h1 {
-    font-size: 1.5em;
-  }
-  
-  .open-pack-button {
-    padding: 15px 30px;
-    font-size: 20px;
-  }
-}
