@@ -33,7 +33,7 @@ const UnifiedPackOpening = ({
 
   // Calculate card grid positions
   useEffect(() => {
-    if (openedCards.length > 0 && containerRef.current) {
+    if (openedCards.length > 0 && containerRef.current && phase === 'scoring') {
       const container = containerRef.current.getBoundingClientRect();
       const cardsPerRow = 5;
       const cardWidth = 120;
@@ -56,7 +56,7 @@ const UnifiedPackOpening = ({
       
       setCardPositions(positions);
     }
-  }, [openedCards]);
+  }, [openedCards, phase]);
 
   const handleOpenClick = () => {
     if (stagedPacks.length === 0 || isOpening) return;
@@ -69,11 +69,11 @@ const UnifiedPackOpening = ({
 
   // Watch for openedCards to be populated
   useEffect(() => {
-    if (openedCards.length > 0 && phase === 'scoring') {
-      // Start scoring immediately when cards are available
+    if (openedCards.length > 0 && phase === 'scoring' && cardPositions.length > 0) {
+      // Start scoring when cards are available and positions are calculated
       startScoringSequence();
     }
-  }, [openedCards, phase]);
+  }, [openedCards, phase, cardPositions]);
 
   const startScoringSequence = () => {
     let currentIndex = 0;
@@ -97,6 +97,8 @@ const UnifiedPackOpening = ({
           };
           
           setFloatingTexts(prev => [...prev, newFloatingText]);
+        } else {
+          console.warn(`No position found for card ${currentIndex}, cardPositions:`, cardPositions);
         }
         
         currentIndex++;
