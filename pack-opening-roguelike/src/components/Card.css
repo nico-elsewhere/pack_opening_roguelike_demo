@@ -42,12 +42,21 @@
   font-weight: bold;
 }
 
+.card.tarot .card-top,
+.card.fused-tarot .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 .card-center {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
+  padding: 4px;
 }
 
 .large-suit {
@@ -55,19 +64,19 @@
 }
 
 .rune-indicator {
-  position: absolute;
-  top: 0;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  margin-top: 2px;
 }
 
 .card-bottom {
-  padding: 8px;
-  font-size: 12px;
+  padding: 6px 8px;
+  font-size: 11px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 20px;
 }
 
 .pp-value {
@@ -284,13 +293,19 @@
 }
 
 .tarot-name {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   text-align: center;
-  padding: 0 8px;
+  padding: 0 4px;
   color: #e9c46a;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  line-height: 1.2;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  max-height: 2.2em;
 }
 
 .rarity-indicator {
@@ -315,11 +330,14 @@
 .card.fused-tarot .tarot-name {
   color: #ffd700;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  font-size: 11px;
+  padding: 0 2px;
 }
 
 .card.fused-tarot .large-suit {
-  font-size: 48px;
+  font-size: 36px;
   filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+  margin: 4px 0;
 }
 
 @keyframes mysticGlow {

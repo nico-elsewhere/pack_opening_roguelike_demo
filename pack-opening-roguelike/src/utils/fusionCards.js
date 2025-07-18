@@ -84,9 +84,12 @@ const generateMajorFusionName = (card1Name, card2Name) => {
   if (specialCombos[key1]) return specialCombos[key1];
   if (specialCombos[key2]) return specialCombos[key2];
   
-  // Generic fusion name
+  // Generic fusion name - create shorter name
+  const shortName1 = card1Name.replace('The ', '');
+  const shortName2 = card2Name.replace('The ', '');
+  
   return { 
-    name: `Fusion of ${card1Name} & ${card2Name}`, 
+    name: `${shortName1} & ${shortName2}`, 
     symbol: '🌌',
     description: `The combined powers of ${card1Name} and ${card2Name}`
   };

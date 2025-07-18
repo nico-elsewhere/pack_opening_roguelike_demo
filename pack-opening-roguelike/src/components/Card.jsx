@@ -72,9 +72,13 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         {isEquipped && <div className="equipped-indicator">EQUIPPED</div>}
         
         <div className="card-top">
-          {isTarot ? (
+          {isTarot || isFusedTarot ? (
             <>
-              <span className="tarot-number">{card.number !== undefined ? card.number : card.rankValue}</span>
+              {!isFusedTarot ? (
+                <span className="tarot-number">{card.number !== undefined ? card.number : card.rankValue}</span>
+              ) : (
+                <span></span>
+              )}
               {card.rarity && <span className="rarity-indicator" style={{ color: getRarityColor() }}>{card.rarity.toUpperCase()}</span>}
             </>
           ) : (
