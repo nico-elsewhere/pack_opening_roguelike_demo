@@ -19,10 +19,16 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   const suitClass = card.suit; // fire, earth, water, or air
   const xpProgress = (card.xp / card.xpToNextLevel) * 100;
   
-  // Determine if this is a tarot card
+  // Determine card type
   const isTarot = card.arcana && (card.arcana === 'major' || card.arcana === 'minor');
   const isMajorArcana = card.arcana === 'major';
   const isFusedTarot = card.arcana && ['transcendent', 'empowered', 'enhanced-minor'].includes(card.arcana);
+  const isCreature = card.arcana === 'creature';
+  
+  // Debug log
+  if (!card.arcana) {
+    console.log('Card missing arcana:', card);
+  }
   
   // Get rarity color
   const getRarityColor = () => {
@@ -61,7 +67,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   return (
     <div className="card-container">
       <div 
-        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''} ${isFusedTarot ? 'fused-tarot' : ''}`}
+        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''} ${isFusedTarot ? 'fused-tarot' : ''} ${isCreature ? 'creature' : ''}`}
         onClick={() => onClick && onClick(card)}
         style={{ 
           cursor: onClick ? 'pointer' : 'default',
@@ -72,7 +78,12 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         {isEquipped && <div className="equipped-indicator">EQUIPPED</div>}
         
         <div className="card-top">
-          {isTarot || isFusedTarot ? (
+          {isCreature ? (
+            <>
+              <span></span>
+              <span></span>
+            </>
+          ) : isTarot || isFusedTarot ? (
             <>
               {!isFusedTarot ? (
                 <span className="tarot-number">{card.number !== undefined ? card.number : card.rankValue}</span>
@@ -90,7 +101,16 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         </div>
         
         <div className="card-center">
-          {isTarot || isFusedTarot ? (
+          {isCreature ? (
+            <>
+              <div className="creature-name">{card.name}</div>
+              {card.imageUrl ? (
+                <img className="creature-image" src={card.imageUrl} alt={card.name} />
+              ) : (
+                <div className="creature-placeholder">🐾</div>
+              )}
+            </>
+          ) : isTarot || isFusedTarot ? (
             <>
               <div className="tarot-name">{card.name}</div>
               {card.symbol && <div className="large-suit">{card.symbol}</div>}
@@ -109,10 +129,20 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
           {showLevel && card.level > 1 && <div className="level">Lv.{card.level}</div>}
         </div>
         
-        {card.isRune && showTooltip && (
-          <div className="rune-tooltip">
-            {getRuneDescription()}
-          </div>
+        {showTooltip && (
+          <>
+            {card.isRune && (
+              <div className="rune-tooltip">
+                {getRuneDescription()}
+              </div>
+            )}
+            {isCreature && card.flavorText && (
+              <div className="creature-tooltip">
+                <div className="flavor-text">{card.flavorText}</div>
+                {card.artists && <div className="artist-credit">Art by: {card.artists}</div>}
+              </div>
+            )}
+          </>
         )}
       </div>
       

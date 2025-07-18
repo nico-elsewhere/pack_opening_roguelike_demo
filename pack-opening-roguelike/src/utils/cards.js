@@ -1,25 +1,75 @@
 import { ALL_TAROT_CARDS } from './tarotCards.js';
+import { getCreature, getCreatures, getGen1CreatureIds } from './creatureAPI.js';
 
 export const SUITS = ['fire', 'earth', 'water', 'air'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-export const createDeck = (useTarot = true) => {
-  const deck = [];
+// Cache for loaded creatures
+let creatureCache = null;
+let cachePromise = null;
+
+// Load creatures from API
+const loadCreatures = async () => {
+  if (creatureCache) return creatureCache;
+  if (cachePromise) return cachePromise;
   
-  // TEMPORARILY: Only return a single test card
-  deck.push({
-    id: 'test-card',
-    name: 'Test',
-    ppValue: 10,
-    isRune: false,
-    level: 1,
-    xp: 0,
-    xpToNextLevel: 100,
-    rarity: 'common',
-    arcana: 'test'
-  });
+  cachePromise = (async () => {
+    try {
+      console.log('Starting creature load...');
+      
+      // Try loading just one creature first to test
+      const singleCreature = await getCreature('Gen1_0000000001');
+      console.log('Single creature loaded:', singleCreature);
+      
+      // If that works, try the batch
+      const creatureIds = getGen1CreatureIds(20);
+      console.log('Attempting to load creatures with IDs:', creatureIds);
+      
+      const creatures = await getCreatures(creatureIds);
+      
+      if (creatures.length === 0) {
+        throw new Error('No creatures loaded');
+      }
+      
+      creatureCache = creatures;
+      console.log(`Loaded ${creatures.length} creatures from API`);
+      return creatureCache;
+    } catch (error) {
+      console.error('Failed to load creatures:', error);
+      console.error('Error stack:', error.stack);
+      
+      // Try single creature as fallback
+      try {
+        const singleCreature = await getCreature('Gen1_0000000001');
+        console.log('Fallback to single creature worked:', singleCreature);
+        creatureCache = [singleCreature];
+        return creatureCache;
+      } catch (fallbackError) {
+        console.error('Even single creature fetch failed:', fallbackError);
+        // Final fallback to test card
+        creatureCache = [{
+          id: 'test-card',
+          name: 'Test',
+          ppValue: 10,
+          isRune: false,
+          level: 1,
+          xp: 0,
+          xpToNextLevel: 100,
+          rarity: 'common',
+          arcana: 'creature'
+        }];
+        return creatureCache;
+      }
+    }
+  })();
   
-  return deck;
+  return cachePromise;
+};
+
+export const createDeck = async (useTarot = true) => {
+  // Load creatures from API
+  const creatures = await loadCreatures();
+  return [...creatures]; // Return a copy
 };
 
 export const generatePack = (packSize = 5, deckTemplate, rarityWeights = null) => {

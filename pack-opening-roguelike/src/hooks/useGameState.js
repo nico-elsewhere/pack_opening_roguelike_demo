@@ -11,7 +11,7 @@ export const useGameState = () => {
   const [pp, setPP] = useState(INITIAL_PP);
   const [collection, setCollection] = useState({});
   const [equippedRunes, setEquippedRunes] = useState([]);
-  const [deckTemplate, setDeckTemplate] = useState(createDeck(true)); // Enable tarot cards
+  const [deckTemplate, setDeckTemplate] = useState([]); // Will be loaded asynchronously
   const [fusedCards, setFusedCards] = useState({}); // Track all fused cards
   const [currentPack, setCurrentPack] = useState(null);
   const [currentPackPPValues, setCurrentPackPPValues] = useState([]);
@@ -65,6 +65,19 @@ export const useGameState = () => {
   ]);
   
   const lastUpdateTime = useRef(Date.now());
+  
+  // Load deck template from API
+  useEffect(() => {
+    const loadDeck = async () => {
+      try {
+        const deck = await createDeck(true);
+        setDeckTemplate(deck);
+      } catch (error) {
+        console.error('Failed to load deck:', error);
+      }
+    };
+    loadDeck();
+  }, []);
   
   useEffect(() => {
     const interval = setInterval(() => {
