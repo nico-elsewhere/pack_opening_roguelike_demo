@@ -187,8 +187,8 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .card {
-    width: 70px;
-    height: 98px;
+    width: 90px;
+    height: 126px;
   }
   
   .card-value {
@@ -227,7 +227,12 @@
   }
   
   .creature-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    padding: 0 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
   
   .creature-image {
@@ -463,6 +468,8 @@
   text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
   line-height: 1.1;
   padding: 0 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .creature-image {

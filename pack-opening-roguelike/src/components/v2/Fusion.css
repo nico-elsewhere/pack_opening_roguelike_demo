@@ -535,6 +535,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .card-face-front {
@@ -587,6 +588,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .result-card-display {
@@ -767,8 +769,8 @@
   
   .fusion-slot,
   .fusion-result-slot {
-    width: 70px;
-    height: 98px;
+    width: 75px;
+    height: 105px;
   }
   
   .empty-fusion-slot {
@@ -836,13 +838,13 @@
   
   /* Adjust card flip container for mobile */
   .card-flip-container {
-    width: 140px;
-    height: 196px;
+    width: 150px;
+    height: 210px;
   }
   
   .mystery-card {
-    width: 140px;
-    height: 196px;
+    width: 150px;
+    height: 210px;
   }
   
   .mystery-text {
@@ -850,13 +852,17 @@
   }
   
   .result-card-display {
-    width: 140px;
-    height: 196px;
-    font-size: 2em;
+    width: 150px;
+    height: 210px;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .result-card-display .card {
     transform: scale(2);
+    transform-origin: center;
   }
   
   .flavor-text-box {
