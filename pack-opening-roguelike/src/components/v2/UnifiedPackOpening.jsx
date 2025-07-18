@@ -49,8 +49,8 @@ const UnifiedPackOpening = ({
         const startY = container.top + 150; // Leave space for header
         
         return {
-          x: startX + col * (cardWidth + gap) + cardWidth / 2,
-          y: startY + row * (cardHeight + gap) + cardHeight / 2
+          x: col * (cardWidth + gap) + cardWidth / 2,
+          y: 150 + row * (cardHeight + gap) + cardHeight / 2
         };
       });
       
@@ -93,7 +93,8 @@ const UnifiedPackOpening = ({
             text: `+${currentPackPPValues[currentIndex]} PP`,
             x: pos.x,
             y: pos.y,
-            color: currentPackPPValues[currentIndex] > 50 ? '#f59e0b' : '#fbbf24'
+            color: currentPackPPValues[currentIndex] > 50 ? '#f59e0b' : '#fbbf24',
+            persistent: true
           };
           
           setFloatingTexts(prev => [...prev, newFloatingText]);
@@ -238,6 +239,7 @@ const UnifiedPackOpening = ({
           x={text.x}
           y={text.y}
           color={text.color}
+          persistent={text.persistent}
           onComplete={() => handleFloatingTextComplete(text.id)}
         />
       ))}

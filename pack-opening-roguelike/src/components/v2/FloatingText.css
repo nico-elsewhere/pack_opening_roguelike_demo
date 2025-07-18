@@ -1,5 +1,5 @@
 .floating-text {
-  position: fixed;
+  position: absolute;
   font-size: 1.5rem;
   font-weight: 700;
   text-shadow: 
@@ -7,8 +7,51 @@
     0 0 20px currentColor;
   z-index: 1000;
   pointer-events: none;
-  animation: floatUp 1s ease-out forwards;
   transform-origin: center bottom;
+}
+
+.floating-text:not(.persistent) {
+  animation: floatUp 1s ease-out forwards;
+}
+
+.floating-text.persistent.floating {
+  animation: floatUpPersistent 0.8s ease-out forwards;
+}
+
+.floating-text.persistent.settled {
+  transform: translate(-50%, -220%) scale(0.85);
+  opacity: 1;
+}
+
+/* Mobile adjustments for floating text */
+@media (max-width: 768px) {
+  .floating-text.persistent.settled {
+    transform: translate(-50%, -130%) scale(0.7);
+    font-size: 1rem;
+  }
+  
+  .floating-text.persistent.floating {
+    animation: floatUpPersistentMobile 0.8s ease-out forwards;
+  }
+}
+
+@keyframes floatUpPersistentMobile {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -60%) scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -130%) scale(0.7);
+    opacity: 1;
+  }
 }
 
 @keyframes floatUp {
@@ -27,6 +70,25 @@
   100% {
     transform: translate(-50%, -150%) scale(0.8);
     opacity: 0;
+  }
+}
+
+@keyframes floatUpPersistent {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -70%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -220%) scale(0.85);
+    opacity: 1;
   }
 }
 

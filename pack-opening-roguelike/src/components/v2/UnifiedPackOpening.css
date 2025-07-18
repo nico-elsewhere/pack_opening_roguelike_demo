@@ -353,6 +353,7 @@
     padding: 0.5rem;
     height: calc(100vh - 200px); /* Account for pack toolbar */
     overflow-y: auto;
+    padding-bottom: 1rem; /* Extra bottom padding */
   }
   
   .opening-header {
@@ -364,14 +365,15 @@
   }
   
   .cards-grid-unified {
-    grid-template-columns: repeat(3, 100px);
-    gap: 12px;
+    grid-template-columns: repeat(3, 80px);
+    gap: 32px 10px; /* Even larger vertical gap, smaller horizontal */
     margin-top: 1rem;
+    margin-bottom: 4rem; /* Larger bottom margin to prevent overlap */
   }
   
   .card-slot-unified {
-    width: 100px;
-    height: 140px;
+    width: 80px;
+    height: 112px; /* Proportionally smaller */
   }
   
   .packs-container {
