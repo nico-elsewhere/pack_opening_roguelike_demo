@@ -1,6 +1,6 @@
 .game-board {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -8,6 +8,7 @@
   padding-bottom: 200px; /* Space for fixed pack toolbar */
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 .game-board.screen-shake {

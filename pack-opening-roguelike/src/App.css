@@ -11,6 +11,7 @@ body {
   color: #fff;
   height: 100vh;
   overflow: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
@@ -104,4 +105,28 @@ button:active {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.7);
+}
+
+/* Mobile Viewport Fix */
+@media (max-width: 768px) {
+  body {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  #root {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  .app {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow: hidden;
+  }
+  
+  .main-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

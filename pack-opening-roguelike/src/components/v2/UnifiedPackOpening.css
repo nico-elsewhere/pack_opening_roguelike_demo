@@ -6,6 +6,7 @@
   align-items: center;
   padding: 2rem;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -349,7 +350,13 @@
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .unified-pack-opening {
-    padding: 1rem;
+    padding: 0.5rem;
+    height: calc(100vh - 200px); /* Account for pack toolbar */
+    overflow-y: auto;
+  }
+  
+  .opening-header {
+    margin-bottom: 1rem;
   }
   
   .opening-title {
@@ -359,6 +366,7 @@
   .cards-grid-unified {
     grid-template-columns: repeat(3, 100px);
     gap: 12px;
+    margin-top: 1rem;
   }
   
   .card-slot-unified {
@@ -368,10 +376,17 @@
   
   .packs-container {
     gap: 1rem;
+    margin-top: 1rem;
   }
   
   .pack-slot-unified {
     width: 100px;
     height: 150px;
+  }
+  
+  .open-packs-button {
+    bottom: 60px; /* Reduced for mobile */
+    padding: 1rem 2rem;
+    font-size: 1rem;
   }
 }
