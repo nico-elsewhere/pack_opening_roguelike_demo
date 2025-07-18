@@ -12,7 +12,6 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   const [error, setError] = useState('');
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [overlayResult, setOverlayResult] = useState(null);
-  const [typedText, setTypedText] = useState('');
   
   const cards = Object.values(collection);
   const [showCreatures, setShowCreatures] = useState(true);
@@ -103,27 +102,6 @@ const Fusion = ({ collection, fuseCards, pp }) => {
     }
   }, [cannotFuse, selectedCard1, selectedCard2]);
   
-  // Typewriter effect for flavor text
-  useEffect(() => {
-    if (showResultOverlay && overlayResult?.flavorText) {
-      setTypedText('');
-      const text = overlayResult.flavorText;
-      let currentIndex = 0;
-      
-      const typeInterval = setInterval(() => {
-        if (currentIndex < text.length) {
-          setTypedText(prev => prev + text[currentIndex]);
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-        }
-      }, 30); // Type speed
-      
-      return () => clearInterval(typeInterval);
-    } else {
-      setTypedText('');
-    }
-  }, [showResultOverlay, overlayResult]);
   
   const handleFusion = async () => {
     if (!selectedCard1 || !selectedCard2 || !previewCard || !canAfford) return;
@@ -386,8 +364,7 @@ const Fusion = ({ collection, fuseCards, pp }) => {
                 {overlayResult?.flavorText && (
                   <div className="flavor-text-box">
                     <p className="typed-flavor-text">
-                      {typedText}
-                      <span className="typing-cursor">|</span>
+                      {overlayResult.flavorText}
                     </p>
                   </div>
                 )}

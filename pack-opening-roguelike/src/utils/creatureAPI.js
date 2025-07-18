@@ -13,6 +13,20 @@ const getRarityName = (rarityNum) => {
   }
 };
 
+// Clean up garbled text from API
+const cleanFlavorText = (text) => {
+  if (!text) return '';
+  
+  // Remove excessive spaces and fix common garbled patterns
+  return text
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase
+    .replace(/\s*,\s*/g, ', ') // Fix comma spacing
+    .replace(/\s*\.\s*/g, '. ') // Fix period spacing
+    .replace(/\s+([.,!?])/g, '$1') // Remove space before punctuation
+    .trim();
+};
+
 // Convert creature data to game card format
 const creatureToCard = (creature) => {
   console.log('Converting creature:', creature); // Debug log
@@ -27,7 +41,7 @@ const creatureToCard = (creature) => {
     parentCardId1: creature.parentCardId1,
     parentCardId2: creature.parentCardId2,
     challengeRating: creature.challengeRating,
-    flavorText: creature.flavorText,
+    flavorText: cleanFlavorText(creature.flavorText),
     imageUrl: creature.imageUrl,
     artists: creature.artists,
     level: 1,
