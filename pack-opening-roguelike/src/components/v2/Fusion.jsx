@@ -284,7 +284,6 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       
       <div className="available-cards">
         <div className="cards-header">
-          <h2>Available Cards</h2>
           <div className="filter-controls">
             <div className="filter-group">
               <label className="filter-label">Rarity:</label>

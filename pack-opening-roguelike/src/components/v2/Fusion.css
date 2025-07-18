@@ -263,9 +263,9 @@
 
 .cards-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .available-cards h2 {
@@ -763,14 +763,18 @@
   }
   
   .fusion-slots {
-    gap: 0.25rem;
-    margin-bottom: 1rem;
+    gap: 2px;
+    margin-bottom: 0.75rem;
+    justify-content: center;
+    flex-wrap: nowrap;
+    width: 100%;
   }
   
   .fusion-slot,
   .fusion-result-slot {
-    width: 75px;
-    height: 105px;
+    width: 90px;
+    height: 126px;
+    flex-shrink: 0;
   }
   
   .empty-fusion-slot {
@@ -792,13 +796,15 @@
   
   .fusion-operator,
   .fusion-arrow {
-    font-size: 1.2rem;
-    margin: 0 0.2rem;
+    font-size: 1rem;
+    margin: 0 2px;
   }
   
   .fusion-workspace {
-    padding: 1rem;
+    padding: 0.75rem;
     margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
   }
   
   .fusion-cost-display {
@@ -810,7 +816,7 @@
   }
   
   .available-cards {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   
   .cards-header h2 {
@@ -818,17 +824,26 @@
   }
   
   .filter-controls {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
   }
   
   .filter-group {
-    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .filter-label {
+    font-size: 0.75rem;
   }
   
   .filter-select {
-    width: 100%;
+    width: auto;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
   }
   
   .cards-grid {
@@ -880,7 +895,10 @@
   }
   
   .fusion-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    width: 100%;
+    margin-top: 0.75rem;
+    order: 3;
   }
 }
