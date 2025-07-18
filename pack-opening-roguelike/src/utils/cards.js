@@ -6,40 +6,19 @@ export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q
 export const createDeck = (useTarot = true) => {
   const deck = [];
   
-  // Add tarot cards if enabled
-  if (useTarot) {
-    ALL_TAROT_CARDS.forEach(tarotCard => {
-      deck.push({
-        ...tarotCard,
-        ppValue: tarotCard.baseValue,
-        isRune: tarotCard.effect !== null,
-        level: 1,
-        xp: 0,
-        xpToNextLevel: 100
-      });
-    });
-  }
+  // TEMPORARILY: Only return a single test card
+  deck.push({
+    id: 'test-card',
+    name: 'Test',
+    ppValue: 10,
+    isRune: false,
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
+    rarity: 'common',
+    arcana: 'test'
+  });
   
-  // Add regular playing cards
-  for (const suit of SUITS) {
-    for (const rank of RANKS) {
-      const baseValue = rank === 'A' ? 11 : rank === 'K' || rank === 'Q' || rank === 'J' ? 10 : parseInt(rank);
-      const isFaceCard = ['J', 'Q', 'K', 'A'].includes(rank);
-      deck.push({
-        id: `${rank}-${suit}`,
-        rank,
-        suit,
-        name: `${rank} of ${suit}`,
-        ppValue: baseValue,
-        isRune: isFaceCard,
-        level: 1,
-        xp: 0,
-        xpToNextLevel: 100,
-        rarity: 'common',
-        arcana: 'playing'
-      });
-    }
-  }
   return deck;
 };
 
