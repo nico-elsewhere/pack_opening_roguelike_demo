@@ -94,7 +94,6 @@ const UnifiedPackOpening = ({
     setScoringIndex(-1);
     setFloatingTexts([]);
     setRunningTotal(0);
-    setCardPositions([]);
     
     // Call parent completion handler
     onComplete();
@@ -110,8 +109,7 @@ const UnifiedPackOpening = ({
       setScoringIndex(-1);
       setFloatingTexts([]);
       setRunningTotal(0);
-      setCardPositions([]);
-    }
+      }
   }, [openedCards.length, phase]);
 
   return (
@@ -134,7 +132,7 @@ const UnifiedPackOpening = ({
           disabled={isOpening}
         >
           <span className="button-icon">⚡</span>
-          <span className="button-text">Open {stagedPacks.length} Pack{stagedPacks.length !== 1 ? 's' : ''}</span>
+          <span className="button-text">OPEN</span>
         </button>
       )}
 

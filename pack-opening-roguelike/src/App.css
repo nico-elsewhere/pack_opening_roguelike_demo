@@ -12,6 +12,10 @@ body {
   height: 100vh;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {

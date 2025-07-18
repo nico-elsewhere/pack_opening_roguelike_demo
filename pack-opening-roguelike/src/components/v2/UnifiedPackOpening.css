@@ -63,25 +63,25 @@
 
 /* Open Button */
 .open-packs-button {
-  position: absolute;
-  bottom: 100px;
+  position: fixed;
+  bottom: 200px; /* Above the pack selection bar */
   left: 50%;
   transform: translateX(-50%);
-  padding: 1.25rem 2.5rem;
+  padding: 1rem 2rem;
   background: linear-gradient(135deg, #8b5cf6, #a855f7);
   color: white;
   border: none;
-  border-radius: 16px;
-  font-size: 1.25rem;
+  border-radius: 12px;
+  font-size: 1.125rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
   transition: all 0.3s ease;
-  z-index: 10;
+  z-index: 9999;
   text-transform: uppercase;
   letter-spacing: 1px;
   width: fit-content;
@@ -292,7 +292,7 @@
   top: -25px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 9999;
 }
 
 .card-slot-unified.revealed {
@@ -322,20 +322,28 @@
 
 /* Continue Button */
 .continue-button-unified {
-  margin-top: 3rem;
-  padding: 1rem 2.5rem;
-  background: #a855f7;
+  position: fixed;
+  bottom: 200px; /* Above the pack selection bar */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.125rem;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+  z-index: 9999;
   text-transform: uppercase;
   letter-spacing: 1px;
-  animation: fadeIn 0.5s ease-out;
+  width: fit-content;
 }
 
 @keyframes fadeIn {
@@ -350,9 +358,8 @@
 }
 
 .continue-button-unified:hover {
-  background: #9333ea;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(168, 85, 247, 0.4);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 12px 40px rgba(168, 85, 247, 0.5);
 }
 
 /* Hide pack sections during scoring */
@@ -418,8 +425,14 @@
   }
   
   .open-packs-button {
-    bottom: 60px; /* Reduced for mobile */
-    padding: 1rem 2rem;
+    bottom: 180px; /* Above pack selection bar on mobile */
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+  }
+  
+  .continue-button-unified {
+    bottom: 180px; /* Above pack selection bar on mobile */
+    padding: 0.875rem 1.75rem;
     font-size: 1rem;
   }
 }
