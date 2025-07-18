@@ -8,23 +8,32 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   const [selectedCard1, setSelectedCard1] = useState(null);
   const [selectedCard2, setSelectedCard2] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [fusionResult, setFusionResult] = useState(null);
   const [error, setError] = useState('');
   const [showResultOverlay, setShowResultOverlay] = useState(false);
   const [overlayResult, setOverlayResult] = useState(null);
   
   const cards = Object.values(collection);
-  const [showCreatures, setShowCreatures] = useState(true);
+  const [selectedRarity, setSelectedRarity] = useState('all');
+  const [selectedGeneration, setSelectedGeneration] = useState('all');
   
-  // For creatures, show all Gen1 creatures; for old cards, use old logic
+  // Show all breedable creatures
   let availableCards = cards.filter(card => {
-    if (showCreatures) {
-      // Show only Gen1 creatures
-      return card.generation === 'Gen1';
-    } else {
-      // Old logic for elemental cards
-      return ['fire', 'earth', 'water', 'air'].includes(card.suit);
+    // Only show Gen1 and Gen2 creatures (Gen3 can't breed further)
+    if (!(card.generation === 'Gen1' || card.generation === 'Gen2')) {
+      return false;
     }
+    
+    // Apply rarity filter
+    if (selectedRarity !== 'all' && card.rarity !== selectedRarity) {
+      return false;
+    }
+    
+    // Apply generation filter
+    if (selectedGeneration !== 'all' && card.generation !== selectedGeneration) {
+      return false;
+    }
+    
+    return true;
   });
   
   // Further filter if a card is selected
@@ -34,9 +43,23 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       // Don't show the already selected cards
       if (card.id === selectedCard1?.id || card.id === selectedCard2?.id) return false;
       
-      // For creatures, all Gen1 can fuse with all other Gen1
-      if (referenceCard.generation === 'Gen1' && card.generation === 'Gen1') {
-        return true;
+      // For creatures, check breeding compatibility
+      if (referenceCard.generation && card.generation) {
+        // Gen1 + Gen1 = Gen2 ✓
+        if (referenceCard.generation === 'Gen1' && card.generation === 'Gen1') {
+          return true;
+        }
+        // Gen2 + Gen1 = Gen3 ✓ (either order)
+        if ((referenceCard.generation === 'Gen2' && card.generation === 'Gen1') ||
+            (referenceCard.generation === 'Gen1' && card.generation === 'Gen2')) {
+          return true;
+        }
+        // Gen2 + Gen2 = Gen3 ✓
+        if (referenceCard.generation === 'Gen2' && card.generation === 'Gen2') {
+          return true;
+        }
+        // Any combination with Gen3 is not allowed
+        return false;
       }
       
       // For old cards, check if this card can fuse with the reference card
@@ -57,7 +80,6 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       // Reset selection
       setSelectedCard1(card);
       setSelectedCard2(null);
-      setFusionResult(null);
     }
   };
   
@@ -67,21 +89,44 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   let isCreatureFusion = false;
   
   if (selectedCard1 && selectedCard2) {
-    // Check if both are Gen1 creatures
-    if (selectedCard1.generation === 'Gen1' && selectedCard2.generation === 'Gen1') {
-      isCreatureFusion = true;
-      // For creatures, we'll show a placeholder preview
-      previewCard = {
-        id: 'preview',
-        name: '???',
-        ppValue: (selectedCard1.ppValue + selectedCard2.ppValue) / 2,
-        level: 1,
-        xp: 0,
-        xpToNextLevel: 100,
-        arcana: 'creature',
-        generation: 'Gen2',
-        rarity: 'uncommon'
-      };
+    // Check if they are creatures that can breed
+    if (selectedCard1.generation && selectedCard2.generation) {
+      // Determine if breeding is valid
+      const gen1 = selectedCard1.generation;
+      const gen2 = selectedCard2.generation;
+      
+      let resultGeneration = null;
+      
+      // Gen1 + Gen1 = Gen2
+      if (gen1 === 'Gen1' && gen2 === 'Gen1') {
+        resultGeneration = 'Gen2';
+      }
+      // Gen2 + Gen1 = Gen3 (either order)
+      else if ((gen1 === 'Gen2' && gen2 === 'Gen1') || (gen1 === 'Gen1' && gen2 === 'Gen2')) {
+        resultGeneration = 'Gen3';
+      }
+      // Gen2 + Gen2 = Gen3
+      else if (gen1 === 'Gen2' && gen2 === 'Gen2') {
+        resultGeneration = 'Gen3';
+      }
+      
+      if (resultGeneration) {
+        isCreatureFusion = true;
+        // For creatures, we'll show a placeholder preview
+        previewCard = {
+          id: 'preview',
+          name: '???',
+          ppValue: Math.round((selectedCard1.ppValue + selectedCard2.ppValue) / 2),
+          level: 1,
+          xp: 0,
+          xpToNextLevel: 100,
+          arcana: 'creature',
+          generation: resultGeneration,
+          rarity: 'uncommon'
+        };
+      } else {
+        cannotFuse = true;
+      }
     } else if (canFuseCards(selectedCard1, selectedCard2)) {
       previewCard = generateFusedCard(selectedCard1, selectedCard2);
     } else {
@@ -154,8 +199,7 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   
   const handleOverlayDismiss = () => {
     if (showResultOverlay && overlayResult) {
-      // Update the main UI with the result
-      setFusionResult(overlayResult);
+      // Reset selection
       setSelectedCard1(null);
       setSelectedCard2(null);
       
@@ -163,24 +207,11 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       setShowResultOverlay(false);
       setOverlayResult(null);
       setIsAnimating(false);
-      
-      // Clear the result from main UI after a short delay
-      setTimeout(() => {
-        setFusionResult(null);
-      }, 2000);
     }
   };
   
   return (
     <div className="fusion-page">
-      <div className="fusion-header">
-        <h1>Creature Breeding Lab</h1>
-        <p className="fusion-subtitle">
-          {showCreatures ? 
-            "Breed two Gen1 creatures to create new Gen2 hybrids" : 
-            "Combine two cards of the same rank to create powerful hybrids"}
-        </p>
-      </div>
       
       <div className="fusion-workspace">
         <div className="fusion-slots">
@@ -214,49 +245,20 @@ const Fusion = ({ collection, fuseCards, pp }) => {
             <span>→</span>
           </div>
           
-          <div className={`fusion-result-slot ${previewCard ? 'preview' : ''} ${fusionResult ? 'success' : ''}`}>
-            {fusionResult ? (
-              <div className="fusion-success">
-                <Card card={fusionResult} />
-                <div className="success-message">
-                  {fusionResult?.generation === 'Gen2' ? 'Breeding Complete!' : 'Fusion Complete!'}
-                </div>
-              </div>
-            ) : previewCard ? (
-              <div className="preview-card">
-                <Card card={previewCard} />
-              </div>
-            ) : (
-              <div className="empty-result-slot">
-                <span className="result-hint">?</span>
-              </div>
-            )}
+          <div className={`fusion-result-slot ${previewCard ? 'preview' : ''}`}>
+            <div className="empty-result-slot">
+              <span className="result-hint">?</span>
+            </div>
           </div>
         </div>
         
-        {previewCard && (
-          <div className="fusion-info">
-            <div className="fusion-cost">
-              <span className="cost-label">Fusion Cost:</span>
-              <span className={`cost-value ${canAfford ? 'affordable' : 'expensive'}`}>
-                {fusionCost} PP
-              </span>
-            </div>
-            {previewCard.description && (
-              <div className="fusion-description">
-                {previewCard.description}
-              </div>
-            )}
-            {previewCard.isFused && getFusionSuitInfo(previewCard) && (
-              <div className="fusion-description">
-                {getFusionSuitInfo(previewCard).description}
-              </div>
-            )}
-            {previewCard.arcana && ['transcendent', 'empowered', 'enhanced-minor'].includes(previewCard.arcana) && (
-              <div className="tarot-fusion-badge">✨ Mystical Fusion ✨</div>
-            )}
-          </div>
-        )}
+        {/* Fusion cost in fixed position */}
+        <div className="fusion-cost-display">
+          <span className="cost-label">Cost:</span>
+          <span className={`cost-value ${!previewCard ? 'inactive' : (canAfford ? 'affordable' : 'expensive')}`}>
+            {previewCard ? `${fusionCost} PP` : '---'}
+          </span>
+        </div>
         
         {error && (
           <div className="fusion-error">{error}</div>
@@ -274,36 +276,47 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       
       <div className="available-cards">
         <div className="cards-header">
-          <h2>
-            Available Cards
-            {(selectedCard1 || selectedCard2) && (
-              <span className="filter-indicator"> (Showing compatible cards)</span>
-            )}
-          </h2>
-          <div className="filter-toggle">
-            <button 
-              className={`toggle-btn ${showCreatures ? 'active' : ''}`}
-              onClick={() => setShowCreatures(true)}
-              disabled={selectedCard1 || selectedCard2}
-            >
-              Creatures
-            </button>
-            <button 
-              className={`toggle-btn ${!showCreatures ? 'active' : ''}`}
-              onClick={() => setShowCreatures(false)}
-              disabled={selectedCard1 || selectedCard2}
-            >
-              Elemental Cards
-            </button>
+          <h2>Available Cards</h2>
+          <div className="filter-controls">
+            <div className="filter-group">
+              <label className="filter-label">Rarity:</label>
+              <select 
+                className="filter-select" 
+                value={selectedRarity} 
+                onChange={(e) => setSelectedRarity(e.target.value)}
+                disabled={selectedCard1 || selectedCard2}
+              >
+                <option value="all">All</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+                <option value="legendary">Legendary</option>
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label className="filter-label">Generation:</label>
+              <select 
+                className="filter-select" 
+                value={selectedGeneration} 
+                onChange={(e) => setSelectedGeneration(e.target.value)}
+                disabled={selectedCard1 || selectedCard2}
+              >
+                <option value="all">All</option>
+                <option value="Gen1">Gen 1</option>
+                <option value="Gen2">Gen 2</option>
+              </select>
+            </div>
           </div>
         </div>
         <div className="cards-grid">
           {availableCards.length === 0 ? (
             <div className="no-cards-message">
               {selectedCard1 || selectedCard2 ? (
-                <p>No compatible cards found. {showCreatures ? 'Select another Gen1 creature.' : 'Try selecting a different card.'}</p>
+                <p>No compatible creatures found. Try selecting a different creature.</p>
               ) : (
-                <p>No {showCreatures ? 'Gen1 creatures' : 'cards'} available.</p>
+                <p>No creatures match your filter criteria.</p>
               )}
             </div>
           ) : (
