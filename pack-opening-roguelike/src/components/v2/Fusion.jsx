@@ -357,27 +357,21 @@ const Fusion = ({ collection, fuseCards, pp }) => {
                 </div>
               </div>
             ) : (
-              <>
-                <div className="result-card-container">
-                  <Card card={overlayResult} />
-                </div>
-                {overlayResult?.flavorText && (
-                  <div className="flavor-text-box">
-                    <p className="typed-flavor-text">
-                      {overlayResult.flavorText}
-                    </p>
-                  </div>
-                )}
-              </>
+              <div className="result-card-container">
+                <Card card={overlayResult} />
+              </div>
             )}
           </div>
           
-          {/* Click to continue message */}
-          {showResultOverlay && (
-            <div className="click-to-continue">
-              Click anywhere to continue
+          {/* Flavor text as separate element */}
+          {showResultOverlay && overlayResult?.flavorText && (
+            <div className="flavor-text-box">
+              <p className="typed-flavor-text">
+                {overlayResult.flavorText}
+              </p>
             </div>
           )}
+          
         </div>
       )}
     </div>
