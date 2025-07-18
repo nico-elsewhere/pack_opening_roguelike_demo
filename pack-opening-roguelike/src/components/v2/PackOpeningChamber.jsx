@@ -62,20 +62,15 @@ const PackOpeningChamber = ({
                 className={`staged-pack-visual ${
                   animatingPacks.includes(stagedPacks[index].id) ? 'wiggling' : ''
                 } ${burstAnimation ? 'bursting' : ''}`}
-                onClick={() => !isOpening && unstagePack && unstagePack(stagedPacks[index].id)}
+                onClick={() => !isOpening && unstagePack && unstagePack(index)}
               >
-                <div className="pack-3d">
-                  <div className="pack-face pack-front">
-                    <span className="pack-symbol">✨</span>
+                <div className="pack-visual">
+                  <div className="pack-content">
+                    <span className="pack-icon">{stagedPacks[index].icon || '📦'}</span>
+                    <div className="pack-glow"></div>
                   </div>
-                  <div className="pack-face pack-back">
-                    <span className="pack-symbol">⚡</span>
-                  </div>
-                  <div className="pack-face pack-top"></div>
-                  <div className="pack-face pack-bottom"></div>
-                  <div className="pack-face pack-left"></div>
-                  <div className="pack-face pack-right"></div>
                 </div>
+                <div className="pack-type-label">{stagedPacks[index].name}</div>
                 {burstAnimation && (
                   <div className="burst-particles">
                     {[...Array(8)].map((_, i) => (
