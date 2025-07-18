@@ -364,9 +364,13 @@ const Fusion = ({ collection, fuseCards, pp }) => {
               
               {/* Back face - Result card */}
               <div className="card-face card-face-back">
-                {overlayResult && (
-                  <Card card={overlayResult} />
-                )}
+                <div className="result-card-display">
+                  {overlayResult ? (
+                    <Card card={overlayResult} />
+                  ) : (
+                    <div style={{color: 'white'}}>Loading...</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
