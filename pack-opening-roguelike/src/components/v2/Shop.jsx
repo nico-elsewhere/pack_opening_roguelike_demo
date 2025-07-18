@@ -3,9 +3,6 @@ import './Shop.css';
 
 const Shop = ({
   pp,
-  canBuyPack,
-  packCost,
-  buyPack,
   packSlots,
   packSlotCost,
   buyPackSlot,
@@ -25,21 +22,6 @@ const Shop = ({
       
       <div className="shop-content">
         <div className="shop-grid">
-          {/* Pack Purchase */}
-          <div className="shop-item glass">
-            <div className="item-icon">🎴</div>
-            <h3>Mystic Pack</h3>
-            <p className="item-description">Contains 5 random cards</p>
-            <div className="item-price">{packCost} PP</div>
-            <button 
-              className={`shop-button ${canBuyPack ? 'available' : 'disabled'}`}
-              onClick={buyPack}
-              disabled={!canBuyPack}
-            >
-              Buy Pack
-            </button>
-          </div>
-          
           {/* Pack Slots Upgrade */}
           <div className="shop-item glass upgrade">
             <div className="item-icon">📦</div>

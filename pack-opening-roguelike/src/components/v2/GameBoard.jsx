@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './GameBoard.css';
 import Card from '../Card';
-import MobilePackBar from './MobilePackBar';
+import PackToolbar from './PackToolbar';
 import CardRevealGrid from './CardRevealGrid';
 import PackOpeningChamber from './PackOpeningChamber';
 
 const GameBoard = ({
-  ownedPacks,
+  pp,
   stagedPacks,
-  stagePack,
+  buyAndStagePack,
   unstagePack,
   openAllStagedPacks,
   openedCards,
@@ -35,17 +35,6 @@ const GameBoard = ({
         handleOpenPacks();
       }
       
-      // Number keys 1-9 to stage packs
-      if (e.key >= '1' && e.key <= '9' && !isRevealing && !showResults) {
-        const num = parseInt(e.key);
-        const availableSlots = packSlots - stagedPacks.length;
-        const packsToStage = Math.min(num, availableSlots, ownedPacks);
-        
-        for (let i = 0; i < packsToStage; i++) {
-          stagePack();
-        }
-      }
-      
       // C to clear board
       if (e.key === 'c' && showResults) {
         handleClearBoard();
@@ -54,7 +43,7 @@ const GameBoard = ({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [stagedPacks, packSlots, ownedPacks, isRevealing, showResults, stagePack]);
+  }, [stagedPacks, packSlots, isRevealing, showResults]);
 
   const handleOpenPacks = () => {
     if (stagedPacks.length === 0 || isRevealing || showResults) return;
@@ -130,20 +119,18 @@ const GameBoard = ({
             currentPackPPValues={currentPackPPValues}
             isRevealing={isRevealing}
             showResults={showResults}
+            onContinue={handleClearBoard}
           />
         </div>
       </div>
       
-      <div className="controls-area">
-        <MobilePackBar
-          ownedPacks={ownedPacks}
-          packTypes={packTypes}
-          selectedPackType={selectedPackType}
-          onSelectPackType={selectPackType}
-          stagePack={stagePack}
-          canStagePack={stagedPacks.length < packSlots && !isRevealing && !showResults}
-        />
-      </div>
+      <PackToolbar
+        packTypes={packTypes}
+        pp={pp}
+        onBuyPack={buyAndStagePack}
+        isOpening={isRevealing || showResults}
+        canOpenPacks={stagedPacks.length < packSlots}
+      />
     </div>
   );
 };

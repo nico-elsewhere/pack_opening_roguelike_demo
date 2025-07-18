@@ -5,6 +5,7 @@
   flex-direction: column;
   padding: 0;
   gap: 0;
+  padding-bottom: 200px; /* Space for fixed pack toolbar */
 }
 
 /* Board Header */

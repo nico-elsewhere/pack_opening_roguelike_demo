@@ -7,7 +7,8 @@ const CardRevealGrid = ({
   revealedCards,
   currentPackPPValues,
   isRevealing,
-  showResults
+  showResults,
+  onContinue
 }) => {
   if (openedCards.length === 0) {
     return (
@@ -60,15 +61,20 @@ const CardRevealGrid = ({
       </div>
       
       {showResults && (
-        <div className="pack-indicators">
-          {Math.ceil(openedCards.length / 5) > 1 && 
-            [...Array(Math.ceil(openedCards.length / 5))].map((_, i) => (
-              <div key={i} className="pack-indicator">
-                Pack {i + 1}
-              </div>
-            ))
-          }
-        </div>
+        <>
+          <div className="pack-indicators">
+            {Math.ceil(openedCards.length / 5) > 1 && 
+              [...Array(Math.ceil(openedCards.length / 5))].map((_, i) => (
+                <div key={i} className="pack-indicator">
+                  Pack {i + 1}
+                </div>
+              ))
+            }
+          </div>
+          <button className="continue-button" onClick={onContinue}>
+            Continue
+          </button>
+        </>
       )}
     </div>
   );

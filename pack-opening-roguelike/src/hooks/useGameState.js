@@ -18,7 +18,6 @@ export const useGameState = () => {
   const [stagedPacks, setStagedPacks] = useState([]);
   const [openedCards, setOpenedCards] = useState([]);
   const [totalCardsOpened, setTotalCardsOpened] = useState(0);
-  const [ownedPacks, setOwnedPacks] = useState(0);
   const [currentScreen, setCurrentScreen] = useState('home');
   const [packSlots, setPackSlots] = useState(1);
   const [runeSlots, setRuneSlots] = useState(3);
@@ -27,32 +26,41 @@ export const useGameState = () => {
   const [packTypes] = useState([
     {
       id: 'basic',
-      name: 'Basic Pack',
+      name: 'Basic',
       description: 'Standard pack with 5 cards',
       icon: '📦',
       cardsPerPack: 5,
       rarityBonus: 0,
-      unlocked: true
+      cost: 50
     },
     {
       id: 'elemental',
-      name: 'Elemental Pack',
+      name: 'Elemental',
       description: 'Higher chance of elemental synergies',
       icon: '🌟',
       cardsPerPack: 5,
       rarityBonus: 10,
-      unlocked: false,
-      unlockRequirement: 'Unlock in shop'
+      cost: 75
     },
     {
-      id: 'premium',
-      name: 'Premium Pack',
-      description: 'Guaranteed rare or better',
-      icon: '💎',
+      id: 'mystic',
+      name: 'Mystic',
+      description: 'Contains tarot cards',
+      icon: '🔮',
       cardsPerPack: 5,
+      rarityBonus: 15,
+      cost: 100,
+      guaranteedTarot: true
+    },
+    {
+      id: 'divine',
+      name: 'Divine',
+      description: 'Guaranteed rare or better',
+      icon: '✨',
+      cardsPerPack: 7,
       rarityBonus: 25,
-      unlocked: false,
-      unlockRequirement: 'Reach level 10'
+      cost: 150,
+      guaranteedRarity: 'rare'
     }
   ]);
   
@@ -80,17 +88,17 @@ export const useGameState = () => {
     return () => clearInterval(interval);
   }, [equippedRunes]);
   
-  const buyPack = () => {
-    if (pp < PACK_COST) return false;
-    setPP(prevPP => prevPP - PACK_COST);
-    setOwnedPacks(prevPacks => prevPacks + 1);
+  const buyAndStagePack = (packType) => {
+    if (pp < packType.cost) return false;
+    if (stagedPacks.length >= packSlots) return false;
+    
+    setPP(prevPP => prevPP - packType.cost);
+    setStagedPacks(prev => [...prev, packType]);
+    setSelectedPackType(packType.id);
     return true;
   };
   
   const openPack = () => {
-    if (ownedPacks <= 0) return false;
-    
-    setOwnedPacks(prevPacks => prevPacks - 1);
     
     // Apply any active modifiers to pack generation
     let rarityWeights = null;
@@ -286,18 +294,14 @@ export const useGameState = () => {
     return false;
   };
   
-  const stagePack = () => {
-    if (ownedPacks > 0 && stagedPacks.length < packSlots) {
-      setStagedPacks([...stagedPacks, { id: Date.now() }]);
-      setOwnedPacks(ownedPacks - 1);
-      return true;
-    }
-    return false;
-  };
+  // Removed stagePack - now using buyAndStagePack directly
   
-  const unstagePack = (packId) => {
-    setStagedPacks(stagedPacks.filter(p => p.id !== packId));
-    setOwnedPacks(ownedPacks + 1);
+  const unstagePack = (packIndex) => {
+    const pack = stagedPacks[packIndex];
+    if (pack) {
+      setPP(prevPP => prevPP + pack.cost); // Refund the pack
+      setStagedPacks(prev => prev.filter((_, i) => i !== packIndex));
+    }
   };
   
   const openAllStagedPacks = () => {
@@ -308,9 +312,10 @@ export const useGameState = () => {
     let totalPPGained = 0;
     const newCollection = { ...collection };
     
-    // Generate all packs
-    stagedPacks.forEach(() => {
-      const pack = generatePack(5, deckTemplate);
+    // Generate all packs based on their types
+    stagedPacks.forEach((packType) => {
+      const cardsPerPack = packType.cardsPerPack || 5;
+      const pack = generatePack(cardsPerPack, deckTemplate);
       allCards.push(...pack);
     });
     
@@ -415,17 +420,12 @@ export const useGameState = () => {
     currentPack,
     currentPackPPValues,
     totalCardsOpened,
-    ownedPacks,
     currentScreen,
     setCurrentScreen,
     packSlots,
     runeSlots,
-    canBuyPack: pp >= PACK_COST,
-    canOpenPack: ownedPacks > 0,
-    packCost: PACK_COST,
     packSlotCost: 100 * Math.pow(2, packSlots - 1),
     runeSlotCost: 150 * Math.pow(2, runeSlots - 3),
-    buyPack,
     openPack,
     equipRune,
     setCurrentPack,
@@ -433,7 +433,7 @@ export const useGameState = () => {
     buyRuneSlot,
     stagedPacks,
     openedCards,
-    stagePack,
+    buyAndStagePack,
     unstagePack,
     openAllStagedPacks,
     clearOpenedCards,

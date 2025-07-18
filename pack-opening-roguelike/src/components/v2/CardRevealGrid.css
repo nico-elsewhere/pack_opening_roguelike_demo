@@ -186,6 +186,35 @@
   }
 }
 
+/* Continue Button */
+.continue-button {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 2.5rem;
+  background: #a855f7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.continue-button:hover {
+  background: #9333ea;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(168, 85, 247, 0.4);
+}
+
+.continue-button:active {
+  transform: translateY(0);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .card-grid {
