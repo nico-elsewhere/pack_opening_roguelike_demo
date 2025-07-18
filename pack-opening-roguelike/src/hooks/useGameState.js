@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createDeck, generatePack, calculateCardPP, generateRuneEffect } from '../utils/cards';
+import { applyCardEffect } from '../utils/tarotCards';
 
 const INITIAL_PP = 100;
 const PP_PER_SECOND = 0.5;
@@ -9,7 +10,7 @@ export const useGameState = () => {
   const [pp, setPP] = useState(INITIAL_PP);
   const [collection, setCollection] = useState({});
   const [equippedRunes, setEquippedRunes] = useState([]);
-  const [deckTemplate] = useState(createDeck());
+  const [deckTemplate] = useState(createDeck(true)); // Enable tarot cards
   const [currentPack, setCurrentPack] = useState(null);
   const [currentPackPPValues, setCurrentPackPPValues] = useState([]);
   const [stagedPacks, setStagedPacks] = useState([]);
@@ -19,6 +20,39 @@ export const useGameState = () => {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [packSlots, setPackSlots] = useState(1);
   const [runeSlots, setRuneSlots] = useState(3);
+  const [gameModifiers, setGameModifiers] = useState({});
+  const [selectedPackType, setSelectedPackType] = useState('basic');
+  const [packTypes] = useState([
+    {
+      id: 'basic',
+      name: 'Basic Pack',
+      description: 'Standard pack with 5 cards',
+      icon: '📦',
+      cardsPerPack: 5,
+      rarityBonus: 0,
+      unlocked: true
+    },
+    {
+      id: 'elemental',
+      name: 'Elemental Pack',
+      description: 'Higher chance of elemental synergies',
+      icon: '🌟',
+      cardsPerPack: 5,
+      rarityBonus: 10,
+      unlocked: false,
+      unlockRequirement: 'Unlock in shop'
+    },
+    {
+      id: 'premium',
+      name: 'Premium Pack',
+      description: 'Guaranteed rare or better',
+      icon: '💎',
+      cardsPerPack: 5,
+      rarityBonus: 25,
+      unlocked: false,
+      unlockRequirement: 'Reach level 10'
+    }
+  ]);
   
   const lastUpdateTime = useRef(Date.now());
   
@@ -55,13 +89,38 @@ export const useGameState = () => {
     if (ownedPacks <= 0) return false;
     
     setOwnedPacks(prevPacks => prevPacks - 1);
-    const pack = generatePack(5, deckTemplate);
+    
+    // Apply any active modifiers to pack generation
+    let rarityWeights = null;
+    if (gameModifiers.riseAndGrindActive) {
+      // Increase rare chances based on commons
+      const commonCount = Object.values(collection).filter(c => c.rarity === 'common').length;
+      const bonus = commonCount * 0.05;
+      rarityWeights = {
+        common: 0.65 - bonus,
+        uncommon: 0.20,
+        rare: 0.10 + (bonus * 0.5),
+        epic: 0.04 + (bonus * 0.3),
+        legendary: 0.01 + (bonus * 0.2)
+      };
+    }
+    
+    const pack = generatePack(5, deckTemplate, rarityWeights);
     
     let totalPPGained = 0;
     const newCollection = { ...collection };
     const packPPValues = [];
+    const packEffectMessages = [];
+    let localGameState = { ...gameModifiers, cardsInCurrentPack: 0 };
     
-    pack.forEach(card => {
+    // Apply investment bonus if active
+    if (localGameState.investmentBonus) {
+      totalPPGained *= localGameState.investmentBonus;
+      setGameModifiers(prev => ({ ...prev, investmentBonus: null }));
+    }
+    
+    pack.forEach((card, index) => {
+      localGameState.cardsInCurrentPack = index + 1;
       const cardId = card.id;
       if (newCollection[cardId]) {
         // Preserve existing effect for runes
@@ -89,10 +148,88 @@ export const useGameState = () => {
         newCollection[cardId] = { ...card };
       }
       
-      const ppGained = calculateCardPP(newCollection[cardId], equippedRunes, pack);
-      packPPValues.push(ppGained);
-      totalPPGained += ppGained;
+      // Apply tarot card effects
+      if (card.effect && card.effect.onPull) {
+        const effectResult = applyCardEffect(card, localGameState, Object.values(newCollection), pack);
+        if (effectResult) {
+          if (effectResult.message) {
+            packEffectMessages.push(effectResult.message);
+          }
+          if (effectResult.ppMultiplier) {
+            localGameState.currentCardMultiplier = effectResult.ppMultiplier;
+          }
+          // Update game state based on effect
+          Object.keys(effectResult).forEach(key => {
+            if (key !== 'message' && key !== 'ppMultiplier') {
+              localGameState[key] = effectResult[key];
+            }
+          });
+        }
+      }
+      
+      let ppGained = calculateCardPP(newCollection[cardId], equippedRunes, pack, localGameState);
+      
+      // Apply card-specific multipliers
+      if (localGameState.currentCardMultiplier) {
+        ppGained *= localGameState.currentCardMultiplier;
+        localGameState.currentCardMultiplier = null;
+      }
+      
+      // Apply pack-wide multipliers
+      if (localGameState.randomTurnoutStacks > 0) {
+        const randomMult = 0.5 + (Math.random() * 1.5);
+        ppGained *= randomMult;
+      }
+      
+      // Early bird bonus
+      if (localGameState.earlyBirdActive && index < 3) {
+        ppGained *= 3;
+      }
+      
+      // Night owl bonus
+      if (localGameState.nightOwlActive && index >= pack.length - 3) {
+        ppGained *= 3;
+      }
+      
+      // Scaling order bonus
+      if (localGameState.scalingOrderActive) {
+        if (card.ppValue > localGameState.lastCardValue) {
+          ppGained *= 1.5;
+        }
+        localGameState.lastCardValue = card.ppValue;
+      }
+      
+      packPPValues.push(Math.floor(ppGained));
+      totalPPGained += Math.floor(ppGained);
     });
+    
+    // Apply end-of-pack effects
+    if (localGameState.randomTurnoutStacks > 0) {
+      setGameModifiers(prev => ({ ...prev, randomTurnoutStacks: prev.randomTurnoutStacks - 1 }));
+    }
+    
+    // Check for monochroma bonus
+    if (localGameState.monochromaCheck) {
+      const colors = new Set(pack.filter(c => c.suit).map(c => ['hearts', 'diamonds'].includes(c.suit) ? 'red' : 'black'));
+      if (colors.size === 1) {
+        totalPPGained *= 4;
+        packEffectMessages.push('Monochroma bonus! 4x PP!');
+      }
+    }
+    
+    // Check for polychromia bonus
+    if (localGameState.polychromiaActive) {
+      const colors = new Set(pack.filter(c => c.suit).map(c => ['hearts', 'diamonds'].includes(c.suit) ? 'red' : 'black'));
+      const colorBonus = 1 + (colors.size * 1);
+      totalPPGained *= colorBonus;
+      packEffectMessages.push(`Polychromia bonus! ${colorBonus}x PP!`);
+    }
+    
+    // Apply teacher bonus to XP gains
+    if (localGameState.teacherBonus) {
+      // XP already applied with bonus in the loop
+      setGameModifiers(prev => ({ ...prev, teacherBonus: null }));
+    }
     
     setCurrentPack(pack);
     setCurrentPackPPValues(packPPValues);
@@ -100,7 +237,17 @@ export const useGameState = () => {
     setCollection(newCollection);
     setTotalCardsOpened(prev => prev + pack.length);
     
-    return { pack, totalPPGained };
+    // Update persistent game modifiers
+    const persistentModifiers = ['randomTurnoutStacks', 'riseAndGrindActive', 'investmentBonus'];
+    const newModifiers = {};
+    persistentModifiers.forEach(key => {
+      if (localGameState[key] !== undefined) {
+        newModifiers[key] = localGameState[key];
+      }
+    });
+    setGameModifiers(newModifiers);
+    
+    return { pack, totalPPGained, messages: packEffectMessages };
   };
   
   const equipRune = (cardId) => {
@@ -212,6 +359,12 @@ export const useGameState = () => {
     setCurrentPackPPValues([]);
   };
   
+  const selectPackType = (packType) => {
+    if (packType.unlocked) {
+      setSelectedPackType(packType.id);
+    }
+  };
+  
   
   return {
     pp: Math.floor(pp),
@@ -243,6 +396,9 @@ export const useGameState = () => {
     stagePack,
     unstagePack,
     openAllStagedPacks,
-    clearOpenedCards
+    clearOpenedCards,
+    packTypes,
+    selectedPackType,
+    selectPackType
   };
 };

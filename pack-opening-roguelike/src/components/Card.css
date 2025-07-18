@@ -87,12 +87,20 @@
   font-size: 10px;
 }
 
-.red {
+.fire {
   color: #e74c3c;
 }
 
-.black {
-  color: #2c3e50;
+.earth {
+  color: #8b6914;
+}
+
+.water {
+  color: #3498db;
+}
+
+.air {
+  color: #95a5a6;
 }
 
 .equipped-indicator {
@@ -230,4 +238,43 @@
 .rune .card-progress {
   border-color: rgba(155, 89, 182, 0.3);
   background: rgba(155, 89, 182, 0.1);
+}
+
+/* Tarot card styles */
+.card.tarot {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #fff;
+  border: 3px solid #666;
+}
+
+.card.tarot.major-arcana {
+  background: linear-gradient(135deg, #0f3460, #16213e);
+  box-shadow: 0 0 20px rgba(233, 196, 106, 0.5);
+}
+
+.tarot-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: #e9c46a;
+}
+
+.tarot-name {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0 8px;
+  color: #e9c46a;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+}
+
+.rarity-indicator {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Rarity border colors are applied inline */
+.card[style*="border-color"] {
+  box-shadow: 0 0 10px currentColor;
 }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './GameBoard.css';
 import Card from '../Card';
-import PackStagingDock from './PackStagingDock';
+import MobilePackBar from './MobilePackBar';
 import CardRevealGrid from './CardRevealGrid';
+import PackOpeningChamber from './PackOpeningChamber';
 
 const GameBoard = ({
   ownedPacks,
@@ -14,12 +15,17 @@ const GameBoard = ({
   clearOpenedCards,
   packSlots,
   equippedRunes,
-  currentPackPPValues
+  currentPackPPValues,
+  packTypes,
+  selectedPackType,
+  selectPackType
 }) => {
   const [isRevealing, setIsRevealing] = useState(false);
   const [revealedCards, setRevealedCards] = useState([]);
   const [totalPP, setTotalPP] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [showPackChamber, setShowPackChamber] = useState(true);
+  const [chamberAnimating, setChamberAnimating] = useState(false);
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -53,27 +59,35 @@ const GameBoard = ({
   const handleOpenPacks = () => {
     if (stagedPacks.length === 0 || isRevealing || showResults) return;
     
-    const result = openAllStagedPacks();
-    if (result) {
-      setIsRevealing(true);
-      setRevealedCards([]);
-      setTotalPP(0);
-      
-      // Reveal cards sequentially
-      result.cards.forEach((card, index) => {
-        setTimeout(() => {
-          setRevealedCards(prev => [...prev, index]);
-          setTotalPP(prev => prev + result.ppValues[index]);
-          
-          if (index === result.cards.length - 1) {
-            setTimeout(() => {
-              setIsRevealing(false);
-              setShowResults(true);
-            }, 500);
-          }
-        }, index * 150); // 150ms between each card
-      });
-    }
+    // Start chamber animation
+    setChamberAnimating(true);
+    
+    // After pack burst animation, transition to card reveal
+    setTimeout(() => {
+      const result = openAllStagedPacks();
+      if (result) {
+        setShowPackChamber(false);
+        setIsRevealing(true);
+        setRevealedCards([]);
+        setTotalPP(0);
+        
+        // Reveal cards sequentially
+        result.cards.forEach((card, index) => {
+          setTimeout(() => {
+            setRevealedCards(prev => [...prev, index]);
+            setTotalPP(prev => prev + result.ppValues[index]);
+            
+            if (index === result.cards.length - 1) {
+              setTimeout(() => {
+                setIsRevealing(false);
+                setShowResults(true);
+              }, 500);
+            }
+          }, index * 150); // 150ms between each card
+        });
+      }
+      setChamberAnimating(false);
+    }, 1500); // Wait for wiggle + burst animations
   };
 
   const handleClearBoard = () => {
@@ -81,6 +95,7 @@ const GameBoard = ({
     setRevealedCards([]);
     setShowResults(false);
     setTotalPP(0);
+    setShowPackChamber(true);
   };
 
   return (
@@ -96,26 +111,37 @@ const GameBoard = ({
       </div>
       
       <div className="play-area">
-        <CardRevealGrid
-          openedCards={openedCards}
-          revealedCards={revealedCards}
-          currentPackPPValues={currentPackPPValues}
-          isRevealing={isRevealing}
-          showResults={showResults}
-        />
+        <div className={`chamber-view ${!showPackChamber ? 'hidden' : ''}`}>
+          <PackOpeningChamber
+            stagedPacks={stagedPacks}
+            packSlots={packSlots}
+            onOpenPacks={handleOpenPacks}
+            isOpening={chamberAnimating}
+            showConfirmButton={true}
+            unstagePack={unstagePack}
+            onClearBoard={handleClearBoard}
+            showClear={showResults}
+          />
+        </div>
+        <div className={`reveal-view ${showPackChamber ? 'hidden' : ''}`}>
+          <CardRevealGrid
+            openedCards={openedCards}
+            revealedCards={revealedCards}
+            currentPackPPValues={currentPackPPValues}
+            isRevealing={isRevealing}
+            showResults={showResults}
+          />
+        </div>
       </div>
       
       <div className="controls-area">
-        <PackStagingDock
+        <MobilePackBar
           ownedPacks={ownedPacks}
-          stagedPacks={stagedPacks}
+          packTypes={packTypes}
+          selectedPackType={selectedPackType}
+          onSelectPackType={selectPackType}
           stagePack={stagePack}
-          unstagePack={unstagePack}
-          packSlots={packSlots}
-          onOpenPacks={handleOpenPacks}
-          onClearBoard={handleClearBoard}
-          canOpen={stagedPacks.length > 0 && !isRevealing && !showResults}
-          showClear={showResults}
+          canStagePack={stagedPacks.length < packSlots && !isRevealing && !showResults}
         />
       </div>
     </div>

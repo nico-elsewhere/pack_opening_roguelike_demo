@@ -2,18 +2,40 @@ import React from 'react';
 import './Card.css';
 
 const suitSymbols = {
-  hearts: '♥',
-  diamonds: '♦',
-  clubs: '♣',
-  spades: '♠'
+  fire: '🔥',
+  earth: '⛰️',
+  water: '💧',
+  air: '🌪️'
 };
 
 const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true }) => {
-  const suitColor = card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
+  const suitClass = card.suit; // fire, earth, water, or air
   const xpProgress = (card.xp / card.xpToNextLevel) * 100;
+  
+  // Determine if this is a tarot card
+  const isTarot = card.arcana && (card.arcana === 'major' || card.arcana === 'minor');
+  const isMajorArcana = card.arcana === 'major';
+  
+  // Get rarity color
+  const getRarityColor = () => {
+    switch(card.rarity) {
+      case 'legendary': return '#ff8c00';
+      case 'epic': return '#9400d3';
+      case 'rare': return '#0080ff';
+      case 'uncommon': return '#00ff00';
+      default: return '#808080';
+    }
+  };
   
   const getRuneDescription = () => {
     if (!card.isRune || !card.effect) return '';
+    
+    // Use tarot card descriptions if available
+    if (card.effect.description) {
+      return card.effect.description;
+    }
+    
+    // Fallback to old system for playing cards
     switch (card.effect.type) {
       case 'suit_bonus':
         return `${card.effect.suit} cards +${Math.round((card.effect.multiplier - 1) * 100)}% PP`;
@@ -31,20 +53,42 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   return (
     <div className="card-container">
       <div 
-        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''}`}
+        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''}`}
         onClick={() => onClick && onClick(card)}
-        style={{ cursor: onClick ? 'pointer' : 'default' }}
+        style={{ 
+          cursor: onClick ? 'pointer' : 'default',
+          borderColor: card.rarity ? getRarityColor() : undefined,
+          borderWidth: card.rarity && card.rarity !== 'common' ? '3px' : undefined
+        }}
       >
         {isEquipped && <div className="equipped-indicator">EQUIPPED</div>}
         
         <div className="card-top">
-          <span className={`rank ${suitColor}`}>{card.rank}</span>
-          <span className={`suit ${suitColor}`}>{suitSymbols[card.suit]}</span>
+          {isTarot ? (
+            <>
+              <span className="tarot-number">{card.number !== undefined ? card.number : card.rankValue}</span>
+              {card.rarity && <span className="rarity-indicator" style={{ color: getRarityColor() }}>{card.rarity.toUpperCase()}</span>}
+            </>
+          ) : (
+            <>
+              <span className={`rank ${suitClass}`}>{card.rank}</span>
+              <span className={`suit ${suitClass}`}>{suitSymbols[card.suit]}</span>
+            </>
+          )}
         </div>
         
         <div className="card-center">
-          {card.isRune && <div className="rune-indicator">RUNE</div>}
-          <div className={`large-suit ${suitColor}`}>{suitSymbols[card.suit]}</div>
+          {isTarot ? (
+            <>
+              <div className="tarot-name">{card.name}</div>
+              {card.isRune && <div className="rune-indicator">EFFECT</div>}
+            </>
+          ) : (
+            <>
+              {card.isRune && <div className="rune-indicator">RUNE</div>}
+              <div className={`large-suit ${suitClass}`}>{suitSymbols[card.suit]}</div>
+            </>
+          )}
         </div>
         
         <div className="card-bottom">

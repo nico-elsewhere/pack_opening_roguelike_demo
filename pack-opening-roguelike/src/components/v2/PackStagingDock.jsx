@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PackStagingDock.css';
+import PackSelectionModal from './PackSelectionModal';
 
 const PackStagingDock = ({
   ownedPacks,
@@ -10,8 +11,11 @@ const PackStagingDock = ({
   onOpenPacks,
   onClearBoard,
   canOpen,
-  showClear
+  showClear,
+  packTypes,
+  onSelectPackType
 }) => {
+  const [showPackModal, setShowPackModal] = useState(false);
   const handleDragOver = (e) => {
     e.preventDefault();
     e.currentTarget.classList.add('drag-over');
@@ -30,7 +34,8 @@ const PackStagingDock = ({
   };
 
   return (
-    <div className="pack-staging-dock glass">
+    <>
+      <div className="pack-staging-dock glass">
       <div className="dock-left">
         <div className="pack-inventory">
           <h3 className="inventory-title">Your Packs</h3>
@@ -48,6 +53,12 @@ const PackStagingDock = ({
               </div>
             ))}
           </div>
+          <button 
+            className="pack-select-btn"
+            onClick={() => setShowPackModal(true)}
+          >
+            Select Pack Type
+          </button>
         </div>
       </div>
 
@@ -115,7 +126,15 @@ const PackStagingDock = ({
           )}
         </div>
       </div>
-    </div>
+      </div>
+      
+      <PackSelectionModal
+        isOpen={showPackModal}
+        onClose={() => setShowPackModal(false)}
+        packTypes={packTypes || []}
+        onSelectPack={onSelectPackType}
+      />
+    </>
   );
 };
 
