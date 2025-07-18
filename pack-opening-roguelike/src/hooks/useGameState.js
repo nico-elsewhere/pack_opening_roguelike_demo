@@ -3,7 +3,7 @@ import { createDeck, generatePack, calculateCardPP, generateRuneEffect } from '.
 import { applyCardEffect } from '../utils/tarotCards';
 import { generateFusedCard, calculateFusionCost } from '../utils/fusionCards';
 
-const INITIAL_PP = 100;
+const INITIAL_PP = 2000; // Increased for testing
 const PP_PER_SECOND = 0.5;
 const PACK_COST = 50;
 

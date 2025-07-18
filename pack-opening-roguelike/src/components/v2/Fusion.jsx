@@ -10,6 +10,9 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [fusionResult, setFusionResult] = useState(null);
   const [error, setError] = useState('');
+  const [showResultOverlay, setShowResultOverlay] = useState(false);
+  const [overlayResult, setOverlayResult] = useState(null);
+  const [typedText, setTypedText] = useState('');
   
   const cards = Object.values(collection);
   const [showCreatures, setShowCreatures] = useState(true);
@@ -100,6 +103,28 @@ const Fusion = ({ collection, fuseCards, pp }) => {
     }
   }, [cannotFuse, selectedCard1, selectedCard2]);
   
+  // Typewriter effect for flavor text
+  useEffect(() => {
+    if (showResultOverlay && overlayResult?.flavorText) {
+      setTypedText('');
+      const text = overlayResult.flavorText;
+      let currentIndex = 0;
+      
+      const typeInterval = setInterval(() => {
+        if (currentIndex < text.length) {
+          setTypedText(prev => prev + text[currentIndex]);
+          currentIndex++;
+        } else {
+          clearInterval(typeInterval);
+        }
+      }, 30); // Type speed
+      
+      return () => clearInterval(typeInterval);
+    } else {
+      setTypedText('');
+    }
+  }, [showResultOverlay, overlayResult]);
+  
   const handleFusion = async () => {
     if (!selectedCard1 || !selectedCard2 || !previewCard || !canAfford) return;
     
@@ -122,15 +147,12 @@ const Fusion = ({ collection, fuseCards, pp }) => {
         }
         
         if (result.success) {
-          setFusionResult(result.fusedCard);
-          setSelectedCard1(null);
-          setSelectedCard2(null);
-          
-          // Clear result after showing
+          // Show result in overlay first
           setTimeout(() => {
-            setFusionResult(null);
-            setIsAnimating(false);
-          }, 3000);
+            setOverlayResult(result.fusedCard);
+            setShowResultOverlay(true);
+          }, 1000); // Delay to show animation first
+          
         } else {
           setError(result.message);
           setIsAnimating(false);
@@ -146,6 +168,25 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   const getFusionSuitInfo = (card) => {
     if (!card || !card.isFused) return null;
     return FUSION_SUITS[card.suit];
+  };
+  
+  const handleOverlayDismiss = () => {
+    if (showResultOverlay && overlayResult) {
+      // Update the main UI with the result
+      setFusionResult(overlayResult);
+      setSelectedCard1(null);
+      setSelectedCard2(null);
+      
+      // Clear overlay states
+      setShowResultOverlay(false);
+      setOverlayResult(null);
+      setIsAnimating(false);
+      
+      // Clear the result from main UI after a short delay
+      setTimeout(() => {
+        setFusionResult(null);
+      }, 2000);
+    }
   };
   
   return (
@@ -202,7 +243,6 @@ const Fusion = ({ collection, fuseCards, pp }) => {
             ) : previewCard ? (
               <div className="preview-card">
                 <Card card={previewCard} />
-                <div className="preview-label">Preview</div>
               </div>
             ) : (
               <div className="empty-result-slot">
@@ -304,15 +344,22 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       </div>
       
       {isAnimating && (
-        <div className={`fusion-animation-overlay ${
-          (selectedCard1?.arcana || selectedCard2?.arcana) ? 'tarot-fusion' : ''
-        }`}>
+        <div 
+          className={`fusion-animation-overlay ${
+            (selectedCard1?.arcana || selectedCard2?.arcana || isCreatureFusion) ? 'tarot-fusion' : ''
+          }`}
+          onClick={showResultOverlay ? handleOverlayDismiss : null}
+          style={{ cursor: showResultOverlay ? 'pointer' : 'default' }}
+        >
+          {/* Background particles */}
           <div className="fusion-particles">
             {[...Array(12)].map((_, i) => (
               <div key={i} className={`particle particle-${i}`}></div>
             ))}
           </div>
-          {(selectedCard1?.arcana || selectedCard2?.arcana) && (
+          
+          {/* Mystical effects for tarot/creatures */}
+          {(selectedCard1?.arcana || selectedCard2?.arcana || isCreatureFusion) && (
             <div className="tarot-fusion-effects">
               <div className="mystical-ring"></div>
               <div className="mystical-symbols">
@@ -320,6 +367,38 @@ const Fusion = ({ collection, fuseCards, pp }) => {
                   <span key={i} className={`symbol symbol-${i}`}>{symbol}</span>
                 ))}
               </div>
+            </div>
+          )}
+          
+          {/* Centered result display */}
+          <div className={`fusion-overlay-result ${showResultOverlay ? 'show' : 'hide'}`}>
+            {!showResultOverlay ? (
+              <div className="mystery-card-animating">
+                <div className="mystery-card">
+                  <span className="mystery-text">?</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="result-card-container">
+                  <Card card={overlayResult} />
+                </div>
+                {overlayResult?.flavorText && (
+                  <div className="flavor-text-box">
+                    <p className="typed-flavor-text">
+                      {typedText}
+                      <span className="typing-cursor">|</span>
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* Click to continue message */}
+          {showResultOverlay && (
+            <div className="click-to-continue">
+              Click anywhere to continue
             </div>
           )}
         </div>
