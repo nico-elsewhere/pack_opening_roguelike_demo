@@ -19,6 +19,7 @@ const GameBoard = ({
   const [isOpening, setIsOpening] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
   const [totalPP, setTotalPP] = useState(0);
+  const [currentPhase, setCurrentPhase] = useState('ready');
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -63,6 +64,25 @@ const GameBoard = ({
     setTotalPP(0);
   };
 
+  const handlePhaseChange = (phase) => {
+    setCurrentPhase(phase);
+  };
+
+  const handleBuyPack = (packType) => {
+    // If we're in complete phase, act like continue button and add pack
+    if (currentPhase === 'complete') {
+      // Add pack first before clearing cards
+      buyAndStagePack(packType);
+      
+      // Then clear opened cards
+      clearOpenedCards();
+      setIsOpening(false);
+      setTotalPP(0);
+    } else {
+      buyAndStagePack(packType);
+    }
+  };
+
   return (
     <div className={`game-board ${screenShake ? 'screen-shake' : ''}`}>
       <UnifiedPackOpening
@@ -75,14 +95,16 @@ const GameBoard = ({
         isOpening={isOpening}
         onComplete={handleComplete}
         totalPP={totalPP}
+        onPhaseChange={handlePhaseChange}
       />
       
       <PackToolbar
         packTypes={packTypes}
         pp={pp}
-        onBuyPack={buyAndStagePack}
+        onBuyPack={handleBuyPack}
         isOpening={isOpening}
         canOpenPacks={stagedPacks.length < packSlots}
+        currentPhase={currentPhase}
       />
     </div>
   );

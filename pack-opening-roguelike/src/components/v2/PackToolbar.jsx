@@ -6,10 +6,15 @@ const PackToolbar = ({
   pp, 
   onBuyPack,
   isOpening,
-  canOpenPacks
+  canOpenPacks,
+  currentPhase
 }) => {
   const handlePackClick = (packType) => {
-    if (pp >= packType.cost && !isOpening && canOpenPacks) {
+    const canAfford = pp >= packType.cost;
+    const isPurchaseDisabled = (currentPhase === 'scoring') || (isOpening && currentPhase !== 'complete');
+    
+    // Allow purchase if we can afford it and we're either in ready phase or complete phase
+    if (canAfford && !isPurchaseDisabled && (canOpenPacks || currentPhase === 'complete')) {
       onBuyPack(packType);
     }
   };
@@ -19,7 +24,8 @@ const PackToolbar = ({
       <div className="pack-buttons">
         {packTypes.map(packType => {
           const canAfford = pp >= packType.cost;
-          const isDisabled = !canAfford || isOpening || !canOpenPacks;
+          const isPurchaseDisabled = (currentPhase === 'scoring') || (isOpening && currentPhase !== 'complete');
+          const isDisabled = !canAfford || isPurchaseDisabled || (!canOpenPacks && currentPhase !== 'complete');
           
           return (
             <button

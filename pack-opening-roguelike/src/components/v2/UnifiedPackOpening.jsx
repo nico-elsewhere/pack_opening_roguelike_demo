@@ -12,9 +12,17 @@ const UnifiedPackOpening = ({
   currentPackPPValues,
   isOpening,
   onComplete,
-  totalPP
+  totalPP,
+  onPhaseChange
 }) => {
   const [phase, setPhase] = useState('ready'); // ready, animating, scoring, complete
+  
+  // Notify parent of phase changes
+  useEffect(() => {
+    if (onPhaseChange) {
+      onPhaseChange(phase);
+    }
+  }, [phase, onPhaseChange]);
   const [buttonFading, setButtonFading] = useState(false);
   const [packAnimating, setPackAnimating] = useState(false);
   const [scoringIndex, setScoringIndex] = useState(-1);
@@ -122,6 +130,20 @@ const UnifiedPackOpening = ({
     // Call parent completion handler
     onComplete();
   };
+
+  // Expose reset function to parent
+  useEffect(() => {
+    if (openedCards.length === 0 && phase !== 'ready') {
+      // When cards are cleared externally, reset to ready
+      setPhase('ready');
+      setButtonFading(false);
+      setPackAnimating(false);
+      setScoringIndex(-1);
+      setFloatingTexts([]);
+      setRunningTotal(0);
+      setCardPositions([]);
+    }
+  }, [openedCards.length, phase]);
 
   return (
     <div className="unified-pack-opening" ref={containerRef}>
