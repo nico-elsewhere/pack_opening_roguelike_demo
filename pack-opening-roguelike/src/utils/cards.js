@@ -112,6 +112,8 @@ export const calculateCardPP = (card, runeEffects = [], cardsInPack = [], gameSt
   // Apply equipped rune effects
   runeEffects.forEach(rune => {
     const effect = rune.effect;
+    if (!effect) return; // Skip if no effect
+    
     if (effect.type === 'suit_bonus' && effect.suit === card.suit) {
       multiplier *= effect.multiplier;
     }

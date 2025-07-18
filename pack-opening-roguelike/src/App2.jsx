@@ -5,6 +5,7 @@ import Header from './components/v2/Header';
 import GameBoard from './components/v2/GameBoard';
 import Collection from './components/v2/Collection';
 import Shop from './components/v2/Shop';
+import Fusion from './components/v2/Fusion';
 
 function App() {
   const gameState = useGameState();
@@ -18,6 +19,7 @@ function App() {
         {currentScreen === 'home' && <GameBoard {...gameState} />}
         {currentScreen === 'collection' && <Collection {...gameState} />}
         {currentScreen === 'shop' && <Shop {...gameState} />}
+        {currentScreen === 'fusion' && <Fusion {...gameState} />}
       </main>
     </div>
   );

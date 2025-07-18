@@ -40,6 +40,12 @@ const Header = ({
         >
           Shop
         </button>
+        <button 
+          className={`nav-tab ${currentScreen === 'fusion' ? 'active' : ''}`}
+          onClick={() => setCurrentScreen('fusion')}
+        >
+          Fusion
+        </button>
       </nav>
       
       <div className="header-right">
@@ -64,8 +70,8 @@ const Header = ({
         
         <div className="runes-mini">
           {equippedRunes.map((rune, index) => (
-            <div key={index} className="rune-icon" title={rune ? `${rune.rank} of ${rune.suit}` : 'Empty'}>
-              {rune ? rune.rank[0] : '○'}
+            <div key={index} className="rune-icon" title={rune ? (rune.name || `${rune.rank} of ${rune.suit}`) : 'Empty'}>
+              {rune ? (rune.symbol || rune.rank?.[0] || '✦') : '○'}
             </div>
           ))}
         </div>

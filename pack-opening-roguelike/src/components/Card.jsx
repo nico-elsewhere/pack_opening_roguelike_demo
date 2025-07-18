@@ -5,7 +5,14 @@ const suitSymbols = {
   fire: '🔥',
   earth: '⛰️',
   water: '💧',
-  air: '🌪️'
+  air: '🌪️',
+  // Fusion suits
+  magma: '🌋',
+  steam: '💨',
+  lightning: '⚡',
+  mud: '🟫',
+  dust: '🌪️',
+  ice: '❄️'
 };
 
 const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true }) => {
@@ -15,6 +22,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   // Determine if this is a tarot card
   const isTarot = card.arcana && (card.arcana === 'major' || card.arcana === 'minor');
   const isMajorArcana = card.arcana === 'major';
+  const isFusedTarot = card.arcana && ['transcendent', 'empowered', 'enhanced-minor'].includes(card.arcana);
   
   // Get rarity color
   const getRarityColor = () => {
@@ -53,7 +61,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   return (
     <div className="card-container">
       <div 
-        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''}`}
+        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''} ${isFusedTarot ? 'fused-tarot' : ''}`}
         onClick={() => onClick && onClick(card)}
         style={{ 
           cursor: onClick ? 'pointer' : 'default',
@@ -78,9 +86,10 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         </div>
         
         <div className="card-center">
-          {isTarot ? (
+          {isTarot || isFusedTarot ? (
             <>
               <div className="tarot-name">{card.name}</div>
+              {card.symbol && <div className="large-suit">{card.symbol}</div>}
               {card.isRune && <div className="rune-indicator">EFFECT</div>}
             </>
           ) : (

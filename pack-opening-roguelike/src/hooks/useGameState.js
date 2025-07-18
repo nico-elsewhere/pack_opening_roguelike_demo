@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createDeck, generatePack, calculateCardPP, generateRuneEffect } from '../utils/cards';
 import { applyCardEffect } from '../utils/tarotCards';
+import { generateFusedCard, calculateFusionCost } from '../utils/fusionCards';
 
 const INITIAL_PP = 100;
 const PP_PER_SECOND = 0.5;
@@ -10,7 +11,8 @@ export const useGameState = () => {
   const [pp, setPP] = useState(INITIAL_PP);
   const [collection, setCollection] = useState({});
   const [equippedRunes, setEquippedRunes] = useState([]);
-  const [deckTemplate] = useState(createDeck(true)); // Enable tarot cards
+  const [deckTemplate, setDeckTemplate] = useState(createDeck(true)); // Enable tarot cards
+  const [fusedCards, setFusedCards] = useState({}); // Track all fused cards
   const [currentPack, setCurrentPack] = useState(null);
   const [currentPackPPValues, setCurrentPackPPValues] = useState([]);
   const [stagedPacks, setStagedPacks] = useState([]);
@@ -66,7 +68,7 @@ export const useGameState = () => {
         let newPP = prevPP + (PP_PER_SECOND * deltaTime);
         
         equippedRunes.forEach(rune => {
-          if (rune.effect.type === 'pp_generation') {
+          if (rune.effect && rune.effect.type === 'pp_generation') {
             newPP += rune.effect.bonusPP * deltaTime;
           }
         });
@@ -365,11 +367,49 @@ export const useGameState = () => {
     }
   };
   
+  const fuseCards = (card1Id, card2Id) => {
+    const card1 = collection[card1Id];
+    const card2 = collection[card2Id];
+    
+    if (!card1 || !card2) return { success: false, message: 'Cards not found' };
+    
+    // Check if player has enough PP
+    const cost = calculateFusionCost(card1, card2);
+    if (pp < cost) return { success: false, message: 'Not enough PP' };
+    
+    // Generate fused card
+    const fusedCard = generateFusedCard(card1, card2);
+    if (!fusedCard) return { success: false, message: 'Cards cannot be fused' };
+    
+    // Check if this fusion already exists
+    if (fusedCards[fusedCard.id] || collection[fusedCard.id]) {
+      return { success: false, message: 'This fusion already exists' };
+    }
+    
+    // Deduct PP
+    setPP(prevPP => prevPP - cost);
+    
+    // Remove original cards from collection
+    const newCollection = { ...collection };
+    delete newCollection[card1Id];
+    delete newCollection[card2Id];
+    
+    // Add fused card to collection
+    newCollection[fusedCard.id] = fusedCard;
+    setCollection(newCollection);
+    
+    // Track fused card and add to deck template
+    setFusedCards(prev => ({ ...prev, [fusedCard.id]: fusedCard }));
+    setDeckTemplate(prev => [...prev, fusedCard]);
+    
+    return { success: true, fusedCard };
+  };
+  
   
   return {
     pp: Math.floor(pp),
     ppPerSecond: PP_PER_SECOND + equippedRunes.reduce((acc, rune) => 
-      rune.effect.type === 'pp_generation' ? acc + rune.effect.bonusPP : acc, 0),
+      rune.effect && rune.effect.type === 'pp_generation' ? acc + rune.effect.bonusPP : acc, 0),
     collection,
     equippedRunes,
     currentPack,
@@ -399,6 +439,8 @@ export const useGameState = () => {
     clearOpenedCards,
     packTypes,
     selectedPackType,
-    selectPackType
+    selectPackType,
+    fusedCards,
+    fuseCards
   };
 };

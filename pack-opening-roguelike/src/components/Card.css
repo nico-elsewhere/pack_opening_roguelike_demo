@@ -103,6 +103,31 @@
   color: #95a5a6;
 }
 
+/* Fusion suit colors */
+.magma {
+  color: #ff4500;
+}
+
+.steam {
+  color: #87ceeb;
+}
+
+.lightning {
+  color: #ffd700;
+}
+
+.mud {
+  color: #8b4513;
+}
+
+.dust {
+  color: #daa520;
+}
+
+.ice {
+  color: #00bfff;
+}
+
 .equipped-indicator {
   position: absolute;
   top: 0;
@@ -277,4 +302,33 @@
 /* Rarity border colors are applied inline */
 .card[style*="border-color"] {
   box-shadow: 0 0 10px currentColor;
+}
+
+/* Fused Tarot Cards */
+.card.fused-tarot {
+  background: linear-gradient(135deg, #4a148c, #6a1b9a, #7b1fa2);
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  animation: mysticGlow 3s ease-in-out infinite;
+}
+
+.card.fused-tarot .tarot-name {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.card.fused-tarot .large-suit {
+  font-size: 48px;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+}
+
+@keyframes mysticGlow {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    border-color: #ffd700;
+  }
+  50% { 
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.9);
+    border-color: #fff;
+  }
 }
