@@ -225,6 +225,19 @@
   box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
 }
 
+.button-text-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .button-text-desktop {
+    display: none;
+  }
+  .button-text-mobile {
+    display: inline;
+  }
+}
+
 .fusion-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 30px rgba(168, 85, 247, 0.6);
@@ -668,8 +681,8 @@
 
 /* Flavor Text Box */
 .flavor-text-box {
-  position: fixed;
-  bottom: 22%;
+  position: absolute;
+  top: calc(100% + 20px);
   left: 0;
   right: 0;
   display: flex;
@@ -695,6 +708,7 @@
   font-style: italic;
   margin: 0;
   text-align: center;
+  white-space: normal;
 }
 
 
@@ -785,10 +799,7 @@
   }
   
   .fusion-cost-display {
-    padding: 0.5rem 0.75rem;
-    bottom: 1rem;
-    right: 1rem;
-    font-size: 0.875rem;
+    display: none; /* Hide on mobile since we'll show cost in button */
   }
   
   .cost-value {
@@ -824,32 +835,36 @@
   
   /* Adjust card flip container for mobile */
   .card-flip-container {
-    width: 91px; /* 70px * 1.3 */
-    height: 127px; /* 98px * 1.3 */
+    width: 140px;
+    height: 196px;
   }
   
   .mystery-card {
-    width: 70px;
-    height: 98px;
+    width: 140px;
+    height: 196px;
   }
   
   .mystery-text {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
   }
   
   .result-card-display {
-    width: 91px;
-    height: 127px;
+    width: 140px;
+    height: 196px;
+    font-size: 2em;
   }
   
   .result-card-display .card {
-    transform: scale(0.76); /* Scale down to fit mobile */
+    transform: scale(2);
   }
   
   .flavor-text-box {
-    bottom: 15%;
-    padding: 0.75rem 1rem;
-    max-width: 300px;
+    top: calc(100% + 15px);
+  }
+  
+  .flavor-text-box p {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
   }
   
   .typed-flavor-text {

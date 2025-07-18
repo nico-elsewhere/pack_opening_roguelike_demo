@@ -186,7 +186,7 @@ const Fusion = ({ collection, fuseCards, pp }) => {
         }
       } catch (error) {
         console.error('Fusion error:', error);
-        setError('Failed to breed creatures. Please try again.');
+        setError('Failed to fuse creatures. Please try again.');
         setIsAnimating(false);
       }
     }, 1500);
@@ -269,8 +269,16 @@ const Fusion = ({ collection, fuseCards, pp }) => {
           onClick={handleFusion}
           disabled={!previewCard || !canAfford || isAnimating}
         >
-          {isAnimating ? (isCreatureFusion ? 'Breeding...' : 'Fusing...') : 
-           (isCreatureFusion ? 'Breed Creatures' : 'Fuse Cards')}
+          {isAnimating ? 'Fusing...' : (
+            <>
+              <span className="button-text-desktop">
+                Fuse Creatures
+              </span>
+              <span className="button-text-mobile">
+                {previewCard ? `Fuse Creatures: ${fusionCost} PP` : 'Fuse'}
+              </span>
+            </>
+          )}
         </button>
       </div>
       
@@ -386,16 +394,18 @@ const Fusion = ({ collection, fuseCards, pp }) => {
                 </div>
               </div>
             </div>
+            
+            {/* Flavor text anchored to card */}
+            {showResultOverlay && overlayResult?.flavorText && (
+              <div className="flavor-text-box">
+                <p className="typed-flavor-text">
+                  {overlayResult.flavorText}
+                </p>
+              </div>
+            )}
           </div>
           
-          {/* Flavor text as separate element */}
-          {showResultOverlay && overlayResult?.flavorText && (
-            <div className="flavor-text-box">
-              <p className="typed-flavor-text">
-                {overlayResult.flavorText}
-              </p>
-            </div>
-          )}
+          {/* Flavor text as part of the result display */}
           
         </div>
       )}
