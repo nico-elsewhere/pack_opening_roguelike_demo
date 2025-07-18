@@ -1,0 +1,103 @@
+.glowing-particle {
+  position: fixed;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  transform: translate(var(--start-x), var(--start-y));
+  animation: particleJourney 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.particle-core {
+  width: 100%;
+  height: 100%;
+  background: var(--particle-color);
+  border-radius: 50%;
+  position: relative;
+}
+
+.particle-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--particle-color) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(4px);
+  opacity: 0.8;
+  animation: particlePulse 1s ease-in-out infinite;
+}
+
+@keyframes particleJourney {
+  0% {
+    transform: 
+      translate(var(--start-x), var(--start-y)) 
+      scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: 
+      translate(var(--start-x), var(--start-y)) 
+      scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: 
+      translate(var(--scatter-x), var(--scatter-y)) 
+      scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    transform: 
+      translate(var(--scatter-x), var(--scatter-y)) 
+      scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: 
+      translate(var(--end-x), var(--end-y)) 
+      scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes particlePulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.6;
+  }
+}
+
+/* Trail effect */
+.glowing-particle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: var(--particle-color);
+  border-radius: 50%;
+  filter: blur(8px);
+  opacity: 0;
+  animation: particleTrail 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes particleTrail {
+  40%, 60% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scaleX(3) scaleY(0.5);
+  }
+  0%, 30%, 70%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
