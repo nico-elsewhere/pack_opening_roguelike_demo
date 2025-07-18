@@ -127,8 +127,12 @@ const Fusion = ({ collection, fuseCards, pp }) => {
         if (result.success) {
           // Show result in overlay first
           setTimeout(() => {
+            console.log('Setting overlay result:', result.fusedCard);
             setOverlayResult(result.fusedCard);
-            setShowResultOverlay(true);
+            // Small delay before flipping to show the ? card and mystical effects
+            setTimeout(() => {
+              setShowResultOverlay(true);
+            }, 800);
           }, 1000); // Delay to show animation first
           
         } else {
@@ -348,19 +352,23 @@ const Fusion = ({ collection, fuseCards, pp }) => {
             </div>
           )}
           
-          {/* Centered result display */}
-          <div className={`fusion-overlay-result ${showResultOverlay ? 'show' : 'hide'}`}>
-            {!showResultOverlay ? (
-              <div className="mystery-card-animating">
+          {/* Centered result display with 3D flip */}
+          <div className="fusion-overlay-result">
+            <div className={`card-flip-container ${showResultOverlay ? 'flipped' : ''}`}>
+              {/* Front face - Mystery card */}
+              <div className="card-face card-face-front">
                 <div className="mystery-card">
                   <span className="mystery-text">?</span>
                 </div>
               </div>
-            ) : (
-              <div className="result-card-container">
-                <Card card={overlayResult} />
+              
+              {/* Back face - Result card */}
+              <div className="card-face card-face-back">
+                {overlayResult && (
+                  <Card card={overlayResult} />
+                )}
               </div>
-            )}
+            </div>
           </div>
           
           {/* Flavor text as separate element */}

@@ -136,12 +136,6 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
                 {getRuneDescription()}
               </div>
             )}
-            {isCreature && card.flavorText && (
-              <div className="creature-tooltip">
-                <div className="flavor-text">{card.flavorText}</div>
-                {card.artists && <div className="artist-credit">Art by: {card.artists}</div>}
-              </div>
-            )}
           </>
         )}
       </div>
