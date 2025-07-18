@@ -740,45 +740,124 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .fusion-page {
+    padding: 0.5rem;
+    height: 100vh;
+  }
+  
   .fusion-slots {
-    gap: 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
   }
   
   .fusion-slot,
   .fusion-result-slot {
-    width: 80px;
-    height: 112px;
+    width: 70px;
+    height: 98px;
+  }
+  
+  .empty-fusion-slot {
+    font-size: 0.7rem;
+  }
+  
+  .slot-number {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .slot-hint {
+    font-size: 0.6rem;
+  }
+  
+  .result-hint {
+    font-size: 2rem;
   }
   
   .fusion-operator,
   .fusion-arrow {
-    font-size: 1.5rem;
-    margin: 0 0.25rem;
+    font-size: 1.2rem;
+    margin: 0 0.2rem;
   }
   
   .fusion-workspace {
     padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .fusion-cost-display {
+    padding: 0.5rem 0.75rem;
+    bottom: 1rem;
+    right: 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .cost-value {
+    font-size: 1rem;
   }
   
   .available-cards {
-    max-height: 400px;
+    padding: 1rem;
+  }
+  
+  .cards-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-select {
+    width: 100%;
   }
   
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
   }
   
+  /* Adjust card flip container for mobile */
+  .card-flip-container {
+    width: 91px; /* 70px * 1.3 */
+    height: 127px; /* 98px * 1.3 */
+  }
+  
   .mystery-card {
-    width: 80px;
-    height: 112px;
+    width: 70px;
+    height: 98px;
   }
   
   .mystery-text {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
   
-  .click-to-continue {
+  .result-card-display {
+    width: 91px;
+    height: 127px;
+  }
+  
+  .result-card-display .card {
+    transform: scale(0.76); /* Scale down to fit mobile */
+  }
+  
+  .flavor-text-box {
+    bottom: 15%;
+    padding: 0.75rem 1rem;
+    max-width: 300px;
+  }
+  
+  .typed-flavor-text {
+    font-size: 0.875rem;
+  }
+  
+  .fusion-button {
+    padding: 0.75rem 1.5rem;
     font-size: 1rem;
   }
 }
