@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Fusion.css';
 import Card from '../Card';
 import { canFuseCards, generateFusedCard, calculateFusionCost, FUSION_SUITS } from '../../utils/fusionCards';
+import { breedCreatures } from '../../utils/creatureAPI';
 
 const Fusion = ({ collection, fuseCards, pp }) => {
   const [selectedCard1, setSelectedCard1] = useState(null);
@@ -11,19 +12,32 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   const [error, setError] = useState('');
   
   const cards = Object.values(collection);
-  const [showTarot, setShowTarot] = useState(true);
+  const [showCreatures, setShowCreatures] = useState(true);
   
-  // Filter cards based on toggle and fusion compatibility
-  let availableCards = showTarot ? cards : cards.filter(card => ['fire', 'earth', 'water', 'air'].includes(card.suit));
+  // For creatures, show all Gen1 creatures; for old cards, use old logic
+  let availableCards = cards.filter(card => {
+    if (showCreatures) {
+      // Show only Gen1 creatures
+      return card.generation === 'Gen1';
+    } else {
+      // Old logic for elemental cards
+      return ['fire', 'earth', 'water', 'air'].includes(card.suit);
+    }
+  });
   
-  // Further filter by fusion compatibility if a card is selected
+  // Further filter if a card is selected
   if (selectedCard1 || selectedCard2) {
     const referenceCard = selectedCard1 || selectedCard2;
     availableCards = availableCards.filter(card => {
       // Don't show the already selected cards
       if (card.id === selectedCard1?.id || card.id === selectedCard2?.id) return false;
       
-      // Check if this card can fuse with the reference card
+      // For creatures, all Gen1 can fuse with all other Gen1
+      if (referenceCard.generation === 'Gen1' && card.generation === 'Gen1') {
+        return true;
+      }
+      
+      // For old cards, check if this card can fuse with the reference card
       return canFuseCards(referenceCard, card);
     });
   }
@@ -48,16 +62,33 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   // Calculate preview card without setting state during render
   let previewCard = null;
   let cannotFuse = false;
+  let isCreatureFusion = false;
   
   if (selectedCard1 && selectedCard2) {
-    if (canFuseCards(selectedCard1, selectedCard2)) {
+    // Check if both are Gen1 creatures
+    if (selectedCard1.generation === 'Gen1' && selectedCard2.generation === 'Gen1') {
+      isCreatureFusion = true;
+      // For creatures, we'll show a placeholder preview
+      previewCard = {
+        id: 'preview',
+        name: '???',
+        ppValue: (selectedCard1.ppValue + selectedCard2.ppValue) / 2,
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 100,
+        arcana: 'creature',
+        generation: 'Gen2',
+        rarity: 'uncommon'
+      };
+    } else if (canFuseCards(selectedCard1, selectedCard2)) {
       previewCard = generateFusedCard(selectedCard1, selectedCard2);
     } else {
       cannotFuse = true;
     }
   }
   
-  const fusionCost = selectedCard1 && selectedCard2 ? calculateFusionCost(selectedCard1, selectedCard2) : 0;
+  const fusionCost = selectedCard1 && selectedCard2 ? 
+    (isCreatureFusion ? 100 : calculateFusionCost(selectedCard1, selectedCard2)) : 0;
   const canAfford = pp >= fusionCost;
   
   // Set error in useEffect to avoid state updates during render
@@ -76,21 +107,37 @@ const Fusion = ({ collection, fuseCards, pp }) => {
     setError('');
     
     // Start fusion animation
-    setTimeout(() => {
-      const result = fuseCards(selectedCard1.id, selectedCard2.id);
-      
-      if (result.success) {
-        setFusionResult(result.fusedCard);
-        setSelectedCard1(null);
-        setSelectedCard2(null);
+    setTimeout(async () => {
+      try {
+        let result;
         
-        // Clear result after showing
-        setTimeout(() => {
-          setFusionResult(null);
+        if (isCreatureFusion) {
+          // Use creature breeding API
+          const bredCreature = await breedCreatures(selectedCard1.id, selectedCard2.id);
+          // Call the game's fuseCards to handle inventory management
+          result = fuseCards(selectedCard1.id, selectedCard2.id, bredCreature);
+        } else {
+          // Use old fusion logic
+          result = fuseCards(selectedCard1.id, selectedCard2.id);
+        }
+        
+        if (result.success) {
+          setFusionResult(result.fusedCard);
+          setSelectedCard1(null);
+          setSelectedCard2(null);
+          
+          // Clear result after showing
+          setTimeout(() => {
+            setFusionResult(null);
+            setIsAnimating(false);
+          }, 3000);
+        } else {
+          setError(result.message);
           setIsAnimating(false);
-        }, 3000);
-      } else {
-        setError(result.message);
+        }
+      } catch (error) {
+        console.error('Fusion error:', error);
+        setError('Failed to breed creatures. Please try again.');
         setIsAnimating(false);
       }
     }, 1500);
@@ -104,8 +151,12 @@ const Fusion = ({ collection, fuseCards, pp }) => {
   return (
     <div className="fusion-page">
       <div className="fusion-header">
-        <h1>Card Fusion Lab</h1>
-        <p className="fusion-subtitle">Combine two cards of the same rank to create powerful hybrids</p>
+        <h1>Creature Breeding Lab</h1>
+        <p className="fusion-subtitle">
+          {showCreatures ? 
+            "Breed two Gen1 creatures to create new Gen2 hybrids" : 
+            "Combine two cards of the same rank to create powerful hybrids"}
+        </p>
       </div>
       
       <div className="fusion-workspace">
@@ -144,7 +195,9 @@ const Fusion = ({ collection, fuseCards, pp }) => {
             {fusionResult ? (
               <div className="fusion-success">
                 <Card card={fusionResult} />
-                <div className="success-message">Fusion Complete!</div>
+                <div className="success-message">
+                  {fusionResult?.generation === 'Gen2' ? 'Breeding Complete!' : 'Fusion Complete!'}
+                </div>
               </div>
             ) : previewCard ? (
               <div className="preview-card">
@@ -192,7 +245,8 @@ const Fusion = ({ collection, fuseCards, pp }) => {
           onClick={handleFusion}
           disabled={!previewCard || !canAfford || isAnimating}
         >
-          {isAnimating ? 'Fusing...' : 'Fuse Cards'}
+          {isAnimating ? (isCreatureFusion ? 'Breeding...' : 'Fusing...') : 
+           (isCreatureFusion ? 'Breed Creatures' : 'Fuse Cards')}
         </button>
       </div>
       
@@ -206,18 +260,18 @@ const Fusion = ({ collection, fuseCards, pp }) => {
           </h2>
           <div className="filter-toggle">
             <button 
-              className={`toggle-btn ${!showTarot ? 'active' : ''}`}
-              onClick={() => setShowTarot(false)}
+              className={`toggle-btn ${showCreatures ? 'active' : ''}`}
+              onClick={() => setShowCreatures(true)}
               disabled={selectedCard1 || selectedCard2}
             >
-              Elemental Only
+              Creatures
             </button>
             <button 
-              className={`toggle-btn ${showTarot ? 'active' : ''}`}
-              onClick={() => setShowTarot(true)}
+              className={`toggle-btn ${!showCreatures ? 'active' : ''}`}
+              onClick={() => setShowCreatures(false)}
               disabled={selectedCard1 || selectedCard2}
             >
-              All Cards
+              Elemental Cards
             </button>
           </div>
         </div>
@@ -225,9 +279,9 @@ const Fusion = ({ collection, fuseCards, pp }) => {
           {availableCards.length === 0 ? (
             <div className="no-cards-message">
               {selectedCard1 || selectedCard2 ? (
-                <p>No cards can be fused with the selected card. Try selecting a different card.</p>
+                <p>No compatible cards found. {showCreatures ? 'Select another Gen1 creature.' : 'Try selecting a different card.'}</p>
               ) : (
-                <p>No cards available.</p>
+                <p>No {showCreatures ? 'Gen1 creatures' : 'cards'} available.</p>
               )}
             </div>
           ) : (

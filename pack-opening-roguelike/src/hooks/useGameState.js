@@ -385,22 +385,23 @@ export const useGameState = () => {
     }
   };
   
-  const fuseCards = (card1Id, card2Id) => {
+  const fuseCards = (card1Id, card2Id, preGeneratedCard = null) => {
     const card1 = collection[card1Id];
     const card2 = collection[card2Id];
     
     if (!card1 || !card2) return { success: false, message: 'Cards not found' };
     
     // Check if player has enough PP
-    const cost = calculateFusionCost(card1, card2);
+    const cost = (card1.generation === 'Gen1' && card2.generation === 'Gen1') ? 
+      100 : calculateFusionCost(card1, card2);
     if (pp < cost) return { success: false, message: 'Not enough PP' };
     
-    // Generate fused card
-    const fusedCard = generateFusedCard(card1, card2);
+    // Use pre-generated card (for creatures) or generate fused card
+    const fusedCard = preGeneratedCard || generateFusedCard(card1, card2);
     if (!fusedCard) return { success: false, message: 'Cards cannot be fused' };
     
-    // Check if this fusion already exists
-    if (fusedCards[fusedCard.id] || collection[fusedCard.id]) {
+    // Check if this fusion already exists (skip for creatures as they can have duplicates)
+    if (!preGeneratedCard && (fusedCards[fusedCard.id] || collection[fusedCard.id])) {
       return { success: false, message: 'This fusion already exists' };
     }
     
