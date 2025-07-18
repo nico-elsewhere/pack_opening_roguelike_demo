@@ -184,6 +184,49 @@
   opacity: 1;
 }
 
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .card {
+    width: 70px;
+    height: 98px;
+  }
+  
+  .card-value {
+    font-size: 1.75rem;
+  }
+  
+  .card-suit {
+    font-size: 1.5rem;
+  }
+  
+  .card-name {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.3rem;
+  }
+  
+  .card-pp-value {
+    font-size: 0.875rem;
+  }
+  
+  .rarity-badge {
+    font-size: 0.5rem;
+    padding: 0.1rem 0.3rem;
+    top: 3px;
+    right: 3px;
+  }
+  
+  .card-special-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+  
+  .card-special-text {
+    font-size: 0.6rem;
+    margin-top: 0.25rem;
+  }
+}
+
 .card-container {
   display: flex;
   flex-direction: column;

@@ -28,35 +28,7 @@ const UnifiedPackOpening = ({
   const [scoringIndex, setScoringIndex] = useState(-1);
   const [floatingTexts, setFloatingTexts] = useState([]);
   const [runningTotal, setRunningTotal] = useState(0);
-  const [cardPositions, setCardPositions] = useState([]);
   const containerRef = useRef(null);
-
-  // Calculate card grid positions
-  useEffect(() => {
-    if (openedCards.length > 0 && containerRef.current && phase === 'scoring') {
-      const container = containerRef.current.getBoundingClientRect();
-      const cardsPerRow = 5;
-      const cardWidth = 120;
-      const cardHeight = 168;
-      const gap = 16;
-      
-      const positions = openedCards.map((_, index) => {
-        const row = Math.floor(index / cardsPerRow);
-        const col = index % cardsPerRow;
-        
-        const gridWidth = cardsPerRow * cardWidth + (cardsPerRow - 1) * gap;
-        const startX = container.left + container.width / 2 - gridWidth / 2;
-        const startY = container.top + 150; // Leave space for header
-        
-        return {
-          x: col * (cardWidth + gap) + cardWidth / 2,
-          y: 150 + row * (cardHeight + gap) + cardHeight / 2
-        };
-      });
-      
-      setCardPositions(positions);
-    }
-  }, [openedCards, phase]);
 
   const handleOpenClick = () => {
     if (stagedPacks.length === 0 || isOpening) return;
@@ -69,11 +41,11 @@ const UnifiedPackOpening = ({
 
   // Watch for openedCards to be populated
   useEffect(() => {
-    if (openedCards.length > 0 && phase === 'scoring' && cardPositions.length > 0) {
-      // Start scoring when cards are available and positions are calculated
+    if (openedCards.length > 0 && phase === 'scoring') {
+      // Start scoring when cards are available
       startScoringSequence();
     }
-  }, [openedCards, phase, cardPositions]);
+  }, [openedCards, phase]);
 
   const startScoringSequence = () => {
     let currentIndex = 0;
@@ -86,21 +58,15 @@ const UnifiedPackOpening = ({
         setRunningTotal(total);
         
         // Add floating text
-        const pos = cardPositions[currentIndex];
-        if (pos) {
-          const newFloatingText = {
-            id: `float-${Date.now()}-${currentIndex}`,
-            text: `+${currentPackPPValues[currentIndex]} PP`,
-            x: pos.x,
-            y: pos.y,
-            color: currentPackPPValues[currentIndex] > 50 ? '#f59e0b' : '#fbbf24',
-            persistent: true
-          };
-          
-          setFloatingTexts(prev => [...prev, newFloatingText]);
-        } else {
-          console.warn(`No position found for card ${currentIndex}, cardPositions:`, cardPositions);
-        }
+        const newFloatingText = {
+          id: `float-${Date.now()}-${currentIndex}`,
+          text: `+${currentPackPPValues[currentIndex]}`,
+          cardIndex: currentIndex,
+          color: currentPackPPValues[currentIndex] > 50 ? '#f59e0b' : '#fbbf24',
+          persistent: true
+        };
+        
+        setFloatingTexts(prev => [...prev, newFloatingText]);
         
         currentIndex++;
         setTimeout(scoreNext, 100);
@@ -149,16 +115,16 @@ const UnifiedPackOpening = ({
   }, [openedCards.length, phase]);
 
   return (
-    <div className="unified-pack-opening" ref={containerRef}>
+    <div className={`unified-pack-opening ${phase}`} ref={containerRef}>
       {/* Header */}
-      <div className="opening-header">
-        {phase === 'scoring' || phase === 'complete' ? (
+      {(phase === 'scoring' || phase === 'complete') && (
+        <div className="opening-header">
           <div className="score-display">
             <span className="score-label">Total:</span>
             <span className="score-value">+{runningTotal} PP</span>
           </div>
-        ) : null}
-      </div>
+        </div>
+      )}
 
       {/* Open Button */}
       {phase === 'ready' && stagedPacks.length > 0 && (
@@ -214,7 +180,21 @@ const UnifiedPackOpening = ({
               className={`card-slot-unified ${index <= scoringIndex ? 'revealed' : ''} ${index === scoringIndex ? 'scoring' : ''}`}
             >
               {index <= scoringIndex ? (
-                <Card card={card} showTooltip={false} />
+                <>
+                  <Card card={card} showTooltip={false} />
+                  {floatingTexts.find(text => text.cardIndex === index) && (
+                    <div className="card-floating-text">
+                      <FloatingText
+                        text={floatingTexts.find(text => text.cardIndex === index).text}
+                        x={0}
+                        y={0}
+                        color={floatingTexts.find(text => text.cardIndex === index).color}
+                        persistent={true}
+                        relative={true}
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="card-placeholder"></div>
               )}
@@ -231,18 +211,6 @@ const UnifiedPackOpening = ({
       )}
 
 
-      {/* Floating Texts */}
-      {floatingTexts.map(text => (
-        <FloatingText
-          key={text.id}
-          text={text.text}
-          x={text.x}
-          y={text.y}
-          color={text.color}
-          persistent={text.persistent}
-          onComplete={() => handleFloatingTextComplete(text.id)}
-        />
-      ))}
     </div>
   );
 };

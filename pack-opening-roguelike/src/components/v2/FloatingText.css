@@ -1,5 +1,5 @@
 .floating-text {
-  position: absolute;
+  position: fixed;
   font-size: 1.5rem;
   font-weight: 700;
   text-shadow: 
@@ -8,6 +8,12 @@
   z-index: 1000;
   pointer-events: none;
   transform-origin: center bottom;
+}
+
+.floating-text.relative {
+  position: absolute;
+  left: 50%;
+  top: 50%;
 }
 
 .floating-text:not(.persistent) {
@@ -23,11 +29,19 @@
   opacity: 1;
 }
 
+.floating-text.relative.persistent.settled {
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 1;
+}
+
 /* Mobile adjustments for floating text */
 @media (max-width: 768px) {
+  .floating-text {
+    font-size: 0.875rem;
+  }
+  
   .floating-text.persistent.settled {
-    transform: translate(-50%, -130%) scale(0.7);
-    font-size: 1rem;
+    transform: translate(-50%, -100%) scale(0.8);
   }
   
   .floating-text.persistent.floating {
@@ -49,7 +63,7 @@
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -130%) scale(0.7);
+    transform: translate(-50%, -100%) scale(0.8);
     opacity: 1;
   }
 }
@@ -88,6 +102,29 @@
   }
   100% {
     transform: translate(-50%, -220%) scale(0.85);
+    opacity: 1;
+  }
+}
+
+.floating-text.relative.persistent.floating {
+  animation: floatUpRelative 0.8s ease-out forwards;
+}
+
+@keyframes floatUpRelative {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -60%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.85);
     opacity: 1;
   }
 }

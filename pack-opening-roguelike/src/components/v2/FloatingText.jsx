@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './FloatingText.css';
 
-const FloatingText = ({ text, x, y, color = '#fbbf24', onComplete, persistent = false }) => {
+const FloatingText = ({ text, x, y, color = '#fbbf24', onComplete, persistent = false, relative = false }) => {
   const [animationPhase, setAnimationPhase] = useState('floating');
 
   useEffect(() => {
@@ -22,14 +22,18 @@ const FloatingText = ({ text, x, y, color = '#fbbf24', onComplete, persistent = 
     }
   }, [onComplete, persistent]);
 
+  const style = relative ? 
+    { color: color } : 
+    {
+      left: `${x}px`,
+      top: `${y}px`,
+      color: color
+    };
+
   return (
     <div 
-      className={`floating-text ${persistent ? 'persistent' : ''} ${animationPhase}`}
-      style={{
-        left: `${x}px`,
-        top: `${y}px`,
-        color: color
-      }}
+      className={`floating-text ${persistent ? 'persistent' : ''} ${relative ? 'relative' : ''} ${animationPhase}`}
+      style={style}
     >
       {text}
     </div>

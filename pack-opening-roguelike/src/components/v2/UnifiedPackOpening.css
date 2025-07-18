@@ -287,6 +287,14 @@
   transition: all 0.3s ease;
 }
 
+.card-floating-text {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
 .card-slot-unified.revealed {
   transform: scale(1);
   opacity: 1;
@@ -347,33 +355,56 @@
   box-shadow: 0 6px 30px rgba(168, 85, 247, 0.4);
 }
 
+/* Hide pack sections during scoring */
+.unified-pack-opening.scoring .packs-container,
+.unified-pack-opening.scoring .open-packs-button {
+  display: none;
+}
+
+.unified-pack-opening.complete .packs-container,
+.unified-pack-opening.complete .open-packs-button {
+  display: none;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .unified-pack-opening {
     padding: 0.5rem;
-    height: calc(100vh - 200px); /* Account for pack toolbar */
+    padding-top: 0.25rem; /* Even less top padding */
+    height: calc(100vh - 180px); /* Account for pack toolbar */
     overflow-y: auto;
-    padding-bottom: 1rem; /* Extra bottom padding */
+    padding-bottom: 1rem; /* Reduced since purple div is now hidden */
   }
   
   .opening-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    justify-content: center;
   }
   
   .opening-title {
     font-size: 1.5rem;
   }
   
+  .score-display {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .score-value {
+    font-size: 1.125rem;
+  }
+  
   .cards-grid-unified {
-    grid-template-columns: repeat(3, 80px);
-    gap: 32px 10px; /* Even larger vertical gap, smaller horizontal */
-    margin-top: 1rem;
-    margin-bottom: 4rem; /* Larger bottom margin to prevent overlap */
+    grid-template-columns: repeat(3, 70px);
+    gap: 40px 8px; /* Much larger vertical gap for text */
+    margin-top: 1.5rem; /* More space below total score */
+    margin-bottom: 2rem;
+    justify-content: center;
   }
   
   .card-slot-unified {
-    width: 80px;
-    height: 112px; /* Proportionally smaller */
+    width: 70px;
+    height: 98px; /* Even smaller proportionally */
   }
   
   .packs-container {
