@@ -57,6 +57,27 @@ const UnifiedPackOpening = ({
         total += currentPackPPValues[currentIndex];
         setRunningTotal(total);
         
+        // Scroll to current card on mobile
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          setTimeout(() => {
+            const cardElement = document.querySelector(`[data-card-index="${currentIndex}"]`);
+            if (cardElement && containerRef.current) {
+              const containerRect = containerRef.current.getBoundingClientRect();
+              const cardRect = cardElement.getBoundingClientRect();
+              const currentScroll = containerRef.current.scrollTop;
+              
+              // Calculate the target scroll position to center the card
+              const targetScroll = currentScroll + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2);
+              
+              containerRef.current.scrollTo({
+                top: Math.max(0, targetScroll),
+                behavior: 'smooth'
+              });
+            }
+          }, 50);
+        }
+        
         // Add floating text
         const newFloatingText = {
           id: `float-${Date.now()}-${currentIndex}`,
@@ -176,6 +197,7 @@ const UnifiedPackOpening = ({
             <div 
               key={`card-${index}`}
               className={`card-slot-unified ${index <= scoringIndex ? 'revealed' : ''} ${index === scoringIndex ? 'scoring' : ''}`}
+              data-card-index={index}
             >
               {index <= scoringIndex ? (
                 <>
@@ -204,7 +226,8 @@ const UnifiedPackOpening = ({
       {/* Continue Button */}
       {phase === 'complete' && (
         <button className="continue-button-unified" onClick={handleContinue}>
-          Continue
+          <span className="continue-desktop">Continue</span>
+          <span className="continue-mobile">→</span>
         </button>
       )}
 

@@ -373,14 +373,36 @@
   display: none;
 }
 
+/* Button Text Visibility */
+.continue-mobile {
+  display: none;
+}
+
+.continue-desktop {
+  display: inline;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .continue-mobile {
+    display: inline;
+  }
+  
+  .continue-desktop {
+    display: none;
+  }
   .unified-pack-opening {
     padding: 0.5rem;
     padding-top: 0.25rem; /* Even less top padding */
     height: calc(100vh - 180px); /* Account for pack toolbar */
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 1rem; /* Reduced since purple div is now hidden */
+  }
+  
+  .unified-pack-opening.scoring,
+  .unified-pack-opening.complete {
+    padding-bottom: 0; /* Remove bottom padding when cards are showing */
   }
   
   .opening-header {
@@ -406,6 +428,7 @@
     gap: 40px 8px; /* Much larger vertical gap for text */
     margin-top: 1.5rem; /* More space below total score */
     margin-bottom: 2rem;
+    padding-bottom: 200px; /* Add space for continue button */
     justify-content: center;
   }
   
@@ -415,13 +438,30 @@
   }
   
   .packs-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-top: 1rem;
+    justify-content: center;
+    max-width: 100%;
   }
   
   .pack-slot-unified {
-    width: 100px;
-    height: 150px;
+    width: 90px;
+    height: 130px;
+  }
+  
+  .pack-content-unified {
+    height: 110px;
+  }
+  
+  .pack-icon-unified {
+    font-size: 2.5rem;
+  }
+  
+  .pack-label-unified {
+    font-size: 0.75rem;
+    bottom: 15px;
   }
   
   .open-packs-button {
@@ -431,8 +471,19 @@
   }
   
   .continue-button-unified {
-    bottom: 180px; /* Above pack selection bar on mobile */
-    padding: 0.875rem 1.75rem;
-    font-size: 1rem;
+    bottom: auto;
+    top: 50%;
+    left: auto;
+    right: 15px;
+    transform: translateY(-50%);
+    padding: 0.75rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+  }
+  
+  .continue-button-unified:hover {
+    transform: translateY(-50%) translateX(-2px);
   }
 }
