@@ -424,17 +424,23 @@
   }
   
   .cards-grid-unified {
-    grid-template-columns: repeat(3, 70px);
-    gap: 40px 8px; /* Much larger vertical gap for text */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 70px 15px; /* Reduced horizontal gap */
     margin-top: 1.5rem; /* More space below total score */
     margin-bottom: 2rem;
-    padding-bottom: 200px; /* Add space for continue button */
+    padding: 0 0.75rem 200px; /* Reduced horizontal padding */
     justify-content: center;
+    max-width: 100%;
   }
   
   .card-slot-unified {
     width: 70px;
     height: 98px; /* Even smaller proportionally */
+  }
+  
+  .card-floating-text {
+    left: 35px; /* Half of card width for perfect center */
+    transform: translateX(-50%);
   }
   
   .packs-container {
