@@ -90,12 +90,12 @@ const UnifiedPackOpening = ({
         setFloatingTexts(prev => [...prev, newFloatingText]);
         
         currentIndex++;
-        setTimeout(scoreNext, 100);
+        setTimeout(scoreNext, 400);
       } else {
         // Scoring complete
         setTimeout(() => {
           setPhase('complete');
-        }, 500);
+        }, 800);
       }
     };
     
