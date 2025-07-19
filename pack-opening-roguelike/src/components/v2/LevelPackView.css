@@ -1,0 +1,261 @@
+.level-pack-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.level-pack-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #CBD5E1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.back-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.level-pack-header h2 {
+  font-size: 2.5rem;
+  color: #10B981;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.level-pack-subtitle {
+  font-size: 1.1rem;
+  color: #CBD5E1;
+  font-style: italic;
+}
+
+.level-cards-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.level-card-wrapper {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: cardFloat 0.6s ease-out both;
+}
+
+@keyframes cardFloat {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.level-card-wrapper:hover:not(.selected) {
+  transform: translateY(-15px) scale(1.05);
+}
+
+.level-card-hover {
+  position: relative;
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.current-level {
+  font-size: 1.1rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.level-arrow {
+  color: #10B981;
+  font-size: 1.25rem;
+}
+
+.next-level {
+  font-size: 1.1rem;
+  color: #10B981;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.pp-increase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 1rem;
+}
+
+.pp-plus {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FBBF24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+}
+
+.pp-label {
+  font-size: 0.75rem;
+  color: #FDE68A;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Selection and animation */
+.level-card-wrapper.selected {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+.level-card-wrapper.fade-out {
+  opacity: 0.3;
+  transform: scale(0.9);
+  filter: blur(2px);
+}
+
+.level-up-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.level-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.8) 0%, transparent 70%);
+  animation: burstExpand 1s ease-out;
+}
+
+@keyframes burstExpand {
+  from {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  to {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
+}
+
+.level-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 1);
+  animation: levelTextPop 0.8s ease-out;
+  white-space: nowrap;
+}
+
+@keyframes levelTextPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.no-cards-message {
+  text-align: center;
+  color: #94A3B8;
+}
+
+.no-cards-message button {
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.no-cards-message button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .level-cards-container {
+    gap: 1rem;
+  }
+
+  .level-card-wrapper .card {
+    width: 90px !important;
+    height: 126px !important;
+  }
+
+  .level-info {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .pp-increase {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .pp-plus {
+    font-size: 1rem;
+  }
+}

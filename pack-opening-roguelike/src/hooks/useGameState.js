@@ -553,6 +553,20 @@ export const useGameState = () => {
       setPacksPerRoom(5 + archetype.effect.value);
     }
     
+    // Initialize collection with all Gen1 cards for roguelike mode
+    const newCollection = {};
+    deckTemplate.forEach(card => {
+      if (card.generation === 'Gen1') {
+        newCollection[card.id] = {
+          ...card,
+          level: 1,
+          xp: 0,
+          xpToNextLevel: 100
+        };
+      }
+    });
+    setCollection(newCollection);
+    
     // Initialize first dream
     setCurrentDream(1);
     setDreamScore(0);

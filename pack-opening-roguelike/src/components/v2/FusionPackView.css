@@ -1,0 +1,210 @@
+.fusion-pack-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.fusion-pack-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+
+.fusion-pack-header h2 {
+  font-size: 2.5rem;
+  color: #8B5CF6;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.fusion-pack-subtitle {
+  font-size: 1.1rem;
+  color: #CBD5E1;
+  font-style: italic;
+}
+
+.fusion-area {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.fusion-cards-container {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.fusion-card-wrapper {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: cardFloat 0.6s ease-out both;
+}
+
+.fusion-card-wrapper:hover:not(.selected) {
+  transform: translateY(-10px);
+}
+
+.fusion-card-wrapper.selected {
+  transform: translateY(-15px) scale(1.05);
+  filter: drop-shadow(0 10px 30px rgba(139, 92, 246, 0.5));
+}
+
+.fusion-card-wrapper.animating {
+  pointer-events: none;
+}
+
+.fusion-card-wrapper.animating.selected {
+  animation: moveToCenter 1s ease-in-out forwards;
+}
+
+@keyframes moveToCenter {
+  to {
+    transform: translateX(calc(50vw - 50% - 60px)) translateY(100px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.selection-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 30px;
+  height: 30px;
+  background: #8B5CF6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+  z-index: 10;
+}
+
+.fusion-preview {
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.fusion-equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mini-card {
+  transform: scale(0.7);
+  transition: all 0.3s ease;
+}
+
+.mini-card.preview.glowing {
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 40px rgba(139, 92, 246, 1));
+  }
+}
+
+.fusion-plus, .fusion-equals {
+  font-size: 2rem;
+  color: #8B5CF6;
+  font-weight: 300;
+}
+
+.fuse-button {
+  display: block;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.fuse-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.fuse-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Import fusion animations from main Fusion component */
+@import './Fusion.css';
+
+/* Fusion result styling specific to pack view */
+.fusion-pack-view .fusion-result {
+  display: none; /* Hide the old result display since we use the overlay */
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .fusion-cards-container {
+    gap: 0.75rem;
+  }
+
+  .fusion-card-wrapper .card {
+    width: 90px !important;
+    height: 126px !important;
+  }
+
+  .mini-card {
+    transform: scale(0.5);
+  }
+
+  .fusion-equation {
+    gap: 0.5rem;
+  }
+
+  .fusion-plus, .fusion-equals {
+    font-size: 1.5rem;
+  }
+}
+
+.no-cards-message {
+  text-align: center;
+  color: #94A3B8;
+  padding: 2rem;
+}
+
+.no-cards-message button {
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.no-cards-message button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

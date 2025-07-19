@@ -30,7 +30,8 @@ const RoguelikeBoard = ({
   setDreamScore,
   setGameMode,
   applyReward,
-  setCollection
+  setCollection,
+  fuseCards
 }) => {
   const [boardSlots, setBoardSlots] = useState([null, null, null, null, null]);
   const [isScoring, setIsScoring] = useState(false);
@@ -255,18 +256,21 @@ const RoguelikeBoard = ({
     if (rewardData.type === 'memento') {
       // Add memento to collection
       if (applyReward) {
-        applyReward(rewardData);
+        applyReward({ type: 'memento', reward: rewardData.memento });
       }
-    } else if (rewardData.type === 'upgrade') {
-      // Upgrade selected cards
+    } else if (rewardData.type === 'level') {
+      // Level up selected card
       const newCollection = { ...collection };
-      rewardData.cards.forEach(card => {
-        if (newCollection[card.id]) {
-          newCollection[card.id].level = (newCollection[card.id].level || 1) + 1;
-          newCollection[card.id].xpToNextLevel = newCollection[card.id].level * 100;
-        }
-      });
+      const cardId = rewardData.card.id;
+      if (newCollection[cardId]) {
+        newCollection[cardId].level = rewardData.newLevel;
+        newCollection[cardId].xpToNextLevel = rewardData.newLevel * 100;
+        newCollection[cardId].xp = 0;
+      }
       setCollection(newCollection);
+    } else if (rewardData.type === 'fusion') {
+      // Fusion is already handled by fuseCards in FusionPackView
+      // Just need to ensure the collection is updated
     }
   };
 
@@ -310,6 +314,14 @@ const RoguelikeBoard = ({
 
       {/* Main Game Area */}
       <div className="tcg-game-area">
+        {/* Archetype Display */}
+        {selectedArchetype && (
+          <div className="archetype-display-tcg">
+            <span className="archetype-icon">{selectedArchetype.icon}</span>
+            <span className="archetype-name">{selectedArchetype.name}</span>
+          </div>
+        )}
+        
         {isScoring && (
           <div className="scoring-overlay" />
         )}
@@ -432,14 +444,6 @@ const RoguelikeBoard = ({
         )}
       </div>
 
-      {/* Archetype Display */}
-      {selectedArchetype && (
-        <div className="archetype-display-tcg">
-          <span className="archetype-icon">{selectedArchetype.icon}</span>
-          <span className="archetype-name">{selectedArchetype.name}</span>
-        </div>
-      )}
-
       {/* Dream Reward Screen */}
       {showRewards && (
         <DreamReward
@@ -450,6 +454,8 @@ const RoguelikeBoard = ({
           archetypeMementos={archetypeMementos}
           onRewardSelected={handleRewardSelected}
           onContinue={handleRewardContinue}
+          fuseCards={fuseCards}
+          pp={pp}
         />
       )}
     </div>

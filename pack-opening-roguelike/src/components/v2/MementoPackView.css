@@ -1,0 +1,240 @@
+.memento-pack-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.memento-pack-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+
+.memento-pack-header h2 {
+  font-size: 2.5rem;
+  color: #F59E0B;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.memento-pack-subtitle {
+  font-size: 1.1rem;
+  color: #CBD5E1;
+  font-style: italic;
+}
+
+.memento-cards-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1200px;
+}
+
+.memento-card {
+  position: relative;
+  width: 200px;
+  height: 280px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  animation: mementoFloat 0.6s ease-out both;
+}
+
+@keyframes mementoFloat {
+  from {
+    opacity: 0;
+    transform: translateY(50px) rotateY(-90deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateY(0);
+  }
+}
+
+.memento-card:hover:not(.selected) {
+  transform: translateY(-10px) scale(1.05);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 15px 40px rgba(245, 158, 11, 0.3);
+}
+
+.memento-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.memento-card:hover .memento-glow {
+  opacity: 1;
+}
+
+.memento-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.5));
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.memento-name {
+  font-size: 1.25rem;
+  color: #FDE68A;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.memento-description {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+/* Selection effects */
+.memento-card.selected {
+  transform: scale(1.1);
+  border-color: #F59E0B;
+  box-shadow: 0 0 50px rgba(245, 158, 11, 0.8);
+  z-index: 10;
+}
+
+.memento-card.fade-out {
+  opacity: 0.3;
+  transform: scale(0.9);
+  filter: blur(2px);
+}
+
+.memento-select-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.select-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.8) 0%, transparent 70%);
+  animation: selectBurst 1.5s ease-out;
+}
+
+@keyframes selectBurst {
+  from {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  to {
+    width: 400px;
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+.select-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 1);
+  animation: selectTextPop 1s ease-out;
+  white-space: nowrap;
+  letter-spacing: 3px;
+}
+
+@keyframes selectTextPop {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.no-mementos-message {
+  text-align: center;
+  color: #94A3B8;
+}
+
+.no-mementos-message button {
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.no-mementos-message button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .memento-cards-container {
+    gap: 1rem;
+  }
+
+  .memento-card {
+    width: 160px;
+    height: 240px;
+    padding: 1rem;
+  }
+
+  .memento-icon {
+    font-size: 2.5rem;
+  }
+
+  .memento-name {
+    font-size: 1rem;
+  }
+
+  .memento-description {
+    font-size: 0.8rem;
+  }
+}
