@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import './UnifiedPackOpening.css';
 import Card from '../Card';
 import FloatingText from './FloatingText';
+import AnimatedScore from './AnimatedScore';
+import SequentialFloatingText from './SequentialFloatingText';
+import { calculateDynamicScores, generateScoringAnimations } from '../../utils/dynamicScoring';
 
 const UnifiedPackOpening = ({
   stagedPacks,
@@ -13,7 +16,9 @@ const UnifiedPackOpening = ({
   isOpening,
   onComplete,
   totalPP,
-  onPhaseChange
+  onPhaseChange,
+  collection,
+  equippedRunes
 }) => {
   const [phase, setPhase] = useState('ready'); // ready, animating, scoring, complete
   
@@ -27,7 +32,10 @@ const UnifiedPackOpening = ({
   const [packAnimating, setPackAnimating] = useState(false);
   const [scoringIndex, setScoringIndex] = useState(-1);
   const [floatingTexts, setFloatingTexts] = useState([]);
+  const [sequentialAnimations, setSequentialAnimations] = useState({});
   const [runningTotal, setRunningTotal] = useState(0);
+  const [cardScores, setCardScores] = useState({});
+  const [revealedCards, setRevealedCards] = useState([]);
   const containerRef = useRef(null);
 
   const handleOpenClick = () => {
@@ -49,13 +57,105 @@ const UnifiedPackOpening = ({
 
   const startScoringSequence = () => {
     let currentIndex = 0;
-    let total = 0;
+    let currentlyRevealed = []; // Track revealed cards locally
+    
+    // Pre-calculate initial scores for all cards to avoid 0 display
+    const initialScores = {};
+    openedCards.forEach((card, idx) => {
+      const ppValue = card.ppValue || 10;
+      const level = card.level || 1;
+      const baseValue = ppValue * level;
+      initialScores[idx] = { base: baseValue, current: baseValue, passiveMultiplier: 1 };
+    });
+    setCardScores(initialScores);
     
     const scoreNext = () => {
       if (currentIndex < openedCards.length) {
+        console.log(`Scoring card ${currentIndex}: ${openedCards[currentIndex]?.name}`);
+        
+        // Add card to revealed cards
+        currentlyRevealed = [...currentlyRevealed, openedCards[currentIndex]];
+        setRevealedCards([...currentlyRevealed]); // Update state for React
+        
+        // Calculate dynamic scores for all revealed cards
+        const { scores, findNewEffects } = calculateDynamicScores(
+          currentlyRevealed, 
+          openedCards,
+          equippedRunes || [],
+          collection || {}
+        );
+        
+        console.log(`Dynamic scores calculated for ${currentIndex}:`, scores);
+        
+        // Get the current card's score (it's the last one since we just added it)
+        const currentCardScore = scores[scores.length - 1];
+        if (!currentCardScore) {
+          console.error('No score found for current card. Scores:', scores);
+          currentIndex++;
+          setTimeout(scoreNext, 100);
+          return;
+        }
+        const baseValue = currentCardScore.baseValue;
+        
+        
+        // Reveal the card
         setScoringIndex(currentIndex);
-        total += currentPackPPValues[currentIndex];
-        setRunningTotal(total);
+        
+        // Always update the score to include passive multiplier
+        const currentCard = openedCards[currentIndex];
+        setCardScores(prev => {
+          const newScores = {
+            ...prev,
+            [currentIndex]: { 
+              base: baseValue, 
+              current: currentCardScore.currentValue,
+              passiveMultiplier: currentCardScore.passiveMultiplier || 1
+            }
+          };
+          if (currentCard && currentCard.name === 'Fred') {
+            console.log(`Setting score for Fred ${currentIndex}: base=${baseValue}, current=${currentCardScore.currentValue}, multiplier=${currentCardScore.passiveMultiplier}`);
+          }
+          return newScores;
+        });
+        
+        // If this card has effects (e.g., Fred with multiplier from previous Freds)
+        if (currentCard && currentCard.name === 'Fred') {
+          console.log(`Fred ${currentIndex} animation check: passiveMultiplier=${currentCardScore.passiveMultiplier}, should animate=${currentCardScore.passiveMultiplier > 1}`);
+        }
+        if (currentCardScore.passiveMultiplier > 1) {
+          console.log(`Setting animation for card ${currentIndex} with multiplier ${currentCardScore.passiveMultiplier}`);
+          // Capture the current index value to avoid closure issues
+          const indexToAnimate = currentIndex;
+          const multiplierToShow = currentCardScore.passiveMultiplier;
+          
+          // Show the animation explaining why
+          setTimeout(() => {
+            const animations = [
+              {
+                type: 'ability',
+                text: 'Fredmaxxing!',
+                delay: 0,
+                duration: 1500
+              },
+              {
+                type: 'multiplier',
+                text: `×${multiplierToShow}`,
+                delay: 300,
+                duration: 1500
+              }
+            ];
+            
+            console.log(`Actually setting animations for card ${indexToAnimate}`);
+            setSequentialAnimations(prev => ({
+              ...prev,
+              [indexToAnimate]: animations
+            }));
+          }, 200);
+        }
+        
+        // Calculate total including this card
+        const currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
+        setRunningTotal(currentTotal);
         
         // Scroll to current card on mobile
         const isMobile = window.innerWidth <= 768;
@@ -67,7 +167,6 @@ const UnifiedPackOpening = ({
               const cardRect = cardElement.getBoundingClientRect();
               const currentScroll = containerRef.current.scrollTop;
               
-              // Calculate the target scroll position to center the card
               const targetScroll = currentScroll + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2);
               
               containerRef.current.scrollTo({
@@ -78,19 +177,9 @@ const UnifiedPackOpening = ({
           }, 50);
         }
         
-        // Add floating text
-        const newFloatingText = {
-          id: `float-${Date.now()}-${currentIndex}`,
-          text: `+${currentPackPPValues[currentIndex]}`,
-          cardIndex: currentIndex,
-          color: currentPackPPValues[currentIndex] > 50 ? '#f59e0b' : '#fbbf24',
-          persistent: true
-        };
-        
-        setFloatingTexts(prev => [...prev, newFloatingText]);
-        
+        // Move to next card
         currentIndex++;
-        setTimeout(scoreNext, 400);
+        setTimeout(scoreNext, 600);
       } else {
         // Scoring complete
         setTimeout(() => {
@@ -99,7 +188,10 @@ const UnifiedPackOpening = ({
       }
     };
     
-    scoreNext();
+    // Start scoring after a brief delay to ensure initial scores are set
+    setTimeout(() => {
+      scoreNext();
+    }, 100);
   };
 
 
@@ -114,7 +206,10 @@ const UnifiedPackOpening = ({
     setPackAnimating(false);
     setScoringIndex(-1);
     setFloatingTexts([]);
+    setSequentialAnimations({});
     setRunningTotal(0);
+    setCardScores({});
+    setRevealedCards([]);
     
     // Call parent completion handler
     onComplete();
@@ -129,7 +224,10 @@ const UnifiedPackOpening = ({
       setPackAnimating(false);
       setScoringIndex(-1);
       setFloatingTexts([]);
+      setSequentialAnimations({});
       setRunningTotal(0);
+      setCardScores({});
+      setRevealedCards([]);
       }
   }, [openedCards.length, phase]);
 
@@ -202,15 +300,24 @@ const UnifiedPackOpening = ({
               {index <= scoringIndex ? (
                 <>
                   <Card card={card} showTooltip={false} showLevel={true} alwaysShowLevel={true} />
-                  {floatingTexts.find(text => text.cardIndex === index) && (
-                    <div className="card-floating-text">
-                      <FloatingText
-                        text={floatingTexts.find(text => text.cardIndex === index).text}
-                        x={0}
-                        y={0}
-                        color={floatingTexts.find(text => text.cardIndex === index).color}
-                        persistent={true}
-                        relative={true}
+                  <div className="card-score-container">
+                    <AnimatedScore 
+                      value={cardScores[index]?.base || 0}
+                      targetValue={cardScores[index]?.current || 0}
+                    />
+                  </div>
+                  {sequentialAnimations[index] && (
+                    <div className="card-animation-container">
+                      <SequentialFloatingText
+                        animations={sequentialAnimations[index]}
+                        onComplete={() => {
+                          console.log(`Animation complete for card ${index}`);
+                          setSequentialAnimations(prev => {
+                            const newAnims = { ...prev };
+                            delete newAnims[index];
+                            return newAnims;
+                          });
+                        }}
                       />
                     </div>
                   )}

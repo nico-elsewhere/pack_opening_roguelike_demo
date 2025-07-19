@@ -14,7 +14,9 @@ const GameBoard = ({
   packSlots,
   currentPackPPValues,
   packTypes,
-  totalCardsOpened
+  totalCardsOpened,
+  collection,
+  equippedRunes
 }) => {
   const [isOpening, setIsOpening] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
@@ -96,6 +98,8 @@ const GameBoard = ({
         onComplete={handleComplete}
         totalPP={totalPP}
         onPhaseChange={handlePhaseChange}
+        collection={collection}
+        equippedRunes={equippedRunes}
       />
       
       <PackToolbar

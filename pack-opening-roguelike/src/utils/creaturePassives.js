@@ -5,26 +5,47 @@ export const CREATURE_PASSIVES = {
   // Fred and Fred-related creatures
   'Fred': {
     name: 'Fredmaxxing',
-    description: 'Multiplies score of all Fred and Fred descendants by the number of Freds in the pack',
+    description: 'Each Fred gets a multiplier equal to the number of Freds already revealed + 1',
     type: 'pack_multiplier',
     effect: (card, allCardsInPack, allCreatures) => {
-      // Count all Freds (including descendants) in the pack
-      const fredCount = allCardsInPack.filter(c => 
-        c.name === 'Fred' || 
-        isDescendantOf(c, 'Fred', allCreatures)
-      ).length;
-      
       // Check if this card is Fred or a Fred descendant
       const isFredRelated = card.name === 'Fred' || 
         isDescendantOf(card, 'Fred', allCreatures);
       
-      if (isFredRelated && fredCount > 0) {
+      if (!isFredRelated) return null;
+      
+      // Use the reveal index if provided (from dynamic scoring)
+      const thisCardIndex = card._revealIndex !== undefined ? card._revealIndex : 
+        allCardsInPack.findIndex(c => c === card);
+      
+      console.log(`Fred passive debug: card._revealIndex=${card._revealIndex}, allCardsInPack.length=${allCardsInPack.length}`);
+      
+      if (thisCardIndex === -1) {
+        return null;
+      }
+      
+      const previousCards = allCardsInPack.slice(0, thisCardIndex);
+      
+      // Count previous Freds
+      const previousFredCount = previousCards.filter(c => 
+        c.name === 'Fred' || 
+        isDescendantOf(c, 'Fred', allCreatures)
+      ).length;
+      
+      console.log(`Fred at index ${thisCardIndex}: previousCards=${previousCards.length}, previousFredCount=${previousFredCount}`);
+      
+      
+      // Always return a result for Fred, even if it's 1x
+      const multiplier = previousFredCount + 1;
+      
+      if (multiplier > 1) {
         return {
-          multiplier: fredCount,
-          message: `Fredmaxxing! ${fredCount}x multiplier`
+          multiplier: multiplier,
+          message: `Fredmaxxing! ${multiplier}x multiplier`
         };
       }
       
+      // First Fred gets 1x (no effect, but still valid)
       return null;
     }
   }

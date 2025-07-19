@@ -1,0 +1,17 @@
+.animated-score {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fbbf24;
+  transition: transform 0.2s ease;
+}
+
+.animated-score.animating {
+  transform: scale(1.1);
+  color: #f59e0b;
+}
+
+@media (max-width: 768px) {
+  .animated-score {
+    font-size: 12px;
+  }
+}
