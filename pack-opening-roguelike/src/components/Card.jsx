@@ -67,7 +67,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   return (
     <div className="card-container">
       <div 
-        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''} ${isFusedTarot ? 'fused-tarot' : ''} ${isCreature ? 'creature' : ''}`}
+        className={`card ${card.isRune ? 'rune' : ''} ${isEquipped ? 'equipped' : ''} ${isTarot ? 'tarot' : ''} ${isMajorArcana ? 'major-arcana' : ''} ${isFusedTarot ? 'fused-tarot' : ''} ${isCreature ? 'creature' : ''} ${isRoguelikeMode ? 'card-large' : ''}`}
         onClick={() => onClick && onClick(card)}
         style={{ 
           cursor: onClick ? 'pointer' : 'default',

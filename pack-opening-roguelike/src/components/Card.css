@@ -481,6 +481,18 @@
   border-color: #6b46c1;
 }
 
+/* Larger cards in roguelike mode */
+.card.card-large {
+  width: 180px;
+  height: 252px;
+}
+
+.card.card-large .creature-ability {
+  font-size: 0.7rem;
+  padding: 0.4rem;
+  bottom: 3rem;
+}
+
 .creature-cost {
   background: #6b46c1;
   color: white;

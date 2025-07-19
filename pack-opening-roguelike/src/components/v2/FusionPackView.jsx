@@ -141,18 +141,20 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
           
           // Ensure the fused card has the inherited abilities
           if (result && result.success && result.fusedCard) {
+            console.log('Fusion result card:', result.fusedCard);
+            console.log('Card generation:', result.fusedCard.generation);
             // Add inherited abilities if not already present
             if (!result.fusedCard.ability) {
               let inheritedAbility = '';
               
-              if (result.fusedCard.generation === 2) {
+              if (result.fusedCard.generation === 2 || result.fusedCard.generation === 'Gen2') {
                 // Gen 2 inherits both parent abilities
                 const ability1 = selectedCard1.ability || getCreatureAbilityText(selectedCard1.name);
                 const ability2 = selectedCard2.ability || getCreatureAbilityText(selectedCard2.name);
                 if (ability1 && ability2) {
                   inheritedAbility = `${ability1} & ${ability2}`;
                 }
-              } else if (result.fusedCard.generation === 3) {
+              } else if (result.fusedCard.generation === 3 || result.fusedCard.generation === 'Gen3') {
                 // Gen 3 inherits all grandparent abilities
                 const abilities = [];
                 
@@ -250,7 +252,7 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
                   animationDelay: `${index * 0.1}s`
                 }}
               >
-                <Card card={card} showLevel={true} />
+                <Card card={card} showLevel={true} isRoguelikeMode={true} />
                 {selectionNumber && (
                   <div className="selection-badge">{selectionNumber}</div>
                 )}
@@ -316,7 +318,7 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
                 </div>
                 <div className="card-face card-face-back">
                   <div className="result-card-display">
-                    {fusionResult && <Card card={fusionResult} />}
+                    {fusionResult && <Card card={fusionResult} isRoguelikeMode={true} />}
                   </div>
                 </div>
               </div>
@@ -341,7 +343,6 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
                 </div>
               )}
             </div>
-            )}
           </div>
         )}
 

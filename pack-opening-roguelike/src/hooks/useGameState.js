@@ -4,6 +4,7 @@ import { applyCardEffect } from '../utils/tarotCards';
 import { generateFusedCard, calculateFusionCost } from '../utils/fusionCards';
 import { ARCHETYPES } from '../utils/archetypes';
 import { getDreamThreshold, isNightmare, getRandomDreamEffect, getRandomNightmareEffect } from '../utils/dreams';
+import { getCreatureAbilityText } from '../utils/creatureEffects';
 
 const INITIAL_PP = 2000; // Increased for testing
 const PP_PER_SECOND = 0.5;
@@ -430,8 +431,51 @@ export const useGameState = () => {
     if (gameMode !== 'roguelike' && pp < cost) return { success: false, message: 'Not enough PP' };
     
     // Use pre-generated card (for creatures) or generate fused card
-    const fusedCard = preGeneratedCard || generateFusedCard(card1, card2);
+    let fusedCard = preGeneratedCard || generateFusedCard(card1, card2);
     if (!fusedCard) return { success: false, message: 'Cards cannot be fused' };
+    
+    // For creatures, ensure proper inheritance of abilities and PP
+    if (preGeneratedCard && card1.generation && card2.generation) {
+      // Calculate proper PP value (sum of parents)
+      fusedCard.ppValue = (card1.ppValue || 10) + (card2.ppValue || 10);
+      
+      // Inherit abilities
+      if (fusedCard.generation === 2 || fusedCard.generation === 'Gen2') {
+        // Gen 2 inherits both parent abilities
+        const ability1 = card1.ability || getCreatureAbilityText(card1.name);
+        const ability2 = card2.ability || getCreatureAbilityText(card2.name);
+        if (ability1 && ability2) {
+          fusedCard.ability = `${ability1} & ${ability2}`;
+        }
+      } else if (fusedCard.generation === 3 || fusedCard.generation === 'Gen3') {
+        // Gen 3 inherits all grandparent abilities
+        const abilities = [];
+        
+        // Get abilities from parent 1
+        if (card1.ability) {
+          if (card1.ability.includes(' & ')) {
+            abilities.push(...card1.ability.split(' & '));
+          } else {
+            abilities.push(card1.ability);
+          }
+        }
+        
+        // Get abilities from parent 2
+        if (card2.ability) {
+          if (card2.ability.includes(' & ')) {
+            abilities.push(...card2.ability.split(' & '));
+          } else {
+            abilities.push(card2.ability);
+          }
+        }
+        
+        if (abilities.length > 0) {
+          fusedCard.ability = abilities.join(' & ');
+        }
+      }
+      
+      console.log('Fused card after modification:', fusedCard);
+    }
     
     // Check if this fusion already exists (skip for creatures as they can have duplicates)
     if (!preGeneratedCard && (fusedCards[fusedCard.id] || collection[fusedCard.id])) {
@@ -521,15 +565,16 @@ export const useGameState = () => {
     // Add cards to hand directly without modifying collection
     // Each card in hand is a separate instance
     const handCards = pack.map(card => {
-      // If card exists in collection, use its level/xp
+      // If card exists in collection, use its properties
       const collectionCard = collection[card.id];
       if (collectionCard) {
         return {
           ...card,
-          level: collectionCard.level,
-          xp: collectionCard.xp,
-          xpToNextLevel: collectionCard.xpToNextLevel,
-          effect: collectionCard.effect
+          ...collectionCard, // Copy all properties from collection
+          // Ensure we keep the card's base properties that might not be in collection
+          id: card.id,
+          name: card.name,
+          arcana: card.arcana || collectionCard.arcana
         };
       }
       return { ...card };
@@ -576,11 +621,14 @@ export const useGameState = () => {
     const newCollection = {};
     deckTemplate.forEach(card => {
       if (card.generation === 'Gen1') {
+        // Get the ability text for this creature
+        const ability = getCreatureAbilityText(card.name);
         newCollection[card.id] = {
           ...card,
           level: 1,
           xp: 0,
-          xpToNextLevel: 100
+          xpToNextLevel: 100,
+          ability: ability || card.ability // Ensure ability is set
         };
       }
     });

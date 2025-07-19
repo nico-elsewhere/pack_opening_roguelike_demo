@@ -200,10 +200,64 @@ export const getCreatureAbilityText = (creatureName) => {
   return effect?.ability || null;
 };
 
+// Process effects from ability text (for fused creatures with combined abilities)
+const parseAndProcessAbilities = (abilityText, currentTokens, boardContext) => {
+  const result = {
+    tokensGained: {},
+    scoreModifier: 0,
+    specialEffect: null
+  };
+  
+  // If no ability text, return empty result
+  if (!abilityText) return result;
+  
+  // Split combined abilities
+  const abilities = abilityText.split(' & ');
+  
+  // Process each ability
+  abilities.forEach(ability => {
+    // Find matching effect in CREATURE_EFFECTS
+    const matchingCreature = Object.keys(CREATURE_EFFECTS).find(
+      creatureName => CREATURE_EFFECTS[creatureName].ability === ability.trim()
+    );
+    
+    if (matchingCreature) {
+      const effect = CREATURE_EFFECTS[matchingCreature].effect;
+      const subResult = processEffectData(effect, currentTokens, boardContext);
+      
+      // Merge results
+      Object.entries(subResult.tokensGained).forEach(([token, amount]) => {
+        result.tokensGained[token] = (result.tokensGained[token] || 0) + amount;
+      });
+      
+      result.scoreModifier += subResult.scoreModifier;
+      
+      // Handle special effects (may need more complex merging logic)
+      if (subResult.specialEffect && !result.specialEffect) {
+        result.specialEffect = subResult.specialEffect;
+      }
+    }
+  });
+  
+  return result;
+};
+
 export const processCreatureEffect = (card, currentTokens, boardContext = {}) => {
+  // First try to get effect by card name (for base creatures)
   const effect = getCreatureEffect(card.name);
+  
+  // If no effect found by name but card has ability text, parse it
+  if (!effect && card.ability) {
+    return parseAndProcessAbilities(card.ability, currentTokens, boardContext);
+  }
+  
   if (!effect) return { tokensGained: {}, scoreModifier: 0, specialEffect: null };
   
+  return processEffectData(effect.effect, currentTokens, boardContext);
+};
+
+// Separate function to process effect data
+const processEffectData = (effectData, currentTokens, boardContext) => {
   const result = {
     tokensGained: {},
     scoreModifier: 0,
@@ -339,7 +393,7 @@ export const processCreatureEffect = (card, currentTokens, boardContext = {}) =>
     }
   };
   
-  processEffect(effect.effect);
+  processEffect(effectData);
   
   return result;
 };

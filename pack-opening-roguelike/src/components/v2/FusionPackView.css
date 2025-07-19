@@ -314,3 +314,60 @@
 .fusion-animation-overlay .fusion-result-info {
   pointer-events: auto;
 }
+
+/* Card flip and result display */
+.card-flip-container {
+  width: 180px;
+  height: 252px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.card-flip-container.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-face-front {
+  z-index: 2;
+}
+
+.card-face-back {
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+.result-card-display {
+  width: 180px;
+  height: 252px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mystery-card {
+  width: 180px;
+  height: 252px;
+  background: linear-gradient(135deg, #2d1b4e 0%, #1a0033 100%);
+  border: 3px solid #6b46c1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(168, 85, 247, 0.4);
+}
+
+.mystery-text {
+  font-size: 4rem;
+  color: #E9D5FF;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
+}
