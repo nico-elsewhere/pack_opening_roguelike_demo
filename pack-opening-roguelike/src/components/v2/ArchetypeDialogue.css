@@ -1,0 +1,102 @@
+.archetype-dialogue-bubble {
+  position: absolute;
+  top: 3.5rem;
+  right: 0;
+  transform: translateX(-1rem);
+  opacity: 0;
+  transition: all 0.3s ease-out;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.archetype-dialogue-bubble.visible {
+  opacity: 1;
+  transform: translateX(-1rem) translateY(0.5rem);
+}
+
+.dialogue-content {
+  background: linear-gradient(135deg, #2D1B4E 0%, #1A0033 100%);
+  border: 2px solid #FFD700;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  max-width: 280px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3);
+  position: relative;
+  animation: dialogueBounce 0.4s ease-out;
+}
+
+@keyframes dialogueBounce {
+  0% {
+    transform: scale(0.8) translateY(-10px);
+  }
+  50% {
+    transform: scale(1.05) translateY(2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dialogue-content p {
+  margin: 0;
+  color: #FFD700;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-style: italic;
+}
+
+/* Speech bubble tail */
+.dialogue-tail {
+  position: absolute;
+  top: -8px;
+  right: 30px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #FFD700;
+  z-index: 2;
+}
+
+.dialogue-tail::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #2D1B4E;
+}
+
+/* Ruler-specific styling */
+.archetype-display-tcg:has(~ .archetype-dialogue-bubble) {
+  z-index: 11;
+}
+
+/* Ensure dialogue appears near the archetype display */
+.tcg-game-area {
+  position: relative;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .archetype-dialogue-bubble {
+    right: -1rem;
+    left: auto;
+  }
+  
+  .dialogue-content {
+    max-width: 220px;
+    padding: 0.5rem 1rem;
+  }
+  
+  .dialogue-content p {
+    font-size: 0.8rem;
+  }
+}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './RoguelikeBoard.css';
 import Card from '../Card';
 import DreamReward from './DreamReward';
+import ArchetypeDialogue from './ArchetypeDialogue';
 import { isNightmare } from '../../utils/dreams';
 import { shouldShuffleHand, getHandLimit } from '../../utils/dreamEffects';
 import { calculateDynamicScores } from '../../utils/dynamicScoring';
@@ -44,6 +45,7 @@ const RoguelikeBoard = ({
   const [showRewards, setShowRewards] = useState(false);
   const [completedDreamNumber, setCompletedDreamNumber] = useState(null);
   const [wasNightmareDream, setWasNightmareDream] = useState(false);
+  const [showDialogue, setShowDialogue] = useState(false);
   
   // Scoring animation state
   const [scoringIndex, setScoringIndex] = useState(-1);
@@ -130,7 +132,7 @@ const RoguelikeBoard = ({
     setRunningTotal(0);
     
     // Start the scoring animation
-    setTimeout(() => startScoringSequence(), 500);
+    setTimeout(() => startScoringSequence(), 200); // Much faster
   };
 
   const startScoringSequence = () => {
@@ -188,13 +190,13 @@ const RoguelikeBoard = ({
         console.log('Running total:', currentTotal);
         
         currentIndex++;
-        scoringTimeoutRef.current = setTimeout(scoreNext, 800);
+        scoringTimeoutRef.current = setTimeout(scoreNext, 535); // 33% faster (800ms -> 535ms)
       } else {
         // Scoring complete
         console.log('Scoring complete, total:', currentTotal);
         setTimeout(() => {
           handleScoringComplete(currentTotal);
-        }, 1000);
+        }, 670); // 33% faster (1000ms -> 670ms)
       }
     };
     
@@ -215,6 +217,9 @@ const RoguelikeBoard = ({
       const cardIds = boardSlots.filter(card => card !== null).map(card => card.id);
       applyCardXP(cardIds);
     }
+
+    // Show archetype dialogue
+    setShowDialogue(true);
   };
   
   // Cleanup scoring timeout on unmount
@@ -319,6 +324,26 @@ const RoguelikeBoard = ({
           <div className="archetype-display-tcg">
             <span className="archetype-icon">{selectedArchetype.icon}</span>
             <span className="archetype-name">{selectedArchetype.name}</span>
+            
+            {/* Archetype Dialogue */}
+            {showDialogue && scoringComplete && (
+              <ArchetypeDialogue
+                archetype={selectedArchetype}
+                gameContext={{
+                  lastScore: lastScoreGained,
+                  boardSlots: boardSlots,
+                  remainingPacks: remainingPacks,
+                  dreamScore: dreamScore,
+                  dreamThreshold: dreamThreshold,
+                  isNightmare: isCurrentNightmare,
+                  dreamEffects: dreamEffects,
+                  archetypeMementos: archetypeMementos,
+                  collection: collection,
+                  dreamNumber: currentDream
+                }}
+                onComplete={() => setShowDialogue(false)}
+              />
+            )}
           </div>
         )}
         
