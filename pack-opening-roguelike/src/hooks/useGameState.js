@@ -190,7 +190,7 @@ export const useGameState = () => {
         }
       }
       
-      let ppGained = calculateCardPP(newCollection[cardId], equippedRunes, pack, localGameState);
+      let ppGained = calculateCardPP(newCollection[cardId], equippedRunes, pack, { ...localGameState, allCreatures: newCollection });
       
       // Apply card-specific multipliers
       if (localGameState.currentCardMultiplier) {
@@ -332,7 +332,8 @@ export const useGameState = () => {
       allCards.push(...pack);
     });
     
-    // Calculate PP for all cards
+    // Calculate PP for all cards and collect the actual collection cards
+    const actualOpenedCards = [];
     allCards.forEach(card => {
       const cardId = card.id;
       if (newCollection[cardId]) {
@@ -359,12 +360,15 @@ export const useGameState = () => {
         newCollection[cardId] = { ...card };
       }
       
-      const ppGained = calculateCardPP(newCollection[cardId], equippedRunes, allCards);
+      // Push the actual card from collection with its proper level
+      actualOpenedCards.push(newCollection[cardId]);
+      
+      const ppGained = calculateCardPP(newCollection[cardId], equippedRunes, allCards, { allCreatures: newCollection });
       allPPValues.push(ppGained);
       totalPPGained += ppGained;
     });
     
-    setOpenedCards(allCards);
+    setOpenedCards(actualOpenedCards);
     setCurrentPackPPValues(allPPValues);
     setPP(prevPP => prevPP + totalPPGained);
     setCollection(newCollection);

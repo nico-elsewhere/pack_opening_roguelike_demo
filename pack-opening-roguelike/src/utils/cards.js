@@ -1,5 +1,6 @@
 import { ALL_TAROT_CARDS } from './tarotCards.js';
 import { getCreature, getCreatures, getGen1CreatureIds } from './creatureAPI.js';
+import { applyPassiveEffects } from './creaturePassives.js';
 
 export const SUITS = ['fire', 'earth', 'water', 'air'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -161,5 +162,14 @@ export const calculateCardPP = (card, runeEffects = [], cardsInPack = [], gameSt
     ppValue = gameState.bearMarketMinimum;
   }
   
-  return Math.floor(ppValue * multiplier);
+  // Calculate base value
+  let baseValue = Math.floor(ppValue * multiplier);
+  
+  // Apply creature passive effects if this is a creature
+  if (card.generation && gameState.allCreatures) {
+    const passiveResult = applyPassiveEffects(card, baseValue, cardsInPack, gameState.allCreatures);
+    return passiveResult.value;
+  }
+  
+  return baseValue;
 };

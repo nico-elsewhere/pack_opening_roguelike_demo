@@ -201,7 +201,7 @@ const UnifiedPackOpening = ({
             >
               {index <= scoringIndex ? (
                 <>
-                  <Card card={card} showTooltip={false} />
+                  <Card card={card} showTooltip={false} showLevel={true} alwaysShowLevel={true} />
                   {floatingTexts.find(text => text.cardIndex === index) && (
                     <div className="card-floating-text">
                       <FloatingText
