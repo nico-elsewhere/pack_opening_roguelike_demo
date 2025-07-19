@@ -72,6 +72,11 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     const valueBeforeDream = currentValue;
     currentValue = applyDreamEffects(currentValue, index, card, revealedCards, dreamEffects);
     const dreamMultiplier = currentValue / valueBeforeDream;
+    const dreamAddition = currentValue - valueBeforeDream;
+    
+    // Determine if the dream effect is additive or multiplicative
+    const dreamEffectType = dreamEffects.length > 0 && dreamEffects[0].effect ? dreamEffects[0].effect.type : null;
+    const isAdditiveDream = dreamEffectType === 'flat_bonus' || dreamEffectType === 'position_scaling' || dreamEffectType === 'cumulative_bonus';
     
     // Store base value before token multipliers
     const baseValueBeforeTokens = currentValue;
@@ -108,6 +113,8 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
       currentValue,
       passiveMultiplier,
       dreamMultiplier: dreamMultiplier !== 1 ? dreamMultiplier : null,
+      dreamAddition: dreamAddition !== 0 ? dreamAddition : null,
+      isAdditiveDream,
       effects: cardEffects,
       tokenMultiplier: cumulativeTokens.strength > 0 ? (1 + cumulativeTokens.strength) : 1,
       tokensGenerated: cardTokensGenerated,

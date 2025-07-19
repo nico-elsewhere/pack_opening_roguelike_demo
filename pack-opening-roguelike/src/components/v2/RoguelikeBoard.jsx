@@ -254,18 +254,25 @@ const RoguelikeBoard = ({
         
         // For cards with effects, we need to wait for the initial score to be visible
         // before starting any animations
-        const hasEffects = currentCardScore && (currentCardScore.dreamMultiplier || currentCardScore.tokenMultiplier > 1);
+        const hasEffects = currentCardScore && 
+          ((currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) || 
+           (currentCardScore.dreamAddition && currentCardScore.dreamAddition !== 0) || 
+           currentCardScore.tokenMultiplier > 1);
         if (hasEffects) {
           totalAnimationDelay += 200 * speedMult; // Extra delay to see base score first
         }
         
         // Animate scoring phases for current card
-        if (currentCardScore && (currentCardScore.dreamMultiplier || currentCardScore.tokenMultiplier > 1)) {
+        if (currentCardScore && 
+            ((currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) || 
+             (currentCardScore.dreamAddition && currentCardScore.dreamAddition !== 0) || 
+             currentCardScore.tokenMultiplier > 1)) {
           const boardIndex = cardIndices[currentIndex];
           let phaseDelay = baseDelay + (200 * speedMult); // Start animations after base score is visible
           
           // Phase 1: Dream effects
-          if (currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) {
+          if ((currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) || 
+              (currentCardScore.dreamAddition && currentCardScore.dreamAddition !== 0)) {
             const dreamAnimDuration = 600 * speedMult;
             const dreamFadeDuration = 200 * speedMult;
             
@@ -634,10 +641,12 @@ const RoguelikeBoard = ({
                           +{cardScores[index]}
                         </span>
                         {cardScoreDetails[index] && 
-                         cardScoreDetails[index].dreamMultiplier && 
+                         (cardScoreDetails[index].dreamMultiplier || cardScoreDetails[index].dreamAddition) && 
                          showingDreamEffect[index] && (
                           <span className={`dream-multiplier ${showingDreamEffect[index] ? 'active' : ''}`}>
-                            ×{cardScoreDetails[index].dreamMultiplier.toFixed(1)}
+                            {cardScoreDetails[index].isAdditiveDream ? 
+                              `+${cardScoreDetails[index].dreamAddition}` : 
+                              `×${cardScoreDetails[index].dreamMultiplier.toFixed(1)}`}
                           </span>
                         )}
                         {cardScoreDetails[index] && 
