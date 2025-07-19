@@ -9,7 +9,7 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
   // For each revealed card, calculate its current score considering all revealed cards so far
   revealedCards.forEach((card, index) => {
     // Calculate base PP with rune effects but without passive creature effects
-    const ppValue = card.ppValue || 10; // Default to 10 if undefined
+    const ppValue = card.ppValue !== undefined ? card.ppValue : 10; // Default to 10 only if undefined
     const level = card.level || 1;
     const baseValue = ppValue * level;
     

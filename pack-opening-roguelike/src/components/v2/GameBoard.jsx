@@ -16,7 +16,8 @@ const GameBoard = ({
   packTypes,
   totalCardsOpened,
   collection,
-  equippedRunes
+  equippedRunes,
+  applyCardXP
 }) => {
   const [isOpening, setIsOpening] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
@@ -100,6 +101,7 @@ const GameBoard = ({
         onPhaseChange={handlePhaseChange}
         collection={collection}
         equippedRunes={equippedRunes}
+        applyCardXP={applyCardXP}
       />
       
       <PackToolbar

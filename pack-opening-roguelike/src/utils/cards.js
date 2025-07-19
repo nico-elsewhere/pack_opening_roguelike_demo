@@ -136,7 +136,9 @@ export const generateRuneEffect = (card) => {
 };
 
 export const calculateCardPP = (card, runeEffects = [], cardsInPack = [], gameState = {}) => {
-  let ppValue = card.ppValue * card.level;
+  const basePPValue = card.ppValue !== undefined ? card.ppValue : 10;
+  const level = card.level || 1;
+  let ppValue = basePPValue * level;
   let multiplier = 1;
   
   // Apply equipped rune effects

@@ -148,26 +148,9 @@ export const useGameState = () => {
       localGameState.cardsInCurrentPack = index + 1;
       const cardId = card.id;
       if (newCollection[cardId]) {
-        // Preserve existing effect for runes
+        // Don't add XP here - it will be added after scoring completes
+        // Just preserve the existing card data
         const existingEffect = newCollection[cardId].effect;
-        newCollection[cardId].xp += 50;
-        if (newCollection[cardId].xp >= newCollection[cardId].xpToNextLevel) {
-          newCollection[cardId].level += 1;
-          newCollection[cardId].xp = 0;
-          newCollection[cardId].xpToNextLevel = newCollection[cardId].level * 100;
-          // Update effect multipliers/values when leveling up
-          if (existingEffect) {
-            if (existingEffect.type === 'suit_bonus') {
-              existingEffect.multiplier = 1 + (0.3 * newCollection[cardId].level);
-            } else if (existingEffect.type === 'pp_generation') {
-              existingEffect.bonusPP = 0.2 * newCollection[cardId].level;
-            } else if (existingEffect.type === 'suit_count_mult') {
-              existingEffect.multiplierPerCard = 0.1 * newCollection[cardId].level;
-            } else if (existingEffect.type === 'suit_chance') {
-              existingEffect.chanceBonus = 0.15 * newCollection[cardId].level;
-            }
-          }
-        }
         newCollection[cardId].effect = existingEffect;
       } else {
         newCollection[cardId] = { ...card };
@@ -449,6 +432,37 @@ export const useGameState = () => {
     return { success: true, fusedCard };
   };
   
+  // Apply XP to cards after scoring completes
+  const applyCardXP = (cardIds) => {
+    const newCollection = { ...collection };
+    
+    cardIds.forEach(cardId => {
+      if (newCollection[cardId]) {
+        const existingEffect = newCollection[cardId].effect;
+        newCollection[cardId].xp += 50;
+        if (newCollection[cardId].xp >= newCollection[cardId].xpToNextLevel) {
+          newCollection[cardId].level += 1;
+          newCollection[cardId].xp = 0;
+          newCollection[cardId].xpToNextLevel = newCollection[cardId].level * 100;
+          // Update effect multipliers/values when leveling up
+          if (existingEffect) {
+            if (existingEffect.type === 'suit_bonus') {
+              existingEffect.multiplier = 1 + (0.3 * newCollection[cardId].level);
+            } else if (existingEffect.type === 'pp_generation') {
+              existingEffect.bonusPP = 0.2 * newCollection[cardId].level;
+            } else if (existingEffect.type === 'suit_count_mult') {
+              existingEffect.multiplierPerCard = 0.1 * newCollection[cardId].level;
+            } else if (existingEffect.type === 'suit_chance') {
+              existingEffect.chanceBonus = 0.15 * newCollection[cardId].level;
+            }
+          }
+        }
+        newCollection[cardId].effect = existingEffect;
+      }
+    });
+    
+    setCollection(newCollection);
+  };
   
   return {
     pp: Math.floor(pp),
@@ -484,6 +498,7 @@ export const useGameState = () => {
     deckTemplate,
     setDebugPackContents,
     setPP,
-    setCollection
+    setCollection,
+    applyCardXP
   };
 };

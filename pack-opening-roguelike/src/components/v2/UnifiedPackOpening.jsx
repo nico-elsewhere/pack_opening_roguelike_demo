@@ -18,7 +18,8 @@ const UnifiedPackOpening = ({
   totalPP,
   onPhaseChange,
   collection,
-  equippedRunes
+  equippedRunes,
+  applyCardXP
 }) => {
   const [phase, setPhase] = useState('ready'); // ready, animating, scoring, complete
   
@@ -64,7 +65,7 @@ const UnifiedPackOpening = ({
     // Pre-calculate initial scores for all cards to avoid 0 display
     const initialScores = {};
     openedCards.forEach((card, idx) => {
-      const ppValue = card.ppValue || 10;
+      const ppValue = card.ppValue !== undefined ? card.ppValue : 10;
       const level = card.level || 1;
       const baseValue = ppValue * level;
       initialScores[idx] = { base: baseValue, current: baseValue, passiveMultiplier: 1 };
@@ -248,7 +249,12 @@ const UnifiedPackOpening = ({
           // Continue scoring from Loopine's position after a delay
           setTimeout(scoreNext, 1500);
         } else {
-          // Scoring complete
+          // Scoring complete - apply XP to all opened cards
+          if (applyCardXP && openedCards.length > 0) {
+            const cardIds = openedCards.map(card => card.id);
+            applyCardXP(cardIds);
+          }
+          
           setTimeout(() => {
             setPhase('complete');
           }, 800);

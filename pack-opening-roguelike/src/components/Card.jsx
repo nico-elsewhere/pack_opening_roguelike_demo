@@ -125,8 +125,8 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         </div>
         
         <div className="card-bottom">
-          <div className="pp-value">+{card.ppValue * card.level} PP</div>
-          {showLevel && (alwaysShowLevel || card.level > 1) && <div className="level">Lv.{card.level}</div>}
+          <div className="pp-value">+{card.ppValue * (card.level || 1)} PP</div>
+          {showLevel && (alwaysShowLevel || (card.level || 1) > 1) && <div className="level">Lv.{card.level || 1}</div>}
         </div>
         
         {showTooltip && (
@@ -143,9 +143,9 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
       {showProgress && (
         <div className="card-progress">
           <div className="progress-info">
-            <span className="current-level">Lv.{card.level}</span>
+            <span className="current-level">Lv.{card.level || 1}</span>
             <span className="xp-text">{card.xp}/{card.xpToNextLevel} XP</span>
-            <span className="next-level">Lv.{card.level + 1}</span>
+            <span className="next-level">Lv.{(card.level || 1) + 1}</span>
           </div>
           <div className="progress-bar">
             <div 
@@ -154,7 +154,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
             />
           </div>
           <div className="level-bonus">
-            Next: +{card.ppValue * (card.level + 1)} PP
+            Next: +{card.ppValue * ((card.level || 1) + 1)} PP
           </div>
         </div>
       )}
