@@ -1,11 +1,23 @@
 // Dynamic scoring system that calculates effects as cards are revealed
 import { calculateCardPP } from './cards';
 import { CREATURE_PASSIVES } from './creaturePassives';
+import { CREATURE_EFFECTS, processCardEffects } from './creatureEffects';
 import { applyDreamEffects, shouldDisableAbilities } from './dreamEffects';
 
 // Calculate PP values for all revealed cards, considering cascading effects
-export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = []) {
+export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = [], currentTokens = null) {
   const scores = [];
+  let tokens = currentTokens || {
+    fire: 0,
+    water: 0,
+    earth: 0,
+    air: 0,
+    light: 0,
+    shadow: 0,
+    arcane: 0,
+    nature: 0
+  };
+  let tokenValueModifiers = {};
   
   // For each revealed card, calculate its current score considering all revealed cards so far
   revealedCards.forEach((card, index) => {
@@ -41,10 +53,32 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     const abilitiesDisabled = shouldDisableAbilities(dreamEffects);
     
     if (!abilitiesDisabled) {
-      // Check if THIS card has a passive that applies to itself
+      // Process new creature effects system
+      const effectResult = processCardEffects(card, revealedSoFar, allCardsInPack, tokens, index);
+      
+      // Update tokens
+      if (effectResult.tokens) {
+        tokens = effectResult.tokens;
+      }
+      
+      // Apply multipliers
+      if (effectResult.multiplier && effectResult.multiplier > 1) {
+        passiveMultiplier *= effectResult.multiplier;
+      }
+      
+      // Add bonus PP
+      if (effectResult.bonusPP) {
+        baseWithRunes += effectResult.bonusPP;
+      }
+      
+      // Store token value modifiers
+      if (effectResult.tokenValueModifier) {
+        Object.assign(tokenValueModifiers, effectResult.tokenValueModifier);
+      }
+      
+      // Legacy passive system (for backwards compatibility)
       const cardPassive = CREATURE_PASSIVES[card.name];
       if (cardPassive && cardPassive.effect) {
-        // For Fredmaxxing, we pass the current index so it knows which card it is
         const modifiedCard = { ...card, _revealIndex: index };
         const result = cardPassive.effect(modifiedCard, revealedSoFar, collection);
         if (result && result.multiplier) {
@@ -129,7 +163,8 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
   
   return {
     scores,
-    findNewEffects
+    findNewEffects,
+    newTokens: tokens
   };
 }
 

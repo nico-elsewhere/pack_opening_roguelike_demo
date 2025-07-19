@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../config/api';
+import { CREATURE_EFFECTS, getCardEffectText } from './creatureEffects';
 
 // Helper to convert numeric rarity to string
 const getRarityName = (rarityNum) => {
@@ -30,7 +31,7 @@ const cleanFlavorText = (text) => {
 // Convert creature data to game card format
 const creatureToCard = (creature) => {
   console.log('Converting creature:', creature); // Debug log
-  return {
+  const card = {
     id: creature.cardId,
     name: creature.name,
     ppValue: 10, // All creatures have base PP of 10
@@ -52,6 +53,21 @@ const creatureToCard = (creature) => {
     // Original data preserved
     _originalCost: creature.cost
   };
+  
+  // Add effect text for Gen1 creatures
+  if (creature.generation === 'Gen1') {
+    const effectText = getCardEffectText(card);
+    if (effectText) {
+      card.effect = effectText;
+    }
+  }
+  
+  // Special case for Boastun - 0 PP
+  if (creature.name === 'Boastun') {
+    card.ppValue = 0;
+  }
+  
+  return card;
 };
 
 // Fetch a single creature by ID
@@ -126,7 +142,7 @@ export const getCreatures = async (cardIds) => {
 };
 
 // Breed two creatures to create a new one
-export const breedCreatures = async (cardId1, cardId2) => {
+export const breedCreatures = async (cardId1, cardId2, parent1Data = null, parent2Data = null) => {
   try {
     const response = await fetch(
       `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.breed}`,
@@ -148,7 +164,42 @@ export const breedCreatures = async (cardId1, cardId2) => {
       throw new Error('No card data in response');
     }
     
-    return creatureToCard(data.card);
+    const fusedCard = creatureToCard(data.card);
+    
+    // Handle effect inheritance
+    if (parent1Data && parent2Data) {
+      fusedCard.inheritedEffects = [];
+      
+      // Inherit from parent 1
+      if (parent1Data.generation === 'Gen1' && CREATURE_EFFECTS[parent1Data.name]) {
+        fusedCard.inheritedEffects.push({
+          name: parent1Data.name,
+          effect: CREATURE_EFFECTS[parent1Data.name].effect
+        });
+      } else if (parent1Data.inheritedEffects) {
+        fusedCard.inheritedEffects.push(...parent1Data.inheritedEffects);
+      }
+      
+      // Inherit from parent 2
+      if (parent2Data.generation === 'Gen1' && CREATURE_EFFECTS[parent2Data.name]) {
+        fusedCard.inheritedEffects.push({
+          name: parent2Data.name,
+          effect: CREATURE_EFFECTS[parent2Data.name].effect
+        });
+      } else if (parent2Data.inheritedEffects) {
+        fusedCard.inheritedEffects.push(...parent2Data.inheritedEffects);
+      }
+      
+      // Set PP value as sum of parents
+      fusedCard.ppValue = (parent1Data.ppValue || 10) + (parent2Data.ppValue || 10);
+      
+      // Set effect text
+      if (fusedCard.inheritedEffects.length > 0) {
+        fusedCard.effect = fusedCard.inheritedEffects.map(e => e.effect).join(' & ');
+      }
+    }
+    
+    return fusedCard;
   } catch (error) {
     console.error('Error breeding creatures:', error);
     throw error;

@@ -163,11 +163,47 @@ Every Gen 1 card should have a unique effect that creates strategic depth:
 - `npm test` - Run tests (if available)
 - `npm run build` - Build for production
 
+## Implementation Status
+
+### Completed Features
+1. **Token System Foundation** ✅
+   - TokenDisplay component shows active tokens
+   - Token state management in RoguelikeBoard
+   - Tokens reset between hands
+   - Token values calculated in final score
+
+2. **Card Size Improvements** ✅
+   - Cards are 1.5x larger in roguelike mode (180x252px)
+   - Effect text displays below creature image
+   - Responsive sizing maintained
+
+3. **Gen 1 Card Effects** ✅
+   - All Gen 1 creatures have unique effects
+   - Effects defined in creatureEffects.js
+   - Effects display on cards in roguelike mode
+   - Token generation, manipulation, and synergies implemented
+
+4. **Fusion Inheritance** ✅
+   - Gen 2 creatures inherit both parent effects
+   - Gen 3 creatures inherit all 4 grandparent effects
+   - PP values sum correctly (parent1 + parent2)
+   - Effect text shows combined effects with " & " separator
+
+5. **Scoring Integration** ✅
+   - Effects process during card reveal
+   - Tokens update in real-time
+   - Token values included in running total
+   - Final score includes all token contributions
+
 ## Known Issues
 - None currently tracked
 
 ## Future Considerations
+- Visual effects for token generation
+- Sound effects for abilities
+- Token animations when consumed/transformed
 - Persistent token effects (between hands)
 - Token-based dream effects
 - Archetype-specific token bonuses
 - Token trading/conversion mechanics
+- Balance testing for all effects

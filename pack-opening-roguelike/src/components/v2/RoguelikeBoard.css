@@ -152,8 +152,8 @@
 }
 
 .board-slot {
-  width: 120px;
-  height: 168px;
+  width: 180px;
+  height: 252px;
   border: 2px dashed rgba(139, 92, 246, 0.3);
   border-radius: 0.5rem;
   position: relative;
@@ -452,8 +452,8 @@
 
 
 .tcg-hand-card .card {
-  width: 120px !important;
-  height: 168px !important;
+  width: 180px !important;
+  height: 252px !important;
 }
 
 /* CSS math function polyfill for abs() */
@@ -541,6 +541,36 @@
   color: white;
   text-align: center;
   animation: fadeIn 0.3s ease-out;
+}
+
+.score-breakdown {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #94A3B8;
+  margin-bottom: 0.5rem;
+  justify-content: center;
+}
+
+.cards-score {
+  transition: all 0.3s ease-out;
+}
+
+.tokens-score {
+  color: #FBBF24;
+  font-weight: 600;
+  animation: tokenScoreAppear 0.5s ease-out;
+}
+
+@keyframes tokenScoreAppear {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .total-value {

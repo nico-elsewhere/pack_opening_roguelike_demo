@@ -90,8 +90,8 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
         let result;
         
         if (selectedCard1.generation && selectedCard2.generation) {
-          // Use creature breeding API
-          const bredCreature = await breedCreatures(selectedCard1.id, selectedCard2.id);
+          // Use creature breeding API with parent data for inheritance
+          const bredCreature = await breedCreatures(selectedCard1.id, selectedCard2.id, selectedCard1, selectedCard2);
           console.log('Bred creature:', bredCreature);
           
           // Call the game's fuseCards to handle inventory management
