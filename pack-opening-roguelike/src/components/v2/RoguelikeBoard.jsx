@@ -51,6 +51,9 @@ const RoguelikeBoard = ({
   const [scoringIndex, setScoringIndex] = useState(-1);
   const [cardScores, setCardScores] = useState({});
   const [runningTotal, setRunningTotal] = useState(0);
+  const [showLoopineEffect, setShowLoopineEffect] = useState(false);
+  const [loopineEffectIndex, setLoopineEffectIndex] = useState(-1);
+  const [isLoopPass, setIsLoopPass] = useState(false);
   const scoringTimeoutRef = useRef(null);
 
   const isCurrentNightmare = isNightmare(currentDream);
@@ -139,15 +142,22 @@ const RoguelikeBoard = ({
     // Get only the actual cards from board slots
     const validCards = [];
     const cardIndices = [];
+    let loopineIndex = -1;
+    
     boardSlots.forEach((card, index) => {
       if (card) {
         validCards.push(card);
         cardIndices.push(index);
+        // Check if this card is Loopine
+        if (card.name === 'Loopine') {
+          loopineIndex = validCards.length - 1; // Index in validCards array
+        }
       }
     });
     
     console.log('Valid cards to score:', validCards);
     console.log('Card indices:', cardIndices);
+    console.log('Loopine index:', loopineIndex);
     
     if (validCards.length === 0) {
       console.error('No cards to score!');
@@ -157,6 +167,8 @@ const RoguelikeBoard = ({
     
     let currentIndex = 0;
     let currentTotal = 0;
+    let isLoopPass = false;
+    const loopPassScores = {}; // Track additional scores from loop pass
     
     const scoreNext = () => {
       if (currentIndex < validCards.length) {
@@ -180,23 +192,60 @@ const RoguelikeBoard = ({
         const newScores = {};
         scores.forEach((score, idx) => {
           const boardIndex = cardIndices[idx];
-          newScores[boardIndex] = score.currentValue;
+          if (isLoopPass && idx >= loopineIndex) {
+            // During loop pass, add to existing scores
+            const baseScore = cardScores[boardIndex] || 0;
+            const loopAddition = score.currentValue;
+            loopPassScores[boardIndex] = loopAddition;
+            newScores[boardIndex] = baseScore + loopAddition;
+          } else if (!isLoopPass) {
+            newScores[boardIndex] = score.currentValue;
+          } else {
+            // Keep existing score for cards before Loopine during loop pass
+            newScores[boardIndex] = cardScores[boardIndex] || score.currentValue;
+          }
         });
         setCardScores(newScores);
         
         // Update running total
-        currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
-        setRunningTotal(currentTotal);
+        if (isLoopPass) {
+          // Add loop pass scores to existing total
+          const loopAddition = Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
+          setRunningTotal(currentTotal + loopAddition);
+        } else {
+          currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
+          setRunningTotal(currentTotal);
+        }
         console.log('Running total:', currentTotal);
         
         currentIndex++;
         scoringTimeoutRef.current = setTimeout(scoreNext, 300); // Much faster
       } else {
-        // Scoring complete
-        console.log('Scoring complete, total:', currentTotal);
-        setTimeout(() => {
-          handleScoringComplete(currentTotal);
-        }, 400); // Much faster
+        // Check if we need to do a loop pass
+        if (!isLoopPass && loopineIndex >= 0) {
+          // Trigger Loopine's time loop effect
+          isLoopPass = true;
+          setIsLoopPass(true);
+          currentIndex = loopineIndex;
+          
+          // Show Loopine ability animation
+          const loopineBoardIndex = cardIndices[loopineIndex];
+          setShowLoopineEffect(true);
+          setLoopineEffectIndex(loopineBoardIndex);
+          
+          // Continue scoring from Loopine's position after animation
+          scoringTimeoutRef.current = setTimeout(() => {
+            setShowLoopineEffect(false);
+            scoreNext();
+          }, 1500);
+        } else {
+          // Scoring complete
+          const finalTotal = currentTotal + Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
+          console.log('Scoring complete, total:', finalTotal);
+          setTimeout(() => {
+            handleScoringComplete(finalTotal);
+          }, 400); // Much faster
+        }
       }
     };
     
@@ -211,6 +260,7 @@ const RoguelikeBoard = ({
     setScoringComplete(true);
     setIsScoring(false);
     setScoringIndex(-1);
+    setIsLoopPass(false);
     
     // Apply XP to cards
     if (applyCardXP) {
@@ -322,8 +372,13 @@ const RoguelikeBoard = ({
         {/* Archetype Display */}
         {selectedArchetype && (
           <div className="archetype-display-tcg">
-            <span className="archetype-icon">{selectedArchetype.icon}</span>
-            <span className="archetype-name">{selectedArchetype.name}</span>
+            <div className="archetype-header">
+              <span className="archetype-icon">{selectedArchetype.icon}</span>
+              <span className="archetype-name">{selectedArchetype.name}</span>
+            </div>
+            <div className="archetype-power">
+              {selectedArchetype.effect.description}
+            </div>
             
             {/* Archetype Dialogue */}
             {showDialogue && scoringComplete && (
@@ -372,7 +427,7 @@ const RoguelikeBoard = ({
             {boardSlots.map((card, index) => (
               <div
                 key={`board-slot-${index}`}
-                className={`board-slot ${card ? 'occupied' : 'empty'} ${isScoring && index <= scoringIndex ? 'scoring' : ''}`}
+                className={`board-slot ${card ? 'occupied' : 'empty'} ${isScoring && index <= scoringIndex ? 'scoring' : ''} ${isLoopPass && isScoring ? 'loop-pass' : ''}`}
                 onDragOver={!isScoring && !scoringComplete ? handleDragOver : undefined}
                 onDrop={!isScoring && !scoringComplete ? (e) => handleDropOnBoard(e, index) : undefined}
               >
@@ -391,6 +446,12 @@ const RoguelikeBoard = ({
                     {scoringComplete && cardScores[index] !== undefined && (
                       <div className="card-score-review">
                         <span className="score-value">+{cardScores[index]}</span>
+                      </div>
+                    )}
+                    {showLoopineEffect && index === loopineEffectIndex && (
+                      <div className="loopine-effect-overlay">
+                        <div className="loopine-time-loop-text">Time Loop!</div>
+                        <div className="loopine-ripple-effect"></div>
                       </div>
                     )}
                   </div>
