@@ -423,10 +423,10 @@ export const useGameState = () => {
     
     if (!card1 || !card2) return { success: false, message: 'Cards not found' };
     
-    // Check if player has enough PP
+    // Check if player has enough PP (skip in roguelike mode)
     const cost = (card1.generation === 'Gen1' && card2.generation === 'Gen1') ? 
       100 : calculateFusionCost(card1, card2);
-    if (pp < cost) return { success: false, message: 'Not enough PP' };
+    if (gameMode !== 'roguelike' && pp < cost) return { success: false, message: 'Not enough PP' };
     
     // Use pre-generated card (for creatures) or generate fused card
     const fusedCard = preGeneratedCard || generateFusedCard(card1, card2);
@@ -437,13 +437,19 @@ export const useGameState = () => {
       return { success: false, message: 'This fusion already exists' };
     }
     
-    // Deduct PP
-    setPP(prevPP => prevPP - cost);
+    // Deduct PP (skip in roguelike mode)
+    if (gameMode !== 'roguelike') {
+      setPP(prevPP => prevPP - cost);
+    }
     
-    // Remove original cards from collection
     const newCollection = { ...collection };
-    delete newCollection[card1Id];
-    delete newCollection[card2Id];
+    
+    // In roguelike mode, don't remove original cards
+    if (gameMode !== 'roguelike') {
+      // Remove original cards from collection
+      delete newCollection[card1Id];
+      delete newCollection[card2Id];
+    }
     
     // Add fused card to collection
     newCollection[fusedCard.id] = fusedCard;

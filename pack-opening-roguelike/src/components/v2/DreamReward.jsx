@@ -14,7 +14,8 @@ const DreamReward = ({
   onRewardSelected,
   onContinue,
   fuseCards,
-  pp
+  pp,
+  gameMode
 }) => {
   const [currentView, setCurrentView] = useState('select'); // 'select', 'level', 'fusion', 'memento'
   const [selectedPackType, setSelectedPackType] = useState(null);
@@ -59,6 +60,8 @@ const DreamReward = ({
           pp={pp}
           onComplete={handleRewardComplete}
           onBack={handleBackToSelect}
+          gameMode={gameMode}
+          selectedArchetype={selectedArchetype}
         />
       )}
 

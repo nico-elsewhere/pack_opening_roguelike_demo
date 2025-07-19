@@ -3,14 +3,17 @@ import './FusionPackView.css';
 import Card from '../Card';
 import { canFuseCards, generateFusedCard, calculateFusionCost } from '../../utils/fusionCards';
 import { breedCreatures } from '../../utils/creatureAPI';
+import FusionDialogue from './FusionDialogue';
 
-const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack }) => {
+const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMode, selectedArchetype }) => {
   const [selectedCards, setSelectedCards] = useState([]);
   const [selectedCard1, setSelectedCard1] = useState(null);
   const [selectedCard2, setSelectedCard2] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [previewCard, setPreviewCard] = useState(null);
   const [fusionResult, setFusionResult] = useState(null);
+  const [showFlippedCard, setShowFlippedCard] = useState(false);
+  const [showContinueButton, setShowContinueButton] = useState(false);
 
   useEffect(() => {
     // Select 5 random Gen1/Gen2 cards from collection that can be fused
@@ -103,14 +106,14 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack }) => {
         if (result && result.success) {
           setFusionResult(result.fusedCard);
           
-          // Show result for a moment before completing
+          // Flip the card after a short delay
           setTimeout(() => {
-            onComplete({
-              type: 'fusion',
-              fusedCard: result.fusedCard,
-              sourceCards: [selectedCard1, selectedCard2]
-            });
-          }, 3000);
+            setShowFlippedCard(true);
+            // Show continue button after flip completes
+            setTimeout(() => {
+              setShowContinueButton(true);
+            }, 800);
+          }, 1000);
         } else {
           console.error('Fusion failed:', result);
           setIsAnimating(false);
@@ -131,6 +134,8 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack }) => {
   };
 
   const canAffordFusion = () => {
+    // Fusion is free in roguelike mode
+    if (gameMode === 'roguelike') return true;
     return pp >= getFusionCost();
   };
 
@@ -189,7 +194,7 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack }) => {
               onClick={handleFuse}
               disabled={!canAffordFusion() || isAnimating}
             >
-              {isAnimating ? 'Fusing...' : `Fuse (${getFusionCost()} PP)`}
+              {isAnimating ? 'Fusing...' : (gameMode === 'roguelike' ? 'Fuse' : `Fuse (${getFusionCost()} PP)`)}
             </button>
           </div>
         )}
@@ -216,27 +221,52 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack }) => {
             )}
             
             {/* Mystery card that flips to reveal result */}
-            {fusionResult && (
-              <div className="fusion-overlay-result">
-                <div className="card-flip-container flipped">
-                  <div className="card-face card-face-back">
-                    <div className="result-card-display">
-                      <Card card={fusionResult} />
-                    </div>
+            <div className="fusion-overlay-result">
+              <div className={`card-flip-container ${showFlippedCard ? 'flipped' : ''}`}>
+                <div className="card-face card-face-front">
+                  <div className="mystery-card">
+                    <div className="mystery-text">?</div>
+                  </div>
+                </div>
+                <div className="card-face card-face-back">
+                  <div className="result-card-display">
+                    {fusionResult && <Card card={fusionResult} />}
                   </div>
                 </div>
               </div>
+              
+              {/* Show card info and continue button after flip */}
+              {showContinueButton && fusionResult && (
+                <div className="fusion-result-info">
+                  <h3>{fusionResult.name}</h3>
+                  {fusionResult.flavorText && (
+                    <p className="flavor-text">{fusionResult.flavorText}</p>
+                  )}
+                  <button 
+                    className="continue-button"
+                    onClick={() => onComplete({
+                      type: 'fusion',
+                      fusedCard: fusionResult,
+                      sourceCards: [selectedCard1, selectedCard2]
+                    })}
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
+            </div>
             )}
           </div>
         )}
 
-        {fusionResult && (
-          <div className="fusion-result">
-            <h3>Fusion Complete!</h3>
-            <div className="result-card">
-              <Card card={fusionResult} showLevel={true} />
-            </div>
-          </div>
+        {/* Show Ruler dialogue during fusion */}
+        {isAnimating && selectedArchetype && (
+          <FusionDialogue
+            archetype={selectedArchetype}
+            fusedCard={fusionResult}
+            sourceCards={[selectedCard1, selectedCard2]}
+            isVisible={showFlippedCard}
+          />
         )}
 
         {selectedCards.length < 2 && (

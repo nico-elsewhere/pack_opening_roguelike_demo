@@ -190,13 +190,13 @@ const RoguelikeBoard = ({
         console.log('Running total:', currentTotal);
         
         currentIndex++;
-        scoringTimeoutRef.current = setTimeout(scoreNext, 535); // 33% faster (800ms -> 535ms)
+        scoringTimeoutRef.current = setTimeout(scoreNext, 300); // Much faster
       } else {
         // Scoring complete
         console.log('Scoring complete, total:', currentTotal);
         setTimeout(() => {
           handleScoringComplete(currentTotal);
-        }, 670); // 33% faster (1000ms -> 670ms)
+        }, 400); // Much faster
       }
     };
     
@@ -481,6 +481,7 @@ const RoguelikeBoard = ({
           onContinue={handleRewardContinue}
           fuseCards={fuseCards}
           pp={pp}
+          gameMode={gameMode}
         />
       )}
     </div>

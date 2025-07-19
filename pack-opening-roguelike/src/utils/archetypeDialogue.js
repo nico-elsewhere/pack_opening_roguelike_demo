@@ -295,6 +295,293 @@ export const RULER_DIALOGUE = {
   ]
 };
 
+// Fusion-specific dialogue
+export const RULER_FUSION_DIALOGUE = {
+  // Gen1 + Gen1 = Gen2
+  gen2Fusion: [
+    "Ah, breeding the next generation of subjects!",
+    "Royal bloodlines must be maintained.",
+    "A new noble is born to serve the crown!",
+    "Witness the power of selective breeding!",
+    "Another addition to my growing empire.",
+    "Excellent! Fresh blood for the kingdom.",
+    "The dynasty grows stronger with each fusion.",
+    "My royal menagerie expands!"
+  ],
+  
+  // Gen2 + Gen2 = Gen3 or other high-tier fusions
+  gen3Fusion: [
+    "Behold! A creature worthy of the throne room!",
+    "Now THIS is power incarnate!",
+    "Such majesty! Even I am humbled.",
+    "A beast fit for a king's army!",
+    "Magnificent! My enemies will tremble!",
+    "The apex of creation bows before me!",
+    "This... this is what true dominion looks like!",
+    "My empire's greatest weapon is born!"
+  ],
+  
+  // Legendary or rare fusions
+  legendaryFusion: [
+    "BY MY CROWN! What power!",
+    "The stuff of legends! Even I am awed!",
+    "History will remember this moment!",
+    "Songs will be sung of this creature!",
+    "A fusion worthy of the royal vault!",
+    "The crown jewel of my collection!",
+    "Unparalleled! Unmatched! UNSTOPPABLE!",
+    "This changes everything!"
+  ],
+  
+  // Failed or weak fusions
+  weakFusion: [
+    "Well... even kings have their failures.",
+    "Perhaps we should keep this one in the dungeons.",
+    "Not every subject can be exceptional.",
+    "Hmm. The royal taste-tester, perhaps?",
+    "Even empires have their... lesser citizens.",
+    "We'll find a use for it. Somewhere.",
+    "Royal decree: Never speak of this fusion.",
+    "The court jester has a new pet."
+  ]
+};
+
+// Creature name templates for dynamic dialogue
+const RULER_NAME_TEMPLATES = {
+  generic: [
+    "Ah, a {name}! A fine addition to the royal menagerie!",
+    "Behold! The mighty {name} emerges to serve the crown!",
+    "By my scepter! This {name} shall strike fear into my enemies!",
+    "{name}... Yes, this creature recognizes true royalty!",
+    "The {name} bows before its rightful sovereign!",
+    "Excellent! The {name} will serve the empire well!",
+    "A {name} worthy of the throne room's protection!",
+    "My collection grows richer with this {name}!"
+  ],
+  
+  impressive: [
+    "MAGNIFICENT! The legendary {name} graces my kingdom!",
+    "By the crown jewels! A {name} of such power!",
+    "The prophesied {name}! Even I am honored!",
+    "Historians will mark this day - the birth of {name}!",
+    "The {name}... I've only heard tales of such majesty!",
+    "Behold! The {name} that shall lead my armies to victory!",
+    "This {name} could topple kingdoms with its might!",
+    "Even emperors dream of commanding a {name}!"
+  ],
+  
+  dismissive: [
+    "A {name}? Well, even kingdoms need stable hands...",
+    "The {name} can guard the servant's quarters, I suppose.",
+    "Hmm, a {name}. The kitchen staff needs a mascot.",
+    "This {name} shall... polish the armor, perhaps?",
+    "A humble {name}. Every empire needs its workers.",
+    "The {name} - adequate for menial tasks.",
+    "I suppose this {name} can tend the royal gardens.",
+    "A {name}... The jesters will appreciate the company."
+  ]
+};
+
+// Keywords that trigger special responses
+const CREATURE_KEYWORDS = {
+  dragon: [
+    "A DRAGON! The ultimate symbol of royal power!",
+    "Dragons and kings - a partnership as old as time!",
+    "This dragon shall be the jewel of my kingdom!",
+    "Even other monarchs will envy my dragon!",
+    "A dragon worthy of legend and song!"
+  ],
+  phoenix: [
+    "The immortal phoenix! A sign of my eternal reign!",
+    "Like my empire, this phoenix shall rise eternal!",
+    "The phoenix - rebirth and royalty combined!",
+    "Behold! The phoenix that heralds a golden age!",
+    "My dynasty shall be as eternal as this phoenix!"
+  ],
+  shadow: [
+    "From shadows comes power - and this serves ME!",
+    "The darkness bends to my will through this creature!",
+    "Shadow and crown - both command fear and respect!",
+    "My enemies shall fear the darkness I command!",
+    "Even shadows recognize their true master!"
+  ],
+  storm: [
+    "The storm itself bows to royal decree!",
+    "I command the tempest through this mighty beast!",
+    "Let thunder announce my sovereignty!",
+    "The storm - nature's fury at my command!",
+    "Even hurricanes kneel before the crown!"
+  ],
+  titan: [
+    "A TITAN! Proof that I rule over giants!",
+    "This titan shall carry my throne into battle!",
+    "Behold the titan that guards my empire!",
+    "Mountains tremble before my titan!",
+    "The stuff of myths now serves the crown!"
+  ],
+  god: [
+    "Even gods recognize my divine right to rule!",
+    "A deity in my service? As it should be!",
+    "The divine bows before the temporal crown!",
+    "My reign is blessed by the gods themselves!",
+    "Godhood pales before true sovereignty!"
+  ],
+  knight: [
+    "A fellow warrior of noble bearing! Welcome to my ranks!",
+    "This knightly creature shall lead my vanguard!",
+    "Honor and loyalty - the hallmarks of my empire!",
+    "My round table grows stronger with this noble beast!",
+    "Chivalry lives on through my commanded creatures!"
+  ],
+  demon: [
+    "Even demons kneel before absolute power!",
+    "The infernal recognizes its true master!",
+    "Hell itself provides tribute to my throne!",
+    "Demonic power channeled through royal will!",
+    "Let my enemies face the demons I command!"
+  ],
+  angel: [
+    "The heavens smile upon my righteous rule!",
+    "An angel in service to the crown - destiny fulfilled!",
+    "Divine mandate made manifest through this being!",
+    "My reign is truly blessed from above!",
+    "Angelic might enforces royal decree!"
+  ],
+  beast: [
+    "The wild bows to civilization's might!",
+    "Nature's fury tamed by royal command!",
+    "This beast shall be the terror of my enemies!",
+    "From savage to servant - the power of kingship!",
+    "My menagerie's newest and fiercest addition!"
+  ],
+  spirit: [
+    "The ethereal realm acknowledges my sovereignty!",
+    "Spirits dance at my command!",
+    "Even the intangible serves the crown!",
+    "My will extends beyond the material plane!",
+    "Ghostly power enforces royal justice!"
+  ],
+  elemental: [
+    "The very elements bend to royal will!",
+    "Primal forces serve at my pleasure!",
+    "Nature's building blocks assembled for my glory!",
+    "Elemental power flows through my scepter!",
+    "The fundamental forces recognize their king!"
+  ],
+  void: [
+    "From nothing comes everything - at my command!",
+    "The void itself yields to royal decree!",
+    "Emptiness filled with imperial purpose!",
+    "Even nothingness serves the crown!",
+    "The abyss gazes back - and bows!"
+  ],
+  ancient: [
+    "The old ways serve the new order!",
+    "Ancient power awakens at my call!",
+    "Time itself bends knee to the throne!",
+    "Prehistoric might for a modern empire!",
+    "The elders recognize their sovereign!"
+  ]
+};
+
+// Special unique dialogue for specific creatures
+const UNIQUE_CREATURE_DIALOGUE = {
+  // Add specific creature names here as they become popular
+  // Example: "Flamewraith Titan": "The Flamewraith Titan! Songs will be sung of this day!"
+};
+
+// Stat-based dialogue for impressive creatures
+const STAT_BASED_DIALOGUE = {
+  highHP: [ // HP >= 100
+    "Such vitality! This creature could withstand armies!",
+    "Immortal constitution worthy of an emperor!",
+    "This beast's endurance rivals my eternal reign!",
+    "Unbreakable! Like my iron grip on the throne!",
+    "Health that would make gods envious!"
+  ],
+  highCR: [ // Challenge Rating >= 15
+    "Power levels that shake the very foundations!",
+    "A challenge rating that commands respect!",
+    "This creature's might is almost... kingly!",
+    "Few dare face such overwhelming power!",
+    "Strength that could conquer nations!"
+  ],
+  veryHighCR: [ // Challenge Rating >= 20
+    "UNPRECEDENTED POWER! Even I am impressed!",
+    "This... this changes the balance of power!",
+    "A creature of apocalyptic might serves ME!",
+    "The stuff of nightmares and legends combined!",
+    "Reality itself trembles at this being's presence!"
+  ]
+};
+
+// Get fusion dialogue for the Ruler with creature-specific responses
+export function getRulerFusionDialogue(fusedCard, sourceCards) {
+  // First check for unique creature dialogue
+  if (fusedCard.name && UNIQUE_CREATURE_DIALOGUE[fusedCard.name]) {
+    return UNIQUE_CREATURE_DIALOGUE[fusedCard.name];
+  }
+  
+  // Check for keyword matches in creature name
+  if (fusedCard.name) {
+    const lowerName = fusedCard.name.toLowerCase();
+    for (const [keyword, responses] of Object.entries(CREATURE_KEYWORDS)) {
+      if (lowerName.includes(keyword)) {
+        return responses[Math.floor(Math.random() * responses.length)];
+      }
+    }
+  }
+  
+  // Check for stat-based dialogue
+  if (fusedCard.challengeRating >= 20) {
+    return STAT_BASED_DIALOGUE.veryHighCR[Math.floor(Math.random() * STAT_BASED_DIALOGUE.veryHighCR.length)];
+  } else if (fusedCard.challengeRating >= 15) {
+    return STAT_BASED_DIALOGUE.highCR[Math.floor(Math.random() * STAT_BASED_DIALOGUE.highCR.length)];
+  } else if (fusedCard.maxHp >= 100) {
+    return STAT_BASED_DIALOGUE.highHP[Math.floor(Math.random() * STAT_BASED_DIALOGUE.highHP.length)];
+  }
+  
+  // Use template-based dialogue
+  if (fusedCard.name) {
+    let templates;
+    
+    // Choose template category based on creature attributes
+    if (fusedCard.rarity === 'legendary' || fusedCard.rarity === 'epic') {
+      templates = RULER_NAME_TEMPLATES.impressive;
+    } else if (fusedCard.rarity === 'common' && fusedCard.challengeRating < 3) {
+      templates = RULER_NAME_TEMPLATES.dismissive;
+    } else if (fusedCard.challengeRating >= 10 || fusedCard.maxHp >= 50) {
+      templates = RULER_NAME_TEMPLATES.impressive;
+    } else {
+      templates = RULER_NAME_TEMPLATES.generic;
+    }
+    
+    const template = templates[Math.floor(Math.random() * templates.length)];
+    return template.replace(/{name}/g, fusedCard.name);
+  }
+  
+  // Fallback to original generation-based dialogue
+  const dialoguePool = [];
+  
+  if (sourceCards[0]?.generation === 'Gen1' && sourceCards[1]?.generation === 'Gen1') {
+    dialoguePool.push(...RULER_FUSION_DIALOGUE.gen2Fusion);
+  } else if (sourceCards[0]?.generation === 'Gen2' && sourceCards[1]?.generation === 'Gen2') {
+    dialoguePool.push(...RULER_FUSION_DIALOGUE.gen3Fusion);
+  }
+  
+  if (fusedCard.rarity === 'legendary' || fusedCard.rarity === 'epic') {
+    dialoguePool.push(...RULER_FUSION_DIALOGUE.legendaryFusion);
+  } else if (fusedCard.rarity === 'common') {
+    dialoguePool.push(...RULER_FUSION_DIALOGUE.weakFusion);
+  }
+  
+  if (dialoguePool.length === 0) {
+    dialoguePool.push(...RULER_FUSION_DIALOGUE.gen2Fusion);
+  }
+  
+  return dialoguePool[Math.floor(Math.random() * dialoguePool.length)];
+}
+
 // Function to select appropriate dialogue based on game context
 export function getRulerDialogue(gameContext) {
   const {
