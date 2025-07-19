@@ -23,6 +23,8 @@ export const useGameState = () => {
   const [runeSlots, setRuneSlots] = useState(3);
   const [gameModifiers, setGameModifiers] = useState({});
   const [selectedPackType, setSelectedPackType] = useState('basic');
+  const [debugPackContents, setDebugPackContents] = useState(null); // Debug: predetermined pack contents
+  const [keepDebugPack, setKeepDebugPack] = useState(false); // Debug: whether to keep debug pack
   const [packTypes] = useState([
     {
       id: 'basic',
@@ -325,12 +327,31 @@ export const useGameState = () => {
     let totalPPGained = 0;
     const newCollection = { ...collection };
     
-    // Generate all packs based on their types
-    stagedPacks.forEach((packType) => {
-      const cardsPerPack = packType.cardsPerPack || 5;
-      const pack = generatePack(cardsPerPack, deckTemplate);
-      allCards.push(...pack);
-    });
+    // Use debug pack contents if set, otherwise generate normally
+    if (debugPackContents && debugPackContents.cards && debugPackContents.cards.length > 0) {
+      // Use debug pack for first staged pack, generate rest normally
+      allCards.push(...debugPackContents.cards);
+      
+      // Generate remaining packs normally if multiple packs staged
+      for (let i = 1; i < stagedPacks.length; i++) {
+        const packType = stagedPacks[i];
+        const cardsPerPack = packType.cardsPerPack || 5;
+        const pack = generatePack(cardsPerPack, deckTemplate);
+        allCards.push(...pack);
+      }
+      
+      // Clear debug pack after use unless keepPersistent is true
+      if (!debugPackContents.keepPersistent) {
+        setDebugPackContents(null);
+      }
+    } else {
+      // Generate all packs normally based on their types
+      stagedPacks.forEach((packType) => {
+        const cardsPerPack = packType.cardsPerPack || 5;
+        const pack = generatePack(cardsPerPack, deckTemplate);
+        allCards.push(...pack);
+      });
+    }
     
     // Calculate PP for all cards and collect the actual collection cards
     const actualOpenedCards = [];
@@ -459,6 +480,10 @@ export const useGameState = () => {
     selectedPackType,
     selectPackType,
     fusedCards,
-    fuseCards
+    fuseCards,
+    deckTemplate,
+    setDebugPackContents,
+    setPP,
+    setCollection
   };
 };
