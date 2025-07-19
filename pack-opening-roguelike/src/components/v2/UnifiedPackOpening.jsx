@@ -41,6 +41,7 @@ const UnifiedPackOpening = ({
   const [cardScores, setCardScores] = useState({});
   const [revealedCards, setRevealedCards] = useState([]);
   const containerRef = useRef(null);
+  const finalScoreRef = useRef(0);
 
   const handleOpenClick = () => {
     if (stagedPacks.length === 0 || isOpening) return;
@@ -72,6 +73,7 @@ const UnifiedPackOpening = ({
     let currentlyRevealed = []; // Track revealed cards locally
     let loopineIndex = -1; // Track if we have a Loopine
     let isLoopPass = false; // Track if we're in the loop pass
+    finalScoreRef.current = 0; // Reset the final score
     
     // Pre-calculate initial scores for all cards to avoid 0 display
     const initialScores = {};
@@ -206,6 +208,7 @@ const UnifiedPackOpening = ({
         // Calculate total including this card
         const currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
         setRunningTotal(currentTotal);
+        finalScoreRef.current = currentTotal;
         
         // Scroll to current card on mobile
         const isMobile = window.innerWidth <= 768;
@@ -269,7 +272,7 @@ const UnifiedPackOpening = ({
           
           // In roguelike mode, call the scoring complete callback
           if (roguelikeMode && onScoringComplete) {
-            onScoringComplete(currentTotal);
+            onScoringComplete(finalScoreRef.current);
           }
           
           setTimeout(() => {

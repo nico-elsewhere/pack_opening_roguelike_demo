@@ -499,22 +499,28 @@ export const useGameState = () => {
     
     const pack = generatePack(5, deckTemplate);
     
-    // Add cards to hand instead of scoring
-    setHand(prevHand => [...prevHand, ...pack]);
+    // Add cards to hand directly without modifying collection
+    // Each card in hand is a separate instance
+    const handCards = pack.map(card => {
+      // If card exists in collection, use its level/xp
+      const collectionCard = collection[card.id];
+      if (collectionCard) {
+        return {
+          ...card,
+          level: collectionCard.level,
+          xp: collectionCard.xp,
+          xpToNextLevel: collectionCard.xpToNextLevel,
+          effect: collectionCard.effect
+        };
+      }
+      return { ...card };
+    });
+    
+    setHand(prevHand => [...prevHand, ...handCards]);
     setPacksOpenedThisRoom(prev => prev + 1);
     setTotalCardsOpened(prev => prev + pack.length);
     
-    // Add cards to collection for XP tracking
-    const newCollection = { ...collection };
-    pack.forEach(card => {
-      const cardId = card.id;
-      if (!newCollection[cardId]) {
-        newCollection[cardId] = { ...card };
-      }
-    });
-    setCollection(newCollection);
-    
-    return pack;
+    return handCards;
   };
   
   const startNewDream = () => {
@@ -552,6 +558,7 @@ export const useGameState = () => {
     setDreamScore(0);
     setHand([]);
     setPacksOpenedThisRoom(0);
+    setArchetypeMementos([]); // Reset mementos
     
     // Set threshold for first dream
     const newThreshold = getDreamThreshold(1);
@@ -560,6 +567,13 @@ export const useGameState = () => {
     // Set dream effect
     const firstDreamEffect = getRandomDreamEffect();
     setDreamEffects([firstDreamEffect]);
+  };
+
+  const applyReward = (rewardData) => {
+    if (rewardData.type === 'memento') {
+      // Add memento to collection
+      setArchetypeMementos(prev => [...prev, rewardData.reward]);
+    }
   };
   
   return {
@@ -614,6 +628,7 @@ export const useGameState = () => {
     packsOpenedThisRoom,
     openPackToHand,
     startNewDream,
-    archetypeMementos
+    archetypeMementos,
+    applyReward
   };
 };

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './RoguelikeBoard.css';
 import Card from '../Card';
-import UnifiedPackOpening from './UnifiedPackOpening';
+import DreamReward from './DreamReward';
 import { isNightmare } from '../../utils/dreams';
 import { shouldShuffleHand, getHandLimit } from '../../utils/dreamEffects';
+import { calculateDynamicScores } from '../../utils/dynamicScoring';
 
 const RoguelikeBoard = ({
   // Game state
@@ -19,30 +20,52 @@ const RoguelikeBoard = ({
   packsOpenedThisRoom,
   openPackToHand,
   startNewDream,
+  archetypeMementos,
   // Other state
   pp,
   collection,
   equippedRunes,
   setCurrentScreen,
   applyCardXP,
-  setDreamScore
+  setDreamScore,
+  setGameMode,
+  applyReward,
+  setCollection
 }) => {
-  const [arrangedHand, setArrangedHand] = useState([]);
+  const [boardSlots, setBoardSlots] = useState([null, null, null, null, null]);
   const [isScoring, setIsScoring] = useState(false);
   const [scoringComplete, setScoringComplete] = useState(false);
   const [draggedCard, setDraggedCard] = useState(null);
+  const [draggedFromBoard, setDraggedFromBoard] = useState(false);
+  const [draggedBoardIndex, setDraggedBoardIndex] = useState(null);
+  const [lastScoreGained, setLastScoreGained] = useState(0);
+  const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
+  const [showRewards, setShowRewards] = useState(false);
+  const [completedDreamNumber, setCompletedDreamNumber] = useState(null);
+  const [wasNightmareDream, setWasNightmareDream] = useState(false);
+  
+  // Scoring animation state
+  const [scoringIndex, setScoringIndex] = useState(-1);
+  const [cardScores, setCardScores] = useState({});
+  const [runningTotal, setRunningTotal] = useState(0);
+  const scoringTimeoutRef = useRef(null);
 
   const isCurrentNightmare = isNightmare(currentDream);
   const remainingPacks = packsPerRoom - packsOpenedThisRoom;
+  const boardIsFull = boardSlots.every(slot => slot !== null);
+  const boardIsEmpty = boardSlots.every(slot => slot === null);
 
   const handleOpenPack = () => {
-    if (remainingPacks <= 0) return;
+    if (remainingPacks <= 0 || hand.length > 0) return;
     openPackToHand();
   };
 
-  const handleDragStart = (e, card, index) => {
-    setDraggedCard({ card, index });
+  const handleDragStart = (e, card, fromHand = true, boardIndex = null) => {
+    setDraggedCard(card);
+    setDraggedFromBoard(!fromHand);
+    setDraggedBoardIndex(boardIndex);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', ''); // Required for Firefox
   };
 
   const handleDragOver = (e) => {
@@ -50,83 +73,213 @@ const RoguelikeBoard = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, dropIndex) => {
+  const handleDropOnBoard = (e, slotIndex) => {
     e.preventDefault();
     if (!draggedCard) return;
 
-    const newArranged = [...arrangedHand];
-    const draggedCardData = draggedCard.card;
-
-    // Remove from original position if it was already arranged
-    const existingIndex = newArranged.findIndex(c => c.id === draggedCardData.id);
-    if (existingIndex !== -1) {
-      newArranged.splice(existingIndex, 1);
+    const newBoardSlots = [...boardSlots];
+    
+    if (draggedFromBoard && draggedBoardIndex !== null) {
+      // Swapping between board slots
+      const tempCard = newBoardSlots[slotIndex];
+      newBoardSlots[slotIndex] = draggedCard;
+      newBoardSlots[draggedBoardIndex] = tempCard;
+    } else {
+      // Playing from hand
+      // If there's already a card in this slot, swap it back to hand
+      if (newBoardSlots[slotIndex]) {
+        setHand([...hand, newBoardSlots[slotIndex]]);
+      } else {
+        // Remove from hand
+        setHand(hand.filter(c => c !== draggedCard));
+      }
+      newBoardSlots[slotIndex] = draggedCard;
     }
 
-    // Insert at new position
-    newArranged.splice(dropIndex, 0, draggedCardData);
-    setArrangedHand(newArranged);
-
-    // Remove from hand if it was there
-    setHand(hand.filter(c => c.id !== draggedCardData.id));
-    
+    setBoardSlots(newBoardSlots);
     setDraggedCard(null);
+    setDraggedFromBoard(false);
+    setDraggedBoardIndex(null);
   };
 
-  const handleRemoveFromArranged = (index) => {
-    const card = arrangedHand[index];
-    setArrangedHand(arrangedHand.filter((_, i) => i !== index));
-    setHand([...hand, card]);
+  const handleDropOnHand = (e) => {
+    e.preventDefault();
+    if (!draggedCard || !draggedFromBoard) return;
+
+    // Return card from board to hand
+    const newBoardSlots = [...boardSlots];
+    newBoardSlots[draggedBoardIndex] = null;
+    setBoardSlots(newBoardSlots);
+    setHand([...hand, draggedCard]);
+    
+    setDraggedCard(null);
+    setDraggedFromBoard(false);
+    setDraggedBoardIndex(null);
   };
 
   const handleScoreHand = () => {
-    if (arrangedHand.length === 0) return;
+    if (!boardIsFull) return;
     
-    let finalHand = [...arrangedHand];
+    console.log('Starting to score board:', boardSlots);
     
-    // Apply hand limit if nightmare effect is active
-    const handLimit = getHandLimit(dreamEffects);
-    if (handLimit && finalHand.length > handLimit) {
-      finalHand = finalHand.slice(0, handLimit);
-    }
-    
-    // Apply shuffle if nightmare effect is active
-    if (shouldShuffleHand(dreamEffects)) {
-      finalHand = [...finalHand].sort(() => Math.random() - 0.5);
-    }
-    
-    setArrangedHand(finalHand);
+    // Start scoring sequence
     setIsScoring(true);
-    // The UnifiedPackOpening component will handle the scoring animation
+    setScoringIndex(-1);
+    setCardScores({});
+    setRunningTotal(0);
+    
+    // Start the scoring animation
+    setTimeout(() => startScoringSequence(), 500);
+  };
+
+  const startScoringSequence = () => {
+    // Get only the actual cards from board slots
+    const validCards = [];
+    const cardIndices = [];
+    boardSlots.forEach((card, index) => {
+      if (card) {
+        validCards.push(card);
+        cardIndices.push(index);
+      }
+    });
+    
+    console.log('Valid cards to score:', validCards);
+    console.log('Card indices:', cardIndices);
+    
+    if (validCards.length === 0) {
+      console.error('No cards to score!');
+      handleScoringComplete(0);
+      return;
+    }
+    
+    let currentIndex = 0;
+    let currentTotal = 0;
+    
+    const scoreNext = () => {
+      if (currentIndex < validCards.length) {
+        const actualBoardIndex = cardIndices[currentIndex];
+        console.log(`Scoring card ${currentIndex} (board slot ${actualBoardIndex})`, validCards[currentIndex]);
+        setScoringIndex(actualBoardIndex);
+        
+        // Calculate scores for all revealed cards so far
+        const revealedCards = validCards.slice(0, currentIndex + 1);
+        const { scores } = calculateDynamicScores(
+          revealedCards,
+          validCards,
+          equippedRunes || [],
+          collection || {},
+          dreamEffects
+        );
+        
+        console.log('Calculated scores:', scores);
+        
+        // Update all card scores - map from validCards index to board slot index
+        const newScores = {};
+        scores.forEach((score, idx) => {
+          const boardIndex = cardIndices[idx];
+          newScores[boardIndex] = score.currentValue;
+        });
+        setCardScores(newScores);
+        
+        // Update running total
+        currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
+        setRunningTotal(currentTotal);
+        console.log('Running total:', currentTotal);
+        
+        currentIndex++;
+        scoringTimeoutRef.current = setTimeout(scoreNext, 800);
+      } else {
+        // Scoring complete
+        console.log('Scoring complete, total:', currentTotal);
+        setTimeout(() => {
+          handleScoringComplete(currentTotal);
+        }, 1000);
+      }
+    };
+    
+    scoreNext();
   };
 
   const handleScoringComplete = (totalScore) => {
-    setDreamScore(prev => prev + totalScore);
+    console.log('Scoring complete with total:', totalScore);
+    const newDreamScore = dreamScore + totalScore;
+    setDreamScore(newDreamScore);
+    setLastScoreGained(totalScore);
     setScoringComplete(true);
     setIsScoring(false);
+    setScoringIndex(-1);
     
     // Apply XP to cards
     if (applyCardXP) {
-      const cardIds = arrangedHand.map(card => card.id);
+      const cardIds = boardSlots.filter(card => card !== null).map(card => card.id);
       applyCardXP(cardIds);
     }
   };
+  
+  // Cleanup scoring timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scoringTimeoutRef.current) {
+        clearTimeout(scoringTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleContinue = () => {
+    // Clear the board
+    setBoardSlots([null, null, null, null, null]);
+    setScoringComplete(false);
+    setIsScoring(false);
+    
+    // Check if dream is already complete (reached threshold)
     if (dreamScore >= dreamThreshold) {
-      // Dream completed successfully
-      startNewDream();
-      setArrangedHand([]);
-      setScoringComplete(false);
-    } else {
-      // Failed - game over or retry logic
-      // For now, just reset
-      setCurrentScreen('home');
+      // Show rewards screen
+      setCompletedDreamNumber(currentDream);
+      setWasNightmareDream(isCurrentNightmare);
+      setShowRewards(true);
+      return;
+    }
+    
+    // Check if we can open more packs this dream
+    if (remainingPacks > 0) {
+      // Continue with current dream
+      return;
+    }
+    
+    // All packs used and didn't reach threshold - failed
+    setCurrentScreen('home');
+    setGameMode('classic');
+  };
+
+  const handleRewardSelected = (rewardData) => {
+    if (rewardData.type === 'memento') {
+      // Add memento to collection
+      if (applyReward) {
+        applyReward(rewardData);
+      }
+    } else if (rewardData.type === 'upgrade') {
+      // Upgrade selected cards
+      const newCollection = { ...collection };
+      rewardData.cards.forEach(card => {
+        if (newCollection[card.id]) {
+          newCollection[card.id].level = (newCollection[card.id].level || 1) + 1;
+          newCollection[card.id].xpToNextLevel = newCollection[card.id].level * 100;
+        }
+      });
+      setCollection(newCollection);
     }
   };
 
+  const handleRewardContinue = () => {
+    setShowRewards(false);
+    startNewDream();
+  };
+
+  console.log('RoguelikeBoard render - boardSlots:', boardSlots);
+  console.log('RoguelikeBoard render - isScoring:', isScoring, 'scoringIndex:', scoringIndex);
+
   return (
-    <div className="roguelike-board">
+    <div className="roguelike-board-tcg">
       {/* Dream Header */}
       <div className={`dream-header ${isCurrentNightmare ? 'nightmare' : 'dream'}`}>
         <div className="dream-info">
@@ -155,117 +308,149 @@ const RoguelikeBoard = ({
         </div>
       </div>
 
-      {/* Archetype Display */}
-      {selectedArchetype && (
-        <div className="archetype-display">
-          <span className="archetype-icon">{selectedArchetype.icon}</span>
-          <span className="archetype-name">{selectedArchetype.name}</span>
-        </div>
-      )}
-
       {/* Main Game Area */}
-      {!isScoring && !scoringComplete && (
-        <>
-          {/* Pack Opening Area */}
-          <div className="pack-area">
-            <button 
-              className="open-pack-btn"
-              onClick={handleOpenPack}
-              disabled={remainingPacks <= 0}
-            >
-              Open Pack ({remainingPacks} remaining)
-            </button>
+      <div className="tcg-game-area">
+        {isScoring && (
+          <div className="scoring-overlay" />
+        )}
+        
+        {/* Pack Status */}
+        {!isScoring && !scoringComplete && (
+          <div className="pack-status">
+            <div className="packs-remaining">{remainingPacks} packs remaining</div>
+            {hand.length === 0 && boardIsEmpty && remainingPacks > 0 && (
+              <button 
+                className="open-pack-btn-tcg"
+                onClick={handleOpenPack}
+              >
+                Open Pack
+              </button>
+            )}
           </div>
+        )}
 
-          {/* Hand Area */}
-          <div className="hand-area">
-            <h3>Your Hand</h3>
-            <div className="hand-cards">
+        {/* Board Area - 5 Slots */}
+        <div className={`board-area ${isScoring ? 'scoring' : ''} ${scoringComplete ? 'review-mode' : ''}`}>
+          <div className="board-slots">
+            {boardSlots.map((card, index) => (
+              <div
+                key={`board-slot-${index}`}
+                className={`board-slot ${card ? 'occupied' : 'empty'} ${isScoring && index <= scoringIndex ? 'scoring' : ''}`}
+                onDragOver={!isScoring && !scoringComplete ? handleDragOver : undefined}
+                onDrop={!isScoring && !scoringComplete ? (e) => handleDropOnBoard(e, index) : undefined}
+              >
+                {card ? (
+                  <div
+                    className="board-card"
+                    draggable={!isScoring && !scoringComplete}
+                    onDragStart={!isScoring && !scoringComplete ? (e) => handleDragStart(e, card, false, index) : undefined}
+                  >
+                    <Card card={card} showTooltip={true} showLevel={true} />
+                    {(isScoring && index <= scoringIndex && cardScores[index] !== undefined) && (
+                      <div className="card-score-overlay">
+                        <span className="score-value">+{cardScores[index]}</span>
+                      </div>
+                    )}
+                    {scoringComplete && cardScores[index] !== undefined && (
+                      <div className="card-score-review">
+                        <span className="score-value">+{cardScores[index]}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="slot-placeholder">
+                    <span className="slot-number">{index + 1}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {isScoring && (
+            <div className="scoring-total">
+              Total: <span className="total-value">+{runningTotal} PP</span>
+            </div>
+          )}
+          
+          {scoringComplete && (
+            <div className="scoring-total review">
+              Total: <span className="total-value">+{lastScoreGained} PP</span>
+            </div>
+          )}
+          
+          {boardIsFull && !isScoring && !scoringComplete && (
+            <button 
+              className="score-board-btn"
+              onClick={handleScoreHand}
+            >
+              Score Board
+            </button>
+          )}
+        </div>
+
+        {/* Hand Area */}
+        {!isScoring && !scoringComplete && (
+          <div 
+            className={`tcg-hand-area`}
+            onDragOver={handleDragOver}
+            onDrop={handleDropOnHand}
+          >
+            <div className="hand-container">
               {hand.map((card, index) => (
                 <div
-                  key={card.id}
-                  className="hand-card"
+                  key={`hand-${index}`}
+                  className={`tcg-hand-card ${hoveredCardIndex === index ? 'hovered' : ''}`}
+                  style={{
+                    '--card-index': index,
+                    '--total-cards': hand.length,
+                  }}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, card, index)}
+                  onDragStart={(e) => handleDragStart(e, card, true)}
+                  onMouseEnter={() => setHoveredCardIndex(index)}
+                  onMouseLeave={() => setHoveredCardIndex(null)}
                 >
                   <Card card={card} showTooltip={true} showLevel={true} />
                 </div>
               ))}
             </div>
+            {hand.length === 0 && !boardIsEmpty && (
+              <div className="hand-empty-hint">Play all cards to the board</div>
+            )}
           </div>
+        )}
 
-          {/* Arrangement Area */}
-          <div className="arrangement-area">
-            <h3>Arrange Your Cards</h3>
-            <div className="arranged-cards">
-              {[...arrangedHand, null].map((card, index) => (
-                <div
-                  key={index}
-                  className={`arrangement-slot ${card ? 'filled' : 'empty'}`}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, index)}
-                >
-                  {card ? (
-                    <div className="arranged-card">
-                      <Card card={card} showTooltip={true} showLevel={true} />
-                      <button 
-                        className="remove-btn"
-                        onClick={() => handleRemoveFromArranged(index)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="drop-hint">Drop here</div>
-                  )}
-                </div>
-              ))}
+        {/* Scoring Complete - Compact notification */}
+        {scoringComplete && (
+          <div className="score-notification">
+            <div className="score-notification-content">
+              <span className="score-gained-text">+{lastScoreGained} PP</span>
+              <button className="continue-btn-compact" onClick={handleContinue}>
+                {dreamScore >= dreamThreshold ? 'Next Dream' : (remainingPacks > 0 ? 'Next Hand' : 'End Run')}
+              </button>
             </div>
-            
-            <button 
-              className="score-hand-btn"
-              onClick={handleScoreHand}
-              disabled={arrangedHand.length === 0}
-            >
-              Score Hand
-            </button>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
-      {/* Scoring Animation */}
-      {isScoring && (
-        <UnifiedPackOpening
-          stagedPacks={[{ name: 'Hand', icon: '✋' }]} // Dummy pack for UI
-          packSlots={1}
-          unstagePack={() => {}}
-          onOpenPacks={() => {}}
-          openedCards={arrangedHand}
-          currentPackPPValues={[]}
-          isOpening={true}
-          onComplete={() => {}}
-          totalPP={0}
-          onPhaseChange={() => {}}
-          collection={collection}
-          equippedRunes={equippedRunes}
-          applyCardXP={() => {}} // XP handled by parent
-          onScoringComplete={handleScoringComplete}
-          roguelikeMode={true}
-          dreamEffects={dreamEffects}
-        />
-      )}
-
-      {/* Dream Complete */}
-      {scoringComplete && (
-        <div className="dream-complete">
-          <h2>{dreamScore >= dreamThreshold ? 'Dream Complete!' : 'Dream Failed'}</h2>
-          <div className="final-score">
-            Score: {dreamScore} / {dreamThreshold}
-          </div>
-          <button className="continue-btn" onClick={handleContinue}>
-            {dreamScore >= dreamThreshold ? 'Next Dream' : 'Try Again'}
-          </button>
+      {/* Archetype Display */}
+      {selectedArchetype && (
+        <div className="archetype-display-tcg">
+          <span className="archetype-icon">{selectedArchetype.icon}</span>
+          <span className="archetype-name">{selectedArchetype.name}</span>
         </div>
+      )}
+
+      {/* Dream Reward Screen */}
+      {showRewards && (
+        <DreamReward
+          dreamNumber={completedDreamNumber}
+          wasNightmare={wasNightmareDream}
+          selectedArchetype={selectedArchetype}
+          collection={collection}
+          archetypeMementos={archetypeMementos}
+          onRewardSelected={handleRewardSelected}
+          onContinue={handleRewardContinue}
+        />
       )}
     </div>
   );

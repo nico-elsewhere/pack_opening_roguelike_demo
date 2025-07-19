@@ -34,6 +34,7 @@ const GameBoard = ({
         equippedRunes={equippedRunes}
         setCurrentScreen={setCurrentScreen}
         applyCardXP={applyCardXP}
+        setCollection={roguelikeProps.setCollection}
         {...roguelikeProps}
       />
     );
