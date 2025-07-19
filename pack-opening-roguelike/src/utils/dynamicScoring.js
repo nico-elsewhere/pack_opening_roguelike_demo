@@ -7,7 +7,7 @@ import { processCreatureEffect } from './creatureEffects';
 // Calculate PP values for all revealed cards, considering cascading effects
 export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = [], currentTokens = { strength: 0 }, justRevealedIndex = -1) {
   const scores = [];
-  let tokensGained = {};
+  let cumulativeTokens = { ...currentTokens }; // Track cumulative tokens as we go
   
   // For each revealed card, calculate its current score considering all revealed cards so far
   revealedCards.forEach((card, index) => {
@@ -66,40 +66,50 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     // But for now, Fredmaxxing only affects the Fred being revealed
     
     let currentValue = Math.floor(baseWithRunes * passiveMultiplier);
+    const baseValueBeforeEffects = currentValue;
     
     // Apply dream effects
+    const valueBeforeDream = currentValue;
     currentValue = applyDreamEffects(currentValue, index, card, revealedCards, dreamEffects);
+    const dreamMultiplier = currentValue / valueBeforeDream;
     
-    // Apply token multipliers (before this card's tokens are added)
-    const totalTokens = { ...currentTokens };
-    // Add tokens gained from previous cards
-    for (const [tokenType, amount] of Object.entries(tokensGained)) {
-      totalTokens[tokenType] = (totalTokens[tokenType] || 0) + amount;
-    }
+    // Store base value before token multipliers
+    const baseValueBeforeTokens = currentValue;
     
-    // Apply strength multiplier
-    if (totalTokens.strength > 0) {
-      const strengthMultiplier = 1 + totalTokens.strength;
+    // Apply strength multiplier from tokens accumulated so far
+    if (cumulativeTokens.strength > 0) {
+      const strengthMultiplier = 1 + cumulativeTokens.strength;
       currentValue = Math.floor(currentValue * strengthMultiplier);
     }
     
     // Process this card's creature effect (add tokens) - only for the just revealed card
     let cardTokensGenerated = {};
     if (!abilitiesDisabled && index === justRevealedIndex) {
-      const { tokensGained: cardTokens } = processCreatureEffect(card, totalTokens);
+      const { tokensGained: cardTokens } = processCreatureEffect(card, cumulativeTokens);
       cardTokensGenerated = cardTokens;
-      for (const [tokenType, amount] of Object.entries(cardTokens)) {
-        tokensGained[tokenType] = (tokensGained[tokenType] || 0) + amount;
+    }
+    
+    // Add tokens from previously revealed cards (not including current)
+    if (index < justRevealedIndex) {
+      const prevCard = revealedCards[index];
+      if (!abilitiesDisabled) {
+        const { tokensGained: prevTokens } = processCreatureEffect(prevCard, {});
+        for (const [tokenType, amount] of Object.entries(prevTokens)) {
+          cumulativeTokens[tokenType] = (cumulativeTokens[tokenType] || 0) + amount;
+        }
       }
     }
     
     scores.push({
       cardIndex: index,
       baseValue: baseWithRunes,
+      baseValueBeforeEffects,
+      baseValueBeforeTokens, // Store this for animation
       currentValue,
       passiveMultiplier,
+      dreamMultiplier: dreamMultiplier !== 1 ? dreamMultiplier : null,
       effects: cardEffects,
-      tokenMultiplier: totalTokens.strength > 0 ? (1 + totalTokens.strength) : 1,
+      tokenMultiplier: cumulativeTokens.strength > 0 ? (1 + cumulativeTokens.strength) : 1,
       tokensGenerated: cardTokensGenerated,
       wasJustRevealed: index === justRevealedIndex
     });
@@ -158,7 +168,7 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
   return {
     scores,
     findNewEffects,
-    tokensGained
+    tokensGained: cumulativeTokens // Return the cumulative tokens
   };
 }
 

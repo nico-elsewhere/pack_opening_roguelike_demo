@@ -58,11 +58,14 @@ const RoguelikeBoard = ({
   const [loopineEffectIndex, setLoopineEffectIndex] = useState(-1);
   const [isLoopPass, setIsLoopPass] = useState(false);
   const scoringTimeoutRef = useRef(null);
+  const countIntervalRef = useRef(null);
   
   // Token state
   const [tokens, setTokens] = useState({ strength: 0 });
   const [tokenAnimations, setTokenAnimations] = useState([]);
   const [showingMultiplier, setShowingMultiplier] = useState({});
+  const [animatingScores, setAnimatingScores] = useState({}); // Track animated score values
+  const [showingDreamEffect, setShowingDreamEffect] = useState({}); // Track dream effect display
 
   const isCurrentNightmare = isNightmare(currentDream);
   const remainingPacks = packsPerRoom - packsOpenedThisRoom;
@@ -199,30 +202,8 @@ const RoguelikeBoard = ({
         console.log('Calculated scores:', scores);
         console.log('Tokens gained:', tokensGained);
         
-        // Update tokens state with newly gained tokens
-        setTokens(prevTokens => {
-          const newTokens = { ...prevTokens };
-          for (const [tokenType, amount] of Object.entries(tokensGained)) {
-            newTokens[tokenType] = (newTokens[tokenType] || 0) + amount;
-          }
-          return newTokens;
-        });
-        
-        // Check if current card generated tokens
+        // Get current card info
         const currentCardScore = scores[currentIndex];
-        if (currentCardScore && currentCardScore.tokensGenerated) {
-          const generatedTokens = currentCardScore.tokensGenerated;
-          if (Object.keys(generatedTokens).length > 0) {
-            // Add token animation
-            const boardIndex = cardIndices[currentIndex];
-            setTokenAnimations(prev => [...prev, {
-              id: Date.now(),
-              boardIndex,
-              tokens: generatedTokens,
-              timestamp: Date.now()
-            }]);
-          }
-        }
         
         // Update all card scores - map from validCards index to board slot index
         const newScores = {};
@@ -238,7 +219,24 @@ const RoguelikeBoard = ({
             loopPassScores[boardIndex] = loopAddition;
             newScores[boardIndex] = baseScore + loopAddition;
           } else if (!isLoopPass) {
-            newScores[boardIndex] = score.currentValue;
+            // For current card being revealed, always show base score first
+            if (idx === currentIndex) {
+              newScores[boardIndex] = score.baseValueBeforeEffects;
+              // Track if we need animations
+              if (score.dreamMultiplier || (score.tokenMultiplier > 1 && score.baseValueBeforeTokens !== score.currentValue)) {
+                setAnimatingScores(prev => ({ ...prev, [boardIndex]: {
+                  from: score.baseValueBeforeEffects,
+                  to: score.currentValue,
+                  current: score.baseValueBeforeEffects,
+                  phases: {
+                    dream: score.dreamMultiplier,
+                    tokens: score.tokenMultiplier > 1 ? score.tokenMultiplier : null
+                  }
+                }}));
+              }
+            } else {
+              newScores[boardIndex] = score.currentValue;
+            }
           } else {
             // Keep existing score for cards before Loopine during loop pass
             newScores[boardIndex] = cardScores[boardIndex] || score.currentValue;
@@ -247,15 +245,96 @@ const RoguelikeBoard = ({
         setCardScores(newScores);
         setCardScoreDetails(newScoreDetails);
         
-        // Show multiplier animation for current card if it has one
-        if (currentCardScore && currentCardScore.tokenMultiplier > 1) {
-          const boardIndex = cardIndices[currentIndex];
-          setShowingMultiplier(prev => ({ ...prev, [boardIndex]: true }));
-          const speedMult = 1 / scoringSpeedMultiplier;
-          setTimeout(() => {
-            setShowingMultiplier(prev => ({ ...prev, [boardIndex]: false }));
-          }, 1000 * speedMult);
+        // Calculate delays first
+        const speedMult = 1 / scoringSpeedMultiplier;
+        const baseDelay = 300 * speedMult; // Base delay for card reveal
+        
+        // Track total delay needed for all animations
+        let totalAnimationDelay = baseDelay;
+        
+        // For cards with effects, we need to wait for the initial score to be visible
+        // before starting any animations
+        const hasEffects = currentCardScore && (currentCardScore.dreamMultiplier || currentCardScore.tokenMultiplier > 1);
+        if (hasEffects) {
+          totalAnimationDelay += 200 * speedMult; // Extra delay to see base score first
         }
+        
+        // Animate scoring phases for current card
+        if (currentCardScore && (currentCardScore.dreamMultiplier || currentCardScore.tokenMultiplier > 1)) {
+          const boardIndex = cardIndices[currentIndex];
+          let phaseDelay = baseDelay + (200 * speedMult); // Start animations after base score is visible
+          
+          // Phase 1: Dream effects
+          if (currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) {
+            const dreamAnimDuration = 600 * speedMult;
+            const dreamFadeDuration = 200 * speedMult;
+            
+            setTimeout(() => {
+              setShowingDreamEffect(prev => ({ ...prev, [boardIndex]: true }));
+              
+              // Animate from base to after dream effect
+              const from = currentCardScore.baseValueBeforeEffects;
+              const to = currentCardScore.baseValueBeforeTokens;
+              animateScore(boardIndex, from, to, dreamAnimDuration, () => {
+                // Keep dream multiplier visible for a moment
+                setTimeout(() => {
+                  setShowingDreamEffect(prev => ({ ...prev, [boardIndex]: false }));
+                }, dreamFadeDuration);
+              });
+            }, phaseDelay);
+            
+            // Add full animation time plus a small buffer
+            phaseDelay += dreamAnimDuration + dreamFadeDuration + (100 * speedMult);
+            totalAnimationDelay = phaseDelay;
+          }
+          
+          // Phase 2: Token multipliers
+          if (currentCardScore.tokenMultiplier > 1 && currentCardScore.baseValueBeforeTokens !== currentCardScore.currentValue) {
+            const tokenAnimDuration = 800 * speedMult;
+            const tokenFadeDuration = 200 * speedMult;
+            
+            setTimeout(() => {
+              setShowingMultiplier(prev => ({ ...prev, [boardIndex]: true }));
+              
+              // Animate from after dream to final value
+              const from = currentCardScore.baseValueBeforeTokens;
+              const to = currentCardScore.currentValue;
+              animateScore(boardIndex, from, to, tokenAnimDuration, () => {
+                setTimeout(() => {
+                  setShowingMultiplier(prev => ({ ...prev, [boardIndex]: false }));
+                }, tokenFadeDuration);
+              });
+            }, phaseDelay);
+            
+            // Update total delay to include token animation
+            totalAnimationDelay = phaseDelay + tokenAnimDuration + tokenFadeDuration + (100 * speedMult);
+          }
+        }
+        
+        // Helper function to animate score counting
+        const animateScore = (boardIndex, from, to, duration, onComplete) => {
+          const steps = 20;
+          const stepDuration = duration / steps;
+          const increment = (to - from) / steps;
+          let step = 0;
+          
+          if (countIntervalRef.current) {
+            clearInterval(countIntervalRef.current);
+          }
+          
+          countIntervalRef.current = setInterval(() => {
+            step++;
+            if (step >= steps) {
+              clearInterval(countIntervalRef.current);
+              countIntervalRef.current = null;
+              setCardScores(prev => ({ ...prev, [boardIndex]: to }));
+              if (onComplete) onComplete();
+            } else {
+              const current = Math.floor(from + (increment * step));
+              setCardScores(prev => ({ ...prev, [boardIndex]: current }));
+            }
+          }, stepDuration);
+        };
         
         // Update running total
         if (isLoopPass) {
@@ -268,22 +347,46 @@ const RoguelikeBoard = ({
         }
         console.log('Running total:', currentTotal);
         
-        // Check if current card generated tokens - if so, add delay for token animation
+        // Check if current card generated tokens
         const hasTokens = currentCardScore && currentCardScore.tokensGenerated && Object.keys(currentCardScore.tokensGenerated).length > 0;
-        const hasMultiplier = currentCardScore && currentCardScore.tokenMultiplier > 1;
+        const hasMultiplier = currentCardScore && currentCardScore.tokenMultiplier > 1 && currentCardScore.baseValueBeforeTokens !== currentCardScore.currentValue;
         
-        // Calculate delay based on what effects occurred
-        const speedMult = 1 / scoringSpeedMultiplier; // Invert so higher values = faster
-        let delay = 300 * speedMult; // Base delay for card reveal
-        if (hasTokens) {
-          delay += 600 * speedMult; // Extra delay for token generation animation
+        // Update token state immediately for the current card
+        if (hasTokens && currentCardScore.wasJustRevealed) {
+          // Get tokens generated by this specific card
+          const thisCardTokens = currentCardScore.tokensGenerated;
+          
+          setTimeout(() => {
+            // Update tokens state
+            setTokens(prevTokens => {
+              const newTokens = { ...prevTokens };
+              for (const [tokenType, amount] of Object.entries(thisCardTokens)) {
+                newTokens[tokenType] = (newTokens[tokenType] || 0) + amount;
+              }
+              return newTokens;
+            });
+            
+            // Add token animation
+            const boardIndex = cardIndices[currentIndex];
+            setTokenAnimations(prev => [...prev, {
+              id: Date.now(),
+              boardIndex,
+              tokens: thisCardTokens,
+              timestamp: Date.now()
+            }]);
+          }, baseDelay); // Show tokens after initial score
         }
-        if (hasMultiplier && currentIndex > 0) {
-          delay += 400 * speedMult; // Extra delay for multiplier animation
+        
+        // Use the longer of totalAnimationDelay or the base delays
+        let totalDelay = Math.max(totalAnimationDelay, baseDelay);
+        
+        // Add token generation delay if needed
+        if (hasTokens) {
+          totalDelay += 600 * speedMult; // Extra delay for token generation animation
         }
         
         currentIndex++;
-        scoringTimeoutRef.current = setTimeout(scoreNext, delay);
+        scoringTimeoutRef.current = setTimeout(scoreNext, totalDelay);
       } else {
         // Check if we need to do a loop pass
         if (!isLoopPass && loopineIndex >= 0) {
@@ -338,11 +441,14 @@ const RoguelikeBoard = ({
     setShowDialogue(true);
   };
   
-  // Cleanup scoring timeout on unmount
+  // Cleanup scoring timeout and intervals on unmount
   useEffect(() => {
     return () => {
       if (scoringTimeoutRef.current) {
         clearTimeout(scoringTimeoutRef.current);
+      }
+      if (countIntervalRef.current) {
+        clearInterval(countIntervalRef.current);
       }
     };
   }, []);
@@ -365,6 +471,8 @@ const RoguelikeBoard = ({
     setCardScoreDetails({});
     setTokenAnimations([]);
     setShowingMultiplier({});
+    setAnimatingScores({});
+    setShowingDreamEffect({});
     
     // Check if dream is already complete (reached threshold)
     if (dreamScore >= dreamThreshold) {
@@ -413,8 +521,8 @@ const RoguelikeBoard = ({
     startNewDream();
   };
 
-  console.log('RoguelikeBoard render - boardSlots:', boardSlots);
-  console.log('RoguelikeBoard render - isScoring:', isScoring, 'scoringIndex:', scoringIndex);
+  // console.log('RoguelikeBoard render - boardSlots:', boardSlots);
+  // console.log('RoguelikeBoard render - isScoring:', isScoring, 'scoringIndex:', scoringIndex);
 
   return (
     <div className="roguelike-board-tcg">
@@ -522,10 +630,19 @@ const RoguelikeBoard = ({
                     <Card card={card} showTooltip={true} showLevel={true} isRoguelikeMode={true} />
                     {(isScoring && index <= scoringIndex && cardScores[index] !== undefined) && (
                       <div className="card-score-overlay">
-                        <span className={`score-value ${showingMultiplier[index] ? 'multiplying' : ''}`}>
+                        <span className={`score-value ${showingMultiplier[index] ? 'multiplying' : ''} ${showingDreamEffect[index] ? 'dream-multiplying' : ''}`}>
                           +{cardScores[index]}
                         </span>
-                        {cardScoreDetails[index] && cardScoreDetails[index].tokenMultiplier > 1 && (
+                        {cardScoreDetails[index] && 
+                         cardScoreDetails[index].dreamMultiplier && 
+                         showingDreamEffect[index] && (
+                          <span className={`dream-multiplier ${showingDreamEffect[index] ? 'active' : ''}`}>
+                            ×{cardScoreDetails[index].dreamMultiplier.toFixed(1)}
+                          </span>
+                        )}
+                        {cardScoreDetails[index] && 
+                         cardScoreDetails[index].tokenMultiplier > 1 && 
+                         cardScoreDetails[index].baseValueBeforeTokens !== cardScoreDetails[index].currentValue && (
                           <span className={`score-multiplier ${showingMultiplier[index] ? 'active' : ''}`}>
                             ×{cardScoreDetails[index].tokenMultiplier}
                           </span>
