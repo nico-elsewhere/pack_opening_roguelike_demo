@@ -148,6 +148,9 @@ const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState
               <button onClick={addMultipleFreds}>5x Fred</button>
               <button onClick={addOneOfEach}>One of Each Rarity</button>
               <button onClick={addManacliteTest}>Manaclite Test</button>
+              <button onClick={addExplosiveSynergy}>Fire/Water Explosion</button>
+              <button onClick={addTokenDiversity}>Token Diversity</button>
+              <button onClick={addShadowLightCombo}>Shadow/Light Combo</button>
               <button onClick={clearDebugPack}>Clear Debug</button>
             </div>
           </div>

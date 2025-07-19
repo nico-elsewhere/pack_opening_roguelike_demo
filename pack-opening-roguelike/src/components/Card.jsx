@@ -109,7 +109,7 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
               ) : (
                 <div className="creature-placeholder">🐾</div>
               )}
-              {isRoguelikeMode && card.ability && (
+              {card.ability && (
                 <div className="creature-ability">{card.ability}</div>
               )}
             </>

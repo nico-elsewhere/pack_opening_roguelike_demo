@@ -3,6 +3,7 @@ import './Fusion.css';
 import Card from '../Card';
 import { canFuseCards, generateFusedCard, calculateFusionCost, FUSION_SUITS } from '../../utils/fusionCards';
 import { breedCreatures } from '../../utils/creatureAPI';
+import { getCreatureAbilityText } from '../../utils/creatureEffects';
 
 const Fusion = ({ collection, fuseCards, pp }) => {
   const [selectedCard1, setSelectedCard1] = useState(null);
@@ -112,17 +113,56 @@ const Fusion = ({ collection, fuseCards, pp }) => {
       
       if (resultGeneration) {
         isCreatureFusion = true;
-        // For creatures, we'll show a placeholder preview
+        
+        // Generate inherited abilities for preview
+        let inheritedAbility = '';
+        if (resultGeneration === 'Gen2') {
+          // Gen 2 inherits both parent abilities
+          const ability1 = selectedCard1.ability || getCreatureAbilityText(selectedCard1.name);
+          const ability2 = selectedCard2.ability || getCreatureAbilityText(selectedCard2.name);
+          if (ability1 && ability2) {
+            inheritedAbility = `${ability1} & ${ability2}`;
+          }
+        } else if (resultGeneration === 'Gen3') {
+          // Gen 3 inherits all grandparent abilities
+          const abilities = [];
+          
+          // Get abilities from parent 1
+          if (selectedCard1.ability) {
+            // If parent already has combined abilities, split them
+            if (selectedCard1.ability.includes(' & ')) {
+              abilities.push(...selectedCard1.ability.split(' & '));
+            } else {
+              abilities.push(selectedCard1.ability);
+            }
+          }
+          
+          // Get abilities from parent 2
+          if (selectedCard2.ability) {
+            if (selectedCard2.ability.includes(' & ')) {
+              abilities.push(...selectedCard2.ability.split(' & '));
+            } else {
+              abilities.push(selectedCard2.ability);
+            }
+          }
+          
+          if (abilities.length > 0) {
+            inheritedAbility = abilities.join(' & ');
+          }
+        }
+        
+        // For creatures, show preview with inherited abilities
         previewCard = {
           id: 'preview',
           name: '???',
-          ppValue: Math.round((selectedCard1.ppValue + selectedCard2.ppValue) / 2),
+          ppValue: selectedCard1.ppValue + selectedCard2.ppValue, // Sum PP values
           level: 1,
           xp: 0,
           xpToNextLevel: 100,
           arcana: 'creature',
           generation: resultGeneration,
-          rarity: 'uncommon'
+          rarity: 'uncommon',
+          ability: inheritedAbility
         };
       } else {
         cannotFuse = true;
@@ -164,6 +204,50 @@ const Fusion = ({ collection, fuseCards, pp }) => {
           const bredCreature = await breedCreatures(selectedCard1.id, selectedCard2.id);
           // Call the game's fuseCards to handle inventory management
           result = fuseCards(selectedCard1.id, selectedCard2.id, bredCreature);
+          
+          // Ensure the fused card has the inherited abilities
+          if (result.success && result.fusedCard) {
+            // Add inherited abilities if not already present
+            if (!result.fusedCard.ability) {
+              let inheritedAbility = '';
+              
+              if (result.fusedCard.generation === 2) {
+                // Gen 2 inherits both parent abilities
+                const ability1 = selectedCard1.ability || getCreatureAbilityText(selectedCard1.name);
+                const ability2 = selectedCard2.ability || getCreatureAbilityText(selectedCard2.name);
+                if (ability1 && ability2) {
+                  inheritedAbility = `${ability1} & ${ability2}`;
+                }
+              } else if (result.fusedCard.generation === 3) {
+                // Gen 3 inherits all grandparent abilities
+                const abilities = [];
+                
+                // Get abilities from parent 1
+                if (selectedCard1.ability) {
+                  if (selectedCard1.ability.includes(' & ')) {
+                    abilities.push(...selectedCard1.ability.split(' & '));
+                  } else {
+                    abilities.push(selectedCard1.ability);
+                  }
+                }
+                
+                // Get abilities from parent 2
+                if (selectedCard2.ability) {
+                  if (selectedCard2.ability.includes(' & ')) {
+                    abilities.push(...selectedCard2.ability.split(' & '));
+                  } else {
+                    abilities.push(selectedCard2.ability);
+                  }
+                }
+                
+                if (abilities.length > 0) {
+                  inheritedAbility = abilities.join(' & ');
+                }
+              }
+              
+              result.fusedCard.ability = inheritedAbility;
+            }
+          }
         } else {
           // Use old fusion logic
           result = fuseCards(selectedCard1.id, selectedCard2.id);

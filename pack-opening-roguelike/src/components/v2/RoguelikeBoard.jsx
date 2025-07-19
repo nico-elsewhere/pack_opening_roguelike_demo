@@ -385,6 +385,13 @@ const RoguelikeBoard = ({
               tokens: thisCardTokens,
               timestamp: Date.now()
             }]);
+            
+            // Handle special effects after token generation
+            if (currentCardScore.specialEffect) {
+              setTimeout(() => {
+                handleSpecialEffect(currentCardScore.specialEffect);
+              }, 500 * speedMult);
+            }
           }, totalAnimationDelay); // Show tokens after all scoring animations
         }
         
@@ -430,6 +437,43 @@ const RoguelikeBoard = ({
     };
     
     scoreNext();
+  };
+
+  const handleSpecialEffect = (effect) => {
+    switch (effect.type) {
+      case 'shuffle_board':
+        // Shuffle the board positions
+        const newBoardSlots = [...boardSlots];
+        const occupiedSlots = newBoardSlots.map((card, index) => ({ card, index })).filter(slot => slot.card !== null);
+        
+        // Fisher-Yates shuffle of occupied slots
+        for (let i = occupiedSlots.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [occupiedSlots[i], occupiedSlots[j]] = [occupiedSlots[j], occupiedSlots[i]];
+        }
+        
+        // Clear board first
+        const clearedBoard = [null, null, null, null, null];
+        
+        // Place shuffled cards back
+        occupiedSlots.forEach((slot, idx) => {
+          clearedBoard[slot.index] = slot.card;
+        });
+        
+        setBoardSlots(clearedBoard);
+        break;
+        
+      case 'time_loop':
+        // Time loop is handled in the main scoring sequence
+        break;
+        
+      case 'fredmaxxing':
+        // Fredmaxxing is handled in the passive system
+        break;
+        
+      default:
+        console.log('Unhandled special effect:', effect);
+    }
   };
 
   const handleScoringComplete = (totalScore) => {
