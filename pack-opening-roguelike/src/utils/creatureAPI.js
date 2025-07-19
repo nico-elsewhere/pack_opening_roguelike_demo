@@ -33,7 +33,7 @@ const creatureToCard = (creature) => {
   return {
     id: creature.cardId,
     name: creature.name,
-    ppValue: creature.cost * 10, // Convert cost to PP value
+    ppValue: 10, // All creatures have base PP of 10
     maxHp: creature.maxHp,
     rarity: getRarityName(creature.rarity),
     generation: creature.generation,

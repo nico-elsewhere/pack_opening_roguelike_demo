@@ -147,18 +147,28 @@ export const useGameState = () => {
     pack.forEach((card, index) => {
       localGameState.cardsInCurrentPack = index + 1;
       const cardId = card.id;
+      
+      // Store the original card for display (not the updated one)
+      let cardToProcess = { ...card };
+      
       if (newCollection[cardId]) {
-        // Don't add XP here - it will be added after scoring completes
-        // Just preserve the existing card data
-        const existingEffect = newCollection[cardId].effect;
-        newCollection[cardId].effect = existingEffect;
+        // Store the existing level/data from collection but don't modify cardToProcess
+        cardToProcess = { 
+          ...card,
+          xp: newCollection[cardId].xp,
+          xpToNextLevel: newCollection[cardId].xpToNextLevel,
+          effect: newCollection[cardId].effect
+        };
       } else {
-        newCollection[cardId] = { ...card };
+        newCollection[cardId] = { ...cardToProcess };
       }
       
+      // Keep the card in the pack at its original level
+      pack[index] = cardToProcess;
+      
       // Apply tarot card effects
-      if (card.effect && card.effect.onPull) {
-        const effectResult = applyCardEffect(card, localGameState, Object.values(newCollection), pack);
+      if (cardToProcess.effect && cardToProcess.effect.onPull) {
+        const effectResult = applyCardEffect(cardToProcess, localGameState, Object.values(newCollection), pack);
         if (effectResult) {
           if (effectResult.message) {
             packEffectMessages.push(effectResult.message);
@@ -440,22 +450,27 @@ export const useGameState = () => {
       if (newCollection[cardId]) {
         const existingEffect = newCollection[cardId].effect;
         newCollection[cardId].xp += 50;
+        
+        // Check if card should level up
         if (newCollection[cardId].xp >= newCollection[cardId].xpToNextLevel) {
-          newCollection[cardId].level += 1;
-          newCollection[cardId].xp = 0;
-          newCollection[cardId].xpToNextLevel = newCollection[cardId].level * 100;
-          // Update effect multipliers/values when leveling up
-          if (existingEffect) {
-            if (existingEffect.type === 'suit_bonus') {
-              existingEffect.multiplier = 1 + (0.3 * newCollection[cardId].level);
-            } else if (existingEffect.type === 'pp_generation') {
-              existingEffect.bonusPP = 0.2 * newCollection[cardId].level;
-            } else if (existingEffect.type === 'suit_count_mult') {
-              existingEffect.multiplierPerCard = 0.1 * newCollection[cardId].level;
-            } else if (existingEffect.type === 'suit_chance') {
-              existingEffect.chanceBonus = 0.15 * newCollection[cardId].level;
-            }
+          // Store the pending level up but don't apply it yet
+          if (!newCollection[cardId].pendingLevelUps) {
+            newCollection[cardId].pendingLevelUps = 0;
           }
+          
+          // Calculate how many levels to gain
+          let remainingXP = newCollection[cardId].xp;
+          let currentLevel = newCollection[cardId].level;
+          let levelsGained = 0;
+          
+          while (remainingXP >= (currentLevel + levelsGained) * 100) {
+            remainingXP -= (currentLevel + levelsGained) * 100;
+            levelsGained++;
+          }
+          
+          newCollection[cardId].pendingLevelUps += levelsGained;
+          newCollection[cardId].xp = remainingXP;
+          newCollection[cardId].xpToNextLevel = (currentLevel + newCollection[cardId].pendingLevelUps) * 100;
         }
         newCollection[cardId].effect = existingEffect;
       }
