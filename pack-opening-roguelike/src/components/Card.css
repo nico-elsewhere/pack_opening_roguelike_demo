@@ -536,6 +536,22 @@
   margin: 8px 0;
 }
 
+.creature-ability {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fbbf24;
+  font-size: 0.625rem;
+  padding: 0.25rem;
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+}
+
 .creature-hp {
   font-size: 0.625rem;
   color: #ff6b6b;

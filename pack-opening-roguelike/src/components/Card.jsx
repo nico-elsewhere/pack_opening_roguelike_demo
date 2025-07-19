@@ -15,7 +15,7 @@ const suitSymbols = {
   ice: '❄️'
 };
 
-const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true, alwaysShowLevel = false }) => {
+const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true, alwaysShowLevel = false, isRoguelikeMode = false }) => {
   const suitClass = card.suit; // fire, earth, water, or air
   const xpProgress = (card.xp / card.xpToNextLevel) * 100;
   
@@ -108,6 +108,9 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
                 <img className="creature-image" src={card.imageUrl} alt={card.name} />
               ) : (
                 <div className="creature-placeholder">🐾</div>
+              )}
+              {isRoguelikeMode && card.ability && (
+                <div className="creature-ability">{card.ability}</div>
               )}
             </>
           ) : isTarot || isFusedTarot ? (

@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../config/api';
+import { getCreatureAbilityText } from './creatureEffects';
 
 // Helper to convert numeric rarity to string
 const getRarityName = (rarityNum) => {
@@ -30,6 +31,8 @@ const cleanFlavorText = (text) => {
 // Convert creature data to game card format
 const creatureToCard = (creature) => {
   console.log('Converting creature:', creature); // Debug log
+  const abilityText = getCreatureAbilityText(creature.name);
+  
   return {
     id: creature.cardId,
     name: creature.name,
@@ -49,6 +52,7 @@ const creatureToCard = (creature) => {
     xpToNextLevel: 100,
     isRune: false, // Can be expanded later
     arcana: 'creature',
+    ability: abilityText, // Add ability text
     // Original data preserved
     _originalCost: creature.cost
   };

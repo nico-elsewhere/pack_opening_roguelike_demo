@@ -48,6 +48,18 @@ export const ARCHETYPES = {
       description: '+10% chance for rare cards'
     },
     color: '#10B981'
+  },
+  outlaw: {
+    id: 'outlaw',
+    name: 'The Outlaw',
+    icon: '🤠',
+    description: 'Rules are meant to be broken',
+    effect: {
+      type: 'placeholder',
+      value: 1,
+      description: 'Effect coming soon'
+    },
+    color: '#8B4513'
   }
 };
 
@@ -107,6 +119,20 @@ export const MEMENTOS = {
       name: 'Pure Heart',
       description: 'Common cards can trigger rare effects',
       effect: { type: 'rarity_upgrade' }
+    }
+  ],
+  outlaw: [
+    {
+      id: 'outlaws_gambit',
+      name: 'Outlaw\'s Gambit',
+      description: 'Placeholder memento 1',
+      effect: { type: 'placeholder' }
+    },
+    {
+      id: 'wild_card',
+      name: 'Wild Card',
+      description: 'Placeholder memento 2',
+      effect: { type: 'placeholder' }
     }
   ]
 };

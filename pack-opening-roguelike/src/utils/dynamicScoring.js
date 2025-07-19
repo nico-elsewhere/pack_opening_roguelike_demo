@@ -2,10 +2,12 @@
 import { calculateCardPP } from './cards';
 import { CREATURE_PASSIVES } from './creaturePassives';
 import { applyDreamEffects, shouldDisableAbilities } from './dreamEffects';
+import { processCreatureEffect } from './creatureEffects';
 
 // Calculate PP values for all revealed cards, considering cascading effects
-export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = []) {
+export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = [], currentTokens = { strength: 0 }, justRevealedIndex = -1) {
   const scores = [];
+  let tokensGained = {};
   
   // For each revealed card, calculate its current score considering all revealed cards so far
   revealedCards.forEach((card, index) => {
@@ -68,12 +70,38 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     // Apply dream effects
     currentValue = applyDreamEffects(currentValue, index, card, revealedCards, dreamEffects);
     
+    // Apply token multipliers (before this card's tokens are added)
+    const totalTokens = { ...currentTokens };
+    // Add tokens gained from previous cards
+    for (const [tokenType, amount] of Object.entries(tokensGained)) {
+      totalTokens[tokenType] = (totalTokens[tokenType] || 0) + amount;
+    }
+    
+    // Apply strength multiplier
+    if (totalTokens.strength > 0) {
+      const strengthMultiplier = 1 + totalTokens.strength;
+      currentValue = Math.floor(currentValue * strengthMultiplier);
+    }
+    
+    // Process this card's creature effect (add tokens) - only for the just revealed card
+    let cardTokensGenerated = {};
+    if (!abilitiesDisabled && index === justRevealedIndex) {
+      const { tokensGained: cardTokens } = processCreatureEffect(card, totalTokens);
+      cardTokensGenerated = cardTokens;
+      for (const [tokenType, amount] of Object.entries(cardTokens)) {
+        tokensGained[tokenType] = (tokensGained[tokenType] || 0) + amount;
+      }
+    }
+    
     scores.push({
       cardIndex: index,
       baseValue: baseWithRunes,
       currentValue,
       passiveMultiplier,
-      effects: cardEffects
+      effects: cardEffects,
+      tokenMultiplier: totalTokens.strength > 0 ? (1 + totalTokens.strength) : 1,
+      tokensGenerated: cardTokensGenerated,
+      wasJustRevealed: index === justRevealedIndex
     });
   });
   
@@ -91,11 +119,11 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
         const targetCard = previousRevealed[i];
         
         // Calculate old score with previous revealed cards
-        const oldScores = calculateDynamicScores(previousRevealed, allCardsInPack, equippedRunes, collection, dreamEffects);
+        const oldScores = calculateDynamicScores(previousRevealed, allCardsInPack, equippedRunes, collection, dreamEffects, currentTokens);
         const oldScore = oldScores.scores[i];
         
         // Calculate new score with current revealed cards
-        const newScores = calculateDynamicScores(currentRevealed, allCardsInPack, equippedRunes, collection, dreamEffects);
+        const newScores = calculateDynamicScores(currentRevealed, allCardsInPack, equippedRunes, collection, dreamEffects, currentTokens);
         const newScore = newScores.scores[i];
         
         // If score changed, find which passive caused it
@@ -129,7 +157,8 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
   
   return {
     scores,
-    findNewEffects
+    findNewEffects,
+    tokensGained
   };
 }
 

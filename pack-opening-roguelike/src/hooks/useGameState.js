@@ -27,6 +27,7 @@ export const useGameState = () => {
   const [selectedPackType, setSelectedPackType] = useState('basic');
   const [debugPackContents, setDebugPackContents] = useState(null); // Debug: predetermined pack contents
   const [keepDebugPack, setKeepDebugPack] = useState(false); // Debug: whether to keep debug pack
+  const [scoringSpeedMultiplier, setScoringSpeedMultiplier] = useState(1.0); // Debug: animation speed multiplier
   
   // Roguelike mode state
   const [gameMode, setGameMode] = useState('classic'); // 'classic' or 'roguelike'
@@ -503,7 +504,19 @@ export const useGameState = () => {
   const openPackToHand = () => {
     if (gameMode !== 'roguelike') return openPack(); // Fallback to classic mode
     
-    const pack = generatePack(5, deckTemplate);
+    let pack;
+    
+    // Use debug pack contents if set, otherwise generate normally
+    if (debugPackContents && debugPackContents.cards && debugPackContents.cards.length > 0) {
+      pack = debugPackContents.cards;
+      
+      // Clear debug pack after use unless keepPersistent is true
+      if (!debugPackContents.keepPersistent) {
+        setDebugPackContents(null);
+      }
+    } else {
+      pack = generatePack(5, deckTemplate);
+    }
     
     // Add cards to hand directly without modifying collection
     // Each card in hand is a separate instance
@@ -632,6 +645,8 @@ export const useGameState = () => {
     setPP,
     setCollection,
     applyCardXP,
+    scoringSpeedMultiplier,
+    setScoringSpeedMultiplier,
     // Roguelike mode
     gameMode,
     setGameMode,
