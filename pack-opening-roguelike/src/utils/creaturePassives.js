@@ -18,7 +18,6 @@ export const CREATURE_PASSIVES = {
       const thisCardIndex = card._revealIndex !== undefined ? card._revealIndex : 
         allCardsInPack.findIndex(c => c === card);
       
-      console.log(`Fred passive debug: card._revealIndex=${card._revealIndex}, allCardsInPack.length=${allCardsInPack.length}`);
       
       if (thisCardIndex === -1) {
         return null;
@@ -32,7 +31,6 @@ export const CREATURE_PASSIVES = {
         isDescendantOf(c, 'Fred', allCreatures)
       ).length;
       
-      console.log(`Fred at index ${thisCardIndex}: previousCards=${previousCards.length}, previousFredCount=${previousFredCount}`);
       
       
       // Always return a result for Fred, even if it's 1x
@@ -46,6 +44,18 @@ export const CREATURE_PASSIVES = {
       }
       
       // First Fred gets 1x (no effect, but still valid)
+      return null;
+    }
+  },
+  
+  // Loopine - triggers a second scoring pass
+  'Loopine': {
+    name: 'Time Loop',
+    description: 'After scoring completes, rescore all cards starting from Loopine',
+    type: 'rescore_trigger',
+    effect: (card, allCardsInPack, allCreatures) => {
+      // This passive doesn't modify the score directly
+      // It's handled specially in the scoring sequence
       return null;
     }
   }

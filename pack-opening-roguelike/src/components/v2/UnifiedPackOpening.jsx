@@ -58,6 +58,8 @@ const UnifiedPackOpening = ({
   const startScoringSequence = () => {
     let currentIndex = 0;
     let currentlyRevealed = []; // Track revealed cards locally
+    let loopineIndex = -1; // Track if we have a Loopine
+    let isLoopPass = false; // Track if we're in the loop pass
     
     // Pre-calculate initial scores for all cards to avoid 0 display
     const initialScores = {};
@@ -66,16 +68,20 @@ const UnifiedPackOpening = ({
       const level = card.level || 1;
       const baseValue = ppValue * level;
       initialScores[idx] = { base: baseValue, current: baseValue, passiveMultiplier: 1 };
+      // Check if this card is Loopine
+      if (card.name === 'Loopine') {
+        loopineIndex = idx;
+      }
     });
     setCardScores(initialScores);
     
     const scoreNext = () => {
       if (currentIndex < openedCards.length) {
-        console.log(`Scoring card ${currentIndex}: ${openedCards[currentIndex]?.name}`);
-        
-        // Add card to revealed cards
-        currentlyRevealed = [...currentlyRevealed, openedCards[currentIndex]];
-        setRevealedCards([...currentlyRevealed]); // Update state for React
+        // On first pass, add card to revealed cards
+        if (!isLoopPass) {
+          currentlyRevealed = [...currentlyRevealed, openedCards[currentIndex]];
+          setRevealedCards([...currentlyRevealed]); // Update state for React
+        }
         
         // Calculate dynamic scores for all revealed cards
         const { scores, findNewEffects } = calculateDynamicScores(
@@ -84,8 +90,6 @@ const UnifiedPackOpening = ({
           equippedRunes || [],
           collection || {}
         );
-        
-        console.log(`Dynamic scores calculated for ${currentIndex}:`, scores);
         
         // Get the current card's score (it's the last one since we just added it)
         const currentCardScore = scores[scores.length - 1];
@@ -98,32 +102,66 @@ const UnifiedPackOpening = ({
         const baseValue = currentCardScore.baseValue;
         
         
-        // Reveal the card
-        setScoringIndex(currentIndex);
+        // Reveal the card (only update scoring index on first pass)
+        if (!isLoopPass) {
+          setScoringIndex(currentIndex);
+        }
+        
+        // If this is a loop pass, show a special effect
+        if (isLoopPass) {
+          const cardElement = document.querySelector(`[data-card-index="${currentIndex}"]`);
+          if (cardElement) {
+            cardElement.classList.add('loop-scoring');
+            setTimeout(() => {
+              cardElement.classList.remove('loop-scoring');
+            }, 600);
+          }
+        }
         
         // Always update the score to include passive multiplier
         const currentCard = openedCards[currentIndex];
         setCardScores(prev => {
+          // During loop pass, add to existing score
+          const existingScore = prev[currentIndex];
+          const previousValue = existingScore?.current || baseValue;
+          const newCurrentValue = isLoopPass 
+            ? previousValue + currentCardScore.currentValue
+            : currentCardScore.currentValue;
+          
           const newScores = {
             ...prev,
             [currentIndex]: { 
               base: baseValue, 
-              current: currentCardScore.currentValue,
-              passiveMultiplier: currentCardScore.passiveMultiplier || 1
+              current: newCurrentValue,
+              previous: previousValue,
+              passiveMultiplier: currentCardScore.passiveMultiplier || 1,
+              looped: isLoopPass
             }
           };
-          if (currentCard && currentCard.name === 'Fred') {
-            console.log(`Setting score for Fred ${currentIndex}: base=${baseValue}, current=${currentCardScore.currentValue}, multiplier=${currentCardScore.passiveMultiplier}`);
-          }
           return newScores;
         });
         
-        // If this card has effects (e.g., Fred with multiplier from previous Freds)
-        if (currentCard && currentCard.name === 'Fred') {
-          console.log(`Fred ${currentIndex} animation check: passiveMultiplier=${currentCardScore.passiveMultiplier}, should animate=${currentCardScore.passiveMultiplier > 1}`);
+        // Show loop addition animation if in loop pass
+        if (isLoopPass && currentIndex >= loopineIndex) {
+          const addedValue = currentCardScore.currentValue;
+          const capturedIndex = currentIndex;
+          setTimeout(() => {
+            setSequentialAnimations(prev => ({
+              ...prev,
+              [capturedIndex]: [
+                {
+                  type: 'pp',
+                  text: `+${addedValue}`,
+                  delay: 0,
+                  duration: 1500
+                }
+              ]
+            }));
+          }, 100);
         }
-        if (currentCardScore.passiveMultiplier > 1) {
-          console.log(`Setting animation for card ${currentIndex} with multiplier ${currentCardScore.passiveMultiplier}`);
+        
+        // If this card has effects (e.g., Fred with multiplier from previous Freds)
+        else if (currentCardScore.passiveMultiplier > 1 && !isLoopPass) {
           // Capture the current index value to avoid closure issues
           const indexToAnimate = currentIndex;
           const multiplierToShow = currentCardScore.passiveMultiplier;
@@ -145,7 +183,6 @@ const UnifiedPackOpening = ({
               }
             ];
             
-            console.log(`Actually setting animations for card ${indexToAnimate}`);
             setSequentialAnimations(prev => ({
               ...prev,
               [indexToAnimate]: animations
@@ -181,10 +218,41 @@ const UnifiedPackOpening = ({
         currentIndex++;
         setTimeout(scoreNext, 600);
       } else {
-        // Scoring complete
-        setTimeout(() => {
-          setPhase('complete');
-        }, 800);
+        // Check if we need to do a loop pass
+        if (!isLoopPass && loopineIndex >= 0) {
+          // Trigger Loopine's time loop effect
+          isLoopPass = true;
+          currentIndex = loopineIndex;
+          
+          // Show a special animation for Loopine's effect
+          setTimeout(() => {
+            setSequentialAnimations(prev => ({
+              ...prev,
+              [loopineIndex]: [
+                {
+                  type: 'ability',
+                  text: 'Time Loop!',
+                  delay: 0,
+                  duration: 2000
+                },
+                {
+                  type: 'multiplier',
+                  text: 'Rescoring...',
+                  delay: 500,
+                  duration: 1500
+                }
+              ]
+            }));
+          }, 200);
+          
+          // Continue scoring from Loopine's position after a delay
+          setTimeout(scoreNext, 1500);
+        } else {
+          // Scoring complete
+          setTimeout(() => {
+            setPhase('complete');
+          }, 800);
+        }
       }
     };
     
@@ -302,7 +370,7 @@ const UnifiedPackOpening = ({
                   <Card card={card} showTooltip={false} showLevel={true} alwaysShowLevel={true} />
                   <div className="card-score-container">
                     <AnimatedScore 
-                      value={cardScores[index]?.base || 0}
+                      value={cardScores[index]?.previous || cardScores[index]?.base || 0}
                       targetValue={cardScores[index]?.current || 0}
                     />
                   </div>
@@ -311,7 +379,6 @@ const UnifiedPackOpening = ({
                       <SequentialFloatingText
                         animations={sequentialAnimations[index]}
                         onComplete={() => {
-                          console.log(`Animation complete for card ${index}`);
                           setSequentialAnimations(prev => {
                             const newAnims = { ...prev };
                             delete newAnims[index];
