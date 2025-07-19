@@ -30,7 +30,7 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
       setSelectedCards(shuffled.slice(0, Math.min(5, shuffled.length)));
     }
     // Don't automatically go back - let player see the issue and manually go back
-  }, [collection]);
+  }, []); // Empty dependency - only select cards once on mount
 
   useEffect(() => {
     // Generate preview when both cards are selected
