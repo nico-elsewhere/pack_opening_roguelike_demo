@@ -19,7 +19,10 @@ const UnifiedPackOpening = ({
   onPhaseChange,
   collection,
   equippedRunes,
-  applyCardXP
+  applyCardXP,
+  roguelikeMode = false,
+  dreamEffects = [],
+  onScoringComplete
 }) => {
   const [phase, setPhase] = useState('ready'); // ready, animating, scoring, complete
   
@@ -55,6 +58,14 @@ const UnifiedPackOpening = ({
       startScoringSequence();
     }
   }, [openedCards, phase]);
+  
+  // In roguelike mode, start scoring immediately
+  useEffect(() => {
+    if (roguelikeMode && openedCards.length > 0) {
+      setPhase('scoring');
+      startScoringSequence();
+    }
+  }, [roguelikeMode, openedCards]);
 
   const startScoringSequence = () => {
     let currentIndex = 0;
@@ -89,7 +100,8 @@ const UnifiedPackOpening = ({
           currentlyRevealed, 
           openedCards,
           equippedRunes || [],
-          collection || {}
+          collection || {},
+          dreamEffects
         );
         
         // Get the current card's score (it's the last one since we just added it)
@@ -250,9 +262,14 @@ const UnifiedPackOpening = ({
           setTimeout(scoreNext, 1500);
         } else {
           // Scoring complete - apply XP to all opened cards
-          if (applyCardXP && openedCards.length > 0) {
+          if (applyCardXP && openedCards.length > 0 && !roguelikeMode) {
             const cardIds = openedCards.map(card => card.id);
             applyCardXP(cardIds);
+          }
+          
+          // In roguelike mode, call the scoring complete callback
+          if (roguelikeMode && onScoringComplete) {
+            onScoringComplete(currentTotal);
           }
           
           setTimeout(() => {
@@ -318,7 +335,7 @@ const UnifiedPackOpening = ({
       )}
 
       {/* Open Button */}
-      {phase === 'ready' && stagedPacks.length > 0 && (
+      {!roguelikeMode && phase === 'ready' && stagedPacks.length > 0 && (
         <button 
           className={`open-packs-button ${buttonFading ? 'fading' : ''}`}
           onClick={handleOpenClick}
@@ -330,7 +347,7 @@ const UnifiedPackOpening = ({
       )}
 
       {/* Pack Display */}
-      {phase === 'ready' && (
+      {!roguelikeMode && phase === 'ready' && (
         <div className="packs-container">
           {[...Array(packSlots)].map((_, index) => (
             <div key={index} className="pack-slot-unified">
@@ -404,7 +421,7 @@ const UnifiedPackOpening = ({
       )}
 
       {/* Continue Button */}
-      {phase === 'complete' && (
+      {!roguelikeMode && phase === 'complete' && (
         <button className="continue-button-unified" onClick={handleContinue}>
           <span className="continue-desktop">Continue</span>
           <span className="continue-mobile">→</span>

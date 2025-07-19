@@ -8,7 +8,13 @@ const Header = ({
   setCurrentScreen,
   equippedRunes,
   totalCardsOpened,
-  collection
+  collection,
+  gameMode,
+  setGameMode,
+  selectedArchetype,
+  currentDream,
+  dreamScore,
+  dreamThreshold
 }) => {
   const uniqueCards = Object.keys(collection).length;
   
@@ -46,19 +52,51 @@ const Header = ({
         >
           Fusion
         </button>
+        {gameMode === 'classic' && (
+          <button 
+            className={`nav-tab archetype-tab`}
+            onClick={() => setCurrentScreen('archetype')}
+          >
+            🌟 Roguelike
+          </button>
+        )}
+        {gameMode === 'roguelike' && (
+          <button 
+            className={`nav-tab exit-roguelike`}
+            onClick={() => {
+              setGameMode('classic');
+              setCurrentScreen('home');
+            }}
+          >
+            ← Exit Run
+          </button>
+        )}
       </nav>
       
       <div className="header-right">
-        <div className="stats-mini">
-          <div className="stat-item">
-            <span className="stat-icon">📇</span>
-            <span className="stat-value">{uniqueCards}/52</span>
+        {gameMode === 'roguelike' && currentDream ? (
+          <div className="roguelike-stats">
+            <div className="stat-item">
+              <span className="stat-icon">🌙</span>
+              <span className="stat-value">Dream {currentDream}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon">⭐</span>
+              <span className="stat-value">{dreamScore}/{dreamThreshold}</span>
+            </div>
           </div>
-          <div className="stat-item">
-            <span className="stat-icon">🎯</span>
-            <span className="stat-value">{totalCardsOpened}</span>
+        ) : (
+          <div className="stats-mini">
+            <div className="stat-item">
+              <span className="stat-icon">📇</span>
+              <span className="stat-value">{uniqueCards}/52</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon">🎯</span>
+              <span className="stat-value">{totalCardsOpened}</span>
+            </div>
           </div>
-        </div>
+        )}
         
         <div className="pp-display">
           <div className="pp-main">

@@ -1,9 +1,10 @@
 // Dynamic scoring system that calculates effects as cards are revealed
 import { calculateCardPP } from './cards';
 import { CREATURE_PASSIVES } from './creaturePassives';
+import { applyDreamEffects, shouldDisableAbilities } from './dreamEffects';
 
 // Calculate PP values for all revealed cards, considering cascading effects
-export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection) {
+export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRunes, collection, dreamEffects = []) {
   const scores = [];
   
   // For each revealed card, calculate its current score considering all revealed cards so far
@@ -36,28 +37,36 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     let passiveMultiplier = 1;
     const cardEffects = [];
     
-    // Check if THIS card has a passive that applies to itself
-    const cardPassive = CREATURE_PASSIVES[card.name];
-    if (cardPassive && cardPassive.effect) {
-      // For Fredmaxxing, we pass the current index so it knows which card it is
-      const modifiedCard = { ...card, _revealIndex: index };
-      const result = cardPassive.effect(modifiedCard, revealedSoFar, collection);
-      if (result && result.multiplier) {
-        passiveMultiplier *= result.multiplier;
-        cardEffects.push({
-          source: card.name,
-          target: card.name,
-          passiveName: cardPassive.name,
-          multiplier: result.multiplier,
-          message: result.message
-        });
+    // Check if abilities are disabled by nightmare effect
+    const abilitiesDisabled = shouldDisableAbilities(dreamEffects);
+    
+    if (!abilitiesDisabled) {
+      // Check if THIS card has a passive that applies to itself
+      const cardPassive = CREATURE_PASSIVES[card.name];
+      if (cardPassive && cardPassive.effect) {
+        // For Fredmaxxing, we pass the current index so it knows which card it is
+        const modifiedCard = { ...card, _revealIndex: index };
+        const result = cardPassive.effect(modifiedCard, revealedSoFar, collection);
+        if (result && result.multiplier) {
+          passiveMultiplier *= result.multiplier;
+          cardEffects.push({
+            source: card.name,
+            target: card.name,
+            passiveName: cardPassive.name,
+            multiplier: result.multiplier,
+            message: result.message
+          });
+        }
       }
     }
     
     // In the future, we might check other cards' passives that affect this card
     // But for now, Fredmaxxing only affects the Fred being revealed
     
-    const currentValue = Math.floor(baseWithRunes * passiveMultiplier);
+    let currentValue = Math.floor(baseWithRunes * passiveMultiplier);
+    
+    // Apply dream effects
+    currentValue = applyDreamEffects(currentValue, index, card, revealedCards, dreamEffects);
     
     scores.push({
       cardIndex: index,
@@ -82,11 +91,11 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
         const targetCard = previousRevealed[i];
         
         // Calculate old score with previous revealed cards
-        const oldScores = calculateDynamicScores(previousRevealed, allCardsInPack, equippedRunes, collection);
+        const oldScores = calculateDynamicScores(previousRevealed, allCardsInPack, equippedRunes, collection, dreamEffects);
         const oldScore = oldScores.scores[i];
         
         // Calculate new score with current revealed cards
-        const newScores = calculateDynamicScores(currentRevealed, allCardsInPack, equippedRunes, collection);
+        const newScores = calculateDynamicScores(currentRevealed, allCardsInPack, equippedRunes, collection, dreamEffects);
         const newScore = newScores.scores[i];
         
         // If score changed, find which passive caused it

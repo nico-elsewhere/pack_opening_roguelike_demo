@@ -149,6 +149,43 @@
   opacity: 0.3;
 }
 
+/* Archetype Tab */
+.archetype-tab {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #F59E0B;
+}
+
+.archetype-tab:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+/* Roguelike Stats */
+.roguelike-stats {
+  display: flex;
+  gap: 1rem;
+  margin-right: 1rem;
+}
+
+.roguelike-stats .stat-item {
+  padding: 0.5rem 0.75rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 0.5rem;
+}
+
+/* Exit Roguelike Button */
+.exit-roguelike {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+}
+
+.exit-roguelike:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {

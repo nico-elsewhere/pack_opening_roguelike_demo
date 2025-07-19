@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './GameBoard.css';
 import PackToolbar from './PackToolbar';
 import UnifiedPackOpening from './UnifiedPackOpening';
+import RoguelikeBoard from './RoguelikeBoard';
 
 const GameBoard = ({
   pp,
@@ -17,8 +18,28 @@ const GameBoard = ({
   totalCardsOpened,
   collection,
   equippedRunes,
-  applyCardXP
+  applyCardXP,
+  // Roguelike mode props
+  gameMode,
+  setCurrentScreen,
+  ...roguelikeProps
 }) => {
+  // If in roguelike mode, render the roguelike board
+  if (gameMode === 'roguelike') {
+    return (
+      <RoguelikeBoard
+        gameMode={gameMode}
+        pp={pp}
+        collection={collection}
+        equippedRunes={equippedRunes}
+        setCurrentScreen={setCurrentScreen}
+        applyCardXP={applyCardXP}
+        {...roguelikeProps}
+      />
+    );
+  }
+  
+  // Classic mode below
   const [isOpening, setIsOpening] = useState(false);
   const [screenShake, setScreenShake] = useState(false);
   const [totalPP, setTotalPP] = useState(0);

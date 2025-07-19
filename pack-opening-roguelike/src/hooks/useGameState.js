@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createDeck, generatePack, calculateCardPP, generateRuneEffect } from '../utils/cards';
 import { applyCardEffect } from '../utils/tarotCards';
 import { generateFusedCard, calculateFusionCost } from '../utils/fusionCards';
+import { ARCHETYPES } from '../utils/archetypes';
+import { getDreamThreshold, isNightmare, getRandomDreamEffect, getRandomNightmareEffect } from '../utils/dreams';
 
 const INITIAL_PP = 2000; // Increased for testing
 const PP_PER_SECOND = 0.5;
@@ -25,6 +27,18 @@ export const useGameState = () => {
   const [selectedPackType, setSelectedPackType] = useState('basic');
   const [debugPackContents, setDebugPackContents] = useState(null); // Debug: predetermined pack contents
   const [keepDebugPack, setKeepDebugPack] = useState(false); // Debug: whether to keep debug pack
+  
+  // Roguelike mode state
+  const [gameMode, setGameMode] = useState('classic'); // 'classic' or 'roguelike'
+  const [selectedArchetype, setSelectedArchetype] = useState(null);
+  const [currentDream, setCurrentDream] = useState(1);
+  const [dreamScore, setDreamScore] = useState(0);
+  const [dreamThreshold, setDreamThreshold] = useState(100);
+  const [hand, setHand] = useState([]); // Cards in player's hand for arrangement
+  const [packsPerRoom, setPacksPerRoom] = useState(5);
+  const [packsOpenedThisRoom, setPacksOpenedThisRoom] = useState(0);
+  const [dreamEffects, setDreamEffects] = useState([]); // Active dream modifiers
+  const [archetypeMementos, setArchetypeMementos] = useState([]); // Collected mementos
   const [packTypes] = useState([
     {
       id: 'basic',
@@ -479,6 +493,75 @@ export const useGameState = () => {
     setCollection(newCollection);
   };
   
+  // Roguelike mode functions
+  const openPackToHand = () => {
+    if (gameMode !== 'roguelike') return openPack(); // Fallback to classic mode
+    
+    const pack = generatePack(5, deckTemplate);
+    
+    // Add cards to hand instead of scoring
+    setHand(prevHand => [...prevHand, ...pack]);
+    setPacksOpenedThisRoom(prev => prev + 1);
+    setTotalCardsOpened(prev => prev + pack.length);
+    
+    // Add cards to collection for XP tracking
+    const newCollection = { ...collection };
+    pack.forEach(card => {
+      const cardId = card.id;
+      if (!newCollection[cardId]) {
+        newCollection[cardId] = { ...card };
+      }
+    });
+    setCollection(newCollection);
+    
+    return pack;
+  };
+  
+  const startNewDream = () => {
+    setCurrentDream(prev => prev + 1);
+    setDreamScore(0);
+    setHand([]);
+    setPacksOpenedThisRoom(0);
+    
+    // Set threshold for new dream
+    const newThreshold = getDreamThreshold(currentDream + 1);
+    setDreamThreshold(newThreshold);
+    
+    // Set dream effect
+    if (isNightmare(currentDream + 1)) {
+      setDreamEffects([getRandomNightmareEffect()]);
+    } else {
+      setDreamEffects([getRandomDreamEffect()]);
+    }
+  };
+  
+  const selectArchetype = (archetypeId) => {
+    const archetype = ARCHETYPES[archetypeId];
+    if (!archetype) return;
+    
+    setSelectedArchetype(archetype);
+    setGameMode('roguelike');
+    
+    // Apply archetype effects
+    if (archetype.effect.type === 'extra_packs') {
+      setPacksPerRoom(5 + archetype.effect.value);
+    }
+    
+    // Initialize first dream
+    setCurrentDream(1);
+    setDreamScore(0);
+    setHand([]);
+    setPacksOpenedThisRoom(0);
+    
+    // Set threshold for first dream
+    const newThreshold = getDreamThreshold(1);
+    setDreamThreshold(newThreshold);
+    
+    // Set dream effect
+    const firstDreamEffect = getRandomDreamEffect();
+    setDreamEffects([firstDreamEffect]);
+  };
+  
   return {
     pp: Math.floor(pp),
     ppPerSecond: PP_PER_SECOND + equippedRunes.reduce((acc, rune) => 
@@ -514,6 +597,23 @@ export const useGameState = () => {
     setDebugPackContents,
     setPP,
     setCollection,
-    applyCardXP
+    applyCardXP,
+    // Roguelike mode
+    gameMode,
+    setGameMode,
+    selectedArchetype,
+    selectArchetype,
+    currentDream,
+    dreamScore,
+    setDreamScore,
+    dreamThreshold,
+    dreamEffects,
+    hand,
+    setHand,
+    packsPerRoom,
+    packsOpenedThisRoom,
+    openPackToHand,
+    startNewDream,
+    archetypeMementos
   };
 };

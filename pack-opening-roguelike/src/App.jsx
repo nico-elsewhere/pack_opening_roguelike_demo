@@ -6,6 +6,7 @@ import GameBoard from './components/v2/GameBoard';
 import Collection from './components/v2/Collection';
 import Shop from './components/v2/Shop';
 import Fusion from './components/v2/Fusion';
+import ArchetypeSelect from './components/v2/ArchetypeSelect';
 import DebugPackSelector from './components/DebugPackSelector';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         {currentScreen === 'collection' && <Collection {...gameState} />}
         {currentScreen === 'shop' && <Shop {...gameState} />}
         {currentScreen === 'fusion' && <Fusion {...gameState} />}
+        {currentScreen === 'archetype' && <ArchetypeSelect {...gameState} />}
       </main>
       
       {/* Debug tool - only visible in development */}
