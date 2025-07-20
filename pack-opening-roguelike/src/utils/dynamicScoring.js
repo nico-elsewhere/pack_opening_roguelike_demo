@@ -184,9 +184,52 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
         cardTokensGenerated = creatureResult.tokensGained;
       }
       
+      // Apply the tokens from this card
+      Object.entries(cardTokensGenerated).forEach(([tokenType, amount]) => {
+        cumulativeTokens[tokenType] = (cumulativeTokens[tokenType] || 0) + amount;
+      });
+      
       // Track special effects that need board-level handling
       if (creatureResult.specialEffect) {
         specialEffectTriggered = creatureResult.specialEffect;
+        
+        // Handle special token manipulation effects immediately
+        switch (specialEffectTriggered.type) {
+          case 'double_tokens':
+            // Pyrrhus effect - double specific token type
+            if (cumulativeTokens[specialEffectTriggered.tokenType]) {
+              cumulativeTokens[specialEffectTriggered.tokenType] *= 2;
+            }
+            break;
+            
+          case 'convert_all_to_air':
+            // Tempest effect - convert all tokens to air
+            const totalTokens = Object.values(cumulativeTokens).reduce((sum, val) => sum + val, 0);
+            // Clear all tokens
+            Object.keys(cumulativeTokens).forEach(token => {
+              cumulativeTokens[token] = 0;
+            });
+            // Add as air
+            cumulativeTokens.air = totalTokens;
+            break;
+            
+          case 'token_conversion':
+            // Escarglow effect - convert specific tokens
+            if (cumulativeTokens[specialEffectTriggered.from] >= specialEffectTriggered.amount) {
+              cumulativeTokens[specialEffectTriggered.from] -= specialEffectTriggered.amount;
+              cumulativeTokens[specialEffectTriggered.to] = (cumulativeTokens[specialEffectTriggered.to] || 0) + 
+                Math.floor(specialEffectTriggered.amount * specialEffectTriggered.multiplier);
+            }
+            break;
+            
+          case 'auto_convert':
+            // Sapphungus effect - earth to strength
+            if (cumulativeTokens[specialEffectTriggered.from]) {
+              cumulativeTokens[specialEffectTriggered.to] = (cumulativeTokens[specialEffectTriggered.to] || 0) + 
+                cumulativeTokens[specialEffectTriggered.from];
+            }
+            break;
+        }
       }
     }
     

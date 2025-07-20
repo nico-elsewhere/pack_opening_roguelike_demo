@@ -7,6 +7,7 @@ import TokenDisplay from './TokenDisplay';
 import { isNightmare } from '../../utils/dreams';
 import { shouldShuffleHand, getHandLimit } from '../../utils/dreamEffects';
 import { calculateDynamicScores } from '../../utils/dynamicScoring';
+import { getCreatureAbilityText } from '../../utils/creatureEffects';
 
 const RoguelikeBoard = ({
   // Game state
@@ -34,7 +35,9 @@ const RoguelikeBoard = ({
   applyReward,
   setCollection,
   fuseCards,
-  scoringSpeedMultiplier = 1.0
+  scoringSpeedMultiplier = 1.0,
+  debugScenario,
+  setDebugScenario
 }) => {
   const [boardSlots, setBoardSlots] = useState([null, null, null, null, null]);
   const [isScoring, setIsScoring] = useState(false);
@@ -67,6 +70,7 @@ const RoguelikeBoard = ({
   const [showingMultiplier, setShowingMultiplier] = useState({});
   const [animatingScores, setAnimatingScores] = useState({}); // Track animated score values
   const [showingDreamEffect, setShowingDreamEffect] = useState({}); // Track dream effect display
+  const [debugExpectedResults, setDebugExpectedResults] = useState(null); // Debug: expected results
 
   const isCurrentNightmare = isNightmare(currentDream);
   const remainingPacks = packsPerRoom - packsOpenedThisRoom;
@@ -169,7 +173,13 @@ const RoguelikeBoard = ({
   const handleScoreHand = () => {
     if (!boardIsFull) return;
     
-    console.log('Starting to score board:', boardSlots);
+    // Animation logging
+    if (window.ANIMATION_LOGGER) {
+      window.ANIMATION_LOGGER.log('SCORING_START', {
+        board: boardSlots.map(card => card?.name),
+        timestamp: 0
+      });
+    }
     
     // Start scoring sequence
     setIsScoring(true);
@@ -218,6 +228,15 @@ const RoguelikeBoard = ({
         const actualBoardIndex = cardIndices[currentIndex];
         console.log(`Scoring card ${currentIndex} (board slot ${actualBoardIndex})`, validCards[currentIndex]);
         setScoringIndex(actualBoardIndex);
+        
+        // Animation logging for card reveal
+        if (window.ANIMATION_LOGGER) {
+          window.ANIMATION_LOGGER.log('CARD_REVEAL', {
+            cardIndex: actualBoardIndex,
+            cardName: validCards[currentIndex]?.name,
+            timestamp: Date.now()
+          });
+        }
         
         // Calculate scores for all revealed cards so far
         const revealedCards = validCards.slice(0, currentIndex + 1);
@@ -311,6 +330,16 @@ const RoguelikeBoard = ({
             setTimeout(() => {
               setShowingDreamEffect(prev => ({ ...prev, [boardIndex]: true }));
               
+              // Animation logging for dream effect
+              if (window.ANIMATION_LOGGER) {
+                window.ANIMATION_LOGGER.log('DREAM_EFFECT_START', {
+                  cardIndex: boardIndex,
+                  multiplier: currentCardScore.dreamMultiplier,
+                  addition: currentCardScore.dreamAddition,
+                  timestamp: Date.now()
+                });
+              }
+              
               // Animate from base to after dream effect
               const from = currentCardScore.baseValueBeforeEffects;
               const to = currentCardScore.baseValueBeforeTokens;
@@ -318,6 +347,12 @@ const RoguelikeBoard = ({
                 // Keep dream multiplier visible for a moment then hide it
                 setTimeout(() => {
                   setShowingDreamEffect(prev => ({ ...prev, [boardIndex]: false }));
+                  if (window.ANIMATION_LOGGER) {
+                    window.ANIMATION_LOGGER.log('DREAM_EFFECT_END', {
+                      cardIndex: boardIndex,
+                      timestamp: Date.now()
+                    });
+                  }
                 }, dreamFadeDuration);
               });
             }, phaseDelay);
@@ -336,6 +371,13 @@ const RoguelikeBoard = ({
               // Small delay to ensure dream effect is hidden first
               setTimeout(() => {
                 setShowingMultiplier(prev => ({ ...prev, [boardIndex]: true }));
+                if (window.ANIMATION_LOGGER) {
+                  window.ANIMATION_LOGGER.log('TOKEN_MULTIPLIER_START', {
+                    cardIndex: boardIndex,
+                    multiplier: currentCardScore.tokenMultiplier,
+                    timestamp: Date.now()
+                  });
+                }
               }, 50 * speedMult);
               
               // Animate from after dream to final value
@@ -345,6 +387,12 @@ const RoguelikeBoard = ({
                 // Keep multiplier visible briefly then hide
                 setTimeout(() => {
                   setShowingMultiplier(prev => ({ ...prev, [boardIndex]: false }));
+                  if (window.ANIMATION_LOGGER) {
+                    window.ANIMATION_LOGGER.log('TOKEN_MULTIPLIER_END', {
+                      cardIndex: boardIndex,
+                      timestamp: Date.now()
+                    });
+                  }
                 }, tokenFadeDuration);
               });
             }, phaseDelay);
@@ -418,9 +466,26 @@ const RoguelikeBoard = ({
               timestamp: Date.now()
             }]);
             
+            // Animation logging for token generation
+            if (window.ANIMATION_LOGGER) {
+              window.ANIMATION_LOGGER.log('TOKEN_GENERATED', {
+                cardIndex: boardIndex,
+                cardName: validCards[currentIndex]?.name,
+                tokens: thisCardTokens,
+                timestamp: Date.now()
+              });
+            }
+            
             // Handle special effects after token generation
             if (currentCardScore.specialEffect) {
               setTimeout(() => {
+                if (window.ANIMATION_LOGGER) {
+                  window.ANIMATION_LOGGER.log('SPECIAL_EFFECT', {
+                    cardIndex: boardIndex,
+                    effectType: currentCardScore.specialEffect.type,
+                    timestamp: Date.now()
+                  });
+                }
                 handleSpecialEffect(currentCardScore.specialEffect);
               }, 500 * speedMult);
             }
@@ -449,6 +514,13 @@ const RoguelikeBoard = ({
           const loopineBoardIndex = cardIndices[loopineIndex];
           setShowLoopineEffect(true);
           setLoopineEffectIndex(loopineBoardIndex);
+          
+          if (window.ANIMATION_LOGGER) {
+            window.ANIMATION_LOGGER.log('LOOPINE_TIME_LOOP', {
+              loopineIndex: loopineBoardIndex,
+              timestamp: Date.now()
+            });
+          }
           
           // Continue scoring from Loopine's position after animation
           const speedMult = 1 / scoringSpeedMultiplier;
@@ -510,6 +582,14 @@ const RoguelikeBoard = ({
 
   const handleScoringComplete = (totalScore) => {
     console.log('Scoring complete with total:', totalScore);
+    
+    if (window.ANIMATION_LOGGER) {
+      window.ANIMATION_LOGGER.log('SCORING_COMPLETE', {
+        totalScore,
+        timestamp: Date.now()
+      });
+    }
+    
     const newDreamScore = dreamScore + totalScore;
     setDreamScore(newDreamScore);
     setLastScoreGained(totalScore);
@@ -539,6 +619,205 @@ const RoguelikeBoard = ({
       }
     };
   }, []);
+  
+  // Helper function to create a Gen2 creature for testing
+  const createGen2CreatureForTest = (name, parent1Name, parent2Name) => {
+    // Get parent abilities
+    const ability1 = getCreatureAbilityText(parent1Name);
+    const ability2 = getCreatureAbilityText(parent2Name);
+    
+    return {
+      id: `debug-gen2-${name}`,
+      name: name,
+      generation: 'Gen2',
+      ppValue: 20, // Gen2 base value
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      ability: ability1 && ability2 ? `${ability1} & ${ability2}` : 'Fused creature ability',
+      parentCardId1: `debug-parent1-${parent1Name}`,
+      parentCardId2: `debug-parent2-${parent2Name}`,
+      arcana: 'creature'
+    };
+  };
+  
+  // Handle debug scenarios
+  useEffect(() => {
+    console.log('Debug scenario effect triggered:', {
+      hasDebugScenario: !!debugScenario,
+      hasCollection: !!collection,
+      collectionSize: collection ? Object.keys(collection).length : 0
+    });
+    
+    if (debugScenario && collection && Object.keys(collection).length > 0) {
+      console.log('Loading debug scenario:', debugScenario);
+      
+      // Set initial tokens if any
+      if (debugScenario.initialTokens) {
+        setTokens(debugScenario.initialTokens);
+      } else {
+        setTokens({});
+      }
+      
+      // Set expected results
+      setDebugExpectedResults({
+        tokens: debugScenario.expectedTokens || {},
+        scores: debugScenario.expectedScores || []
+      });
+      
+      // Place cards on the board
+      if (debugScenario.board) {
+        const newBoard = [null, null, null, null, null];
+        let placedCount = 0;
+        
+        // First, place all specified cards
+        debugScenario.board.forEach((card, index) => {
+          if (card && index < 5) {
+            placedCount++;
+            // Find the card in collection
+            const collectionEntry = Object.entries(collection).find(([id, c]) => 
+              c.name === card.name
+            );
+            
+            if (collectionEntry) {
+              const [cardId, templateCard] = collectionEntry;
+              const cardWithLevel = {
+                ...templateCard,
+                id: cardId,
+                level: card.level || templateCard.level || 1,
+                ability: templateCard.ability || getCreatureAbilityText(card.name),
+                ppValue: templateCard.ppValue || 10
+              };
+              newBoard[index] = cardWithLevel;
+            } else {
+              // If not in collection, create card (handles TestCreature, Gen2/Gen3)
+              console.log(`Creating card ${card.name} for debug scenario`, card);
+              
+              // Handle TestCreature as a basic placeholder
+              if (card.name === 'TestCreature') {
+                const testCard = {
+                  id: `debug-test-${index}`,
+                  name: 'TestCreature',
+                  level: card.level || 1,
+                  ppValue: card.ppValue || 10,
+                  ability: card.ability || 'No ability',
+                  generation: card.generation || 'Gen1',
+                  arcana: 'creature',
+                  xp: 0,
+                  xpToNextLevel: 100
+                };
+                newBoard[index] = testCard;
+              } else {
+                // Determine generation and properties
+                let generation = card.generation || 'Gen1';
+                let ppValue = 10;
+                let ability = getCreatureAbilityText(card.name);
+                
+                // Handle Gen2 creatures specifically
+                if ((generation === 'Gen2' || generation === 2) && card.parent1 && card.parent2) {
+                  // Create a proper Gen2 creature with parent abilities
+                  const gen2Card = createGen2CreatureForTest(card.name, card.parent1, card.parent2);
+                  gen2Card.level = card.level || 1;
+                  if (card.ppValue) gen2Card.ppValue = card.ppValue;
+                  if (card.ability) gen2Card.ability = card.ability;
+                  newBoard[index] = gen2Card;
+                } else {
+                  // If ability is not found, it might be a Gen2/Gen3
+                  if (!ability && card.ability) {
+                    ability = card.ability;
+                  } else if (!ability) {
+                    // Try to infer from name or use placeholder
+                    if (card.name.includes('Fused') || generation === 'Gen2' || generation === 2) {
+                      generation = 'Gen2';
+                      ppValue = 20;
+                      ability = card.ability || 'Fused creature ability';
+                    } else if (generation === 'Gen3' || generation === 3) {
+                      generation = 'Gen3';
+                      ppValue = 40;
+                      ability = card.ability || 'Triple fused creature ability';
+                    } else {
+                      ability = 'No ability';
+                    }
+                  }
+                  
+                  // Set PP value based on generation if not specified
+                  if (!card.ppValue) {
+                    if (generation === 'Gen2' || generation === 2) ppValue = 20;
+                    else if (generation === 'Gen3' || generation === 3) ppValue = 40;
+                  }
+                  
+                  const debugCard = {
+                    id: `debug-${card.name}-${index}`,
+                    name: card.name,
+                    level: card.level || 1,
+                    ppValue: card.ppValue || ppValue,
+                    ability: ability,
+                    generation: generation,
+                    arcana: 'creature',
+                    xp: 0,
+                    xpToNextLevel: 100
+                  };
+                  newBoard[index] = debugCard;
+                }
+              }
+            }
+          }
+        });
+        
+        // Fill remaining slots with basic creatures to ensure we have 5
+        if (placedCount < 5) {
+          console.log(`Test scenario only has ${placedCount} creatures, filling remaining slots`);
+          const fillerCreature = {
+            name: 'Flitterfin',
+            level: 1,
+            ppValue: 10,
+            ability: getCreatureAbilityText('Flitterfin'),
+            generation: 'Gen1',
+            arcana: 'creature',
+            xp: 0,
+            xpToNextLevel: 100
+          };
+          
+          for (let i = 0; i < 5; i++) {
+            if (newBoard[i] === null) {
+              newBoard[i] = {
+                ...fillerCreature,
+                id: `debug-filler-${i}`
+              };
+            }
+          }
+        }
+        
+        setBoardSlots(newBoard);
+        // Clear hand since we're placing directly on board
+        setHand([]);
+        
+        // Log what was loaded
+        console.log('Test scenario loaded with board:', newBoard.map(card => 
+          card ? `${card.name} (${card.generation}, ${card.ppValue} PP, "${card.ability}")` : 'null'
+        ));
+      }
+      
+      // Note: Dream effects would need to be set through game state
+      // For now, we'll just log if they're present
+      if (debugScenario.dreamEffects && debugScenario.dreamEffects.length > 0) {
+        console.log('Debug scenario includes dream effects:', debugScenario.dreamEffects);
+      }
+      
+      // Reset scoring state
+      setIsScoring(false);
+      setScoringComplete(false);
+      setCardScores({});
+      setScoringIndex(-1);
+      setRunningTotal(0);
+      setAnimatingScores({});
+      setShowingDreamEffect({});
+      setShowingMultiplier({});
+      
+      // Clear the scenario after applying it
+      setDebugScenario(null);
+    }
+  }, [debugScenario, setDebugScenario, collection]);
   
   // Clean up old token animations
   useEffect(() => {
@@ -886,6 +1165,34 @@ const RoguelikeBoard = ({
                 {dreamScore >= dreamThreshold ? 'Next Dream' : (remainingPacks > 0 ? 'Next Hand' : 'End Run')}
               </button>
             </div>
+          </div>
+        )}
+        
+        {/* Debug Expected Results */}
+        {debugExpectedResults && (
+          <div className="debug-expected-results">
+            <h4>Expected Results:</h4>
+            <div className="expected-content">
+              {debugExpectedResults.tokens && (
+                <div>Tokens: {JSON.stringify(debugExpectedResults.tokens)}</div>
+              )}
+              {debugExpectedResults.scores && (
+                <div>Scores: [{debugExpectedResults.scores.join(', ')}]</div>
+              )}
+              {scoringComplete && (
+                <div className="actual-results">
+                  <h5>Actual Results:</h5>
+                  <div>Tokens: {JSON.stringify(tokens)}</div>
+                  <div>Scores: [{boardSlots.filter(Boolean).map((_, i) => cardScores[i] || 0).join(', ')}]</div>
+                </div>
+              )}
+            </div>
+            <button 
+              className="close-debug-results"
+              onClick={() => setDebugExpectedResults(null)}
+            >
+              Close
+            </button>
           </div>
         )}
       </div>

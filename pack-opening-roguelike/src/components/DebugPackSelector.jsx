@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DebugPackSelector.css';
+import TestScenarioLoader from './debug/TestScenarioLoader';
 
 const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,6 +9,8 @@ const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState
   const [showCheats, setShowCheats] = useState(false);
   const [keepDebugPack, setKeepDebugPack] = useState(false);
   const [scoringSpeed, setScoringSpeed] = useState(1.0);
+  const [showTestScenarios, setShowTestScenarios] = useState(false);
+  const [currentTestScenario, setCurrentTestScenario] = useState(null);
   
   // Filter available cards based on search
   const filteredCards = deckTemplate.filter(card => 
@@ -78,6 +81,71 @@ const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState
     }
   };
   
+  const addExplosiveSynergy = () => {
+    const magmaduke = deckTemplate.find(c => c.name === 'Magmaduke');
+    const aquara = deckTemplate.find(c => c.name === 'Aquara');
+    const pyrrhus = deckTemplate.find(c => c.name === 'Pyrrhus');
+    
+    if (magmaduke && aquara && pyrrhus) {
+      setSelectedCards([
+        { ...magmaduke },
+        { ...aquara },
+        { ...pyrrhus },
+        { ...magmaduke },
+        { ...aquara }
+      ]);
+    }
+  };
+  
+  const addTokenDiversity = () => {
+    const creatures = ['Magmaduke', 'Aquara', 'Sapphungus', 'Lileye', 'Lumlin'];
+    const cards = creatures
+      .map(name => deckTemplate.find(c => c.name === name))
+      .filter(Boolean);
+    setSelectedCards(cards);
+  };
+  
+  const addShadowLightCombo = () => {
+    const stitchhead = deckTemplate.find(c => c.name === 'Stitchhead');
+    const serafuzz = deckTemplate.find(c => c.name === 'Serafuzz');
+    
+    if (stitchhead && serafuzz) {
+      setSelectedCards([
+        { ...stitchhead },
+        { ...stitchhead },
+        { ...serafuzz }
+      ]);
+    }
+  };
+  
+  const handleLoadTestScenario = (scenarioData) => {
+    // Check if deck template is loaded
+    if (!deckTemplate || deckTemplate.length === 0) {
+      alert('Please wait for the game to fully load before loading test scenarios.');
+      return;
+    }
+    
+    // First, ensure we're in roguelike mode
+    if (gameState.gameMode !== 'roguelike') {
+      // Switch to roguelike mode with default archetype if not already there
+      if (!gameState.selectedArchetype) {
+        gameState.selectArchetype('scholar'); // Default to Scholar
+      } else {
+        gameState.setGameMode('roguelike');
+      }
+    }
+    
+    // Store the full scenario data for the board to use
+    // We need to wait a bit for the archetype selection to complete
+    setTimeout(() => {
+      gameState.setDebugScenario?.(scenarioData);
+      gameState.setCurrentScreen('home'); // GameBoard is shown on 'home' screen
+    }, 100);
+    
+    setCurrentTestScenario(scenarioData.metadata.scenarioId);
+    setShowTestScenarios(false);
+  };
+  
   // Cheat functions
   const add1000PP = () => {
     if (gameState && gameState.setPP) {
@@ -125,6 +193,13 @@ const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState
           title="Debug: Cheats"
         >
           💰
+        </button>
+        <button 
+          className="debug-toggle test-scenarios"
+          onClick={() => setShowTestScenarios(!showTestScenarios)}
+          title="Debug: Load Test Scenarios"
+        >
+          🧪
         </button>
       </div>
       
@@ -259,6 +334,14 @@ const DebugPackSelector = ({ deckTemplate, onSetDebugPack, collection, gameState
             </div>
           </div>
         </div>
+      )}
+      
+      {showTestScenarios && (
+        <TestScenarioLoader
+          onLoadScenario={handleLoadTestScenario}
+          currentScenario={currentTestScenario}
+          onClose={() => setShowTestScenarios(false)}
+        />
       )}
     </div>
   );

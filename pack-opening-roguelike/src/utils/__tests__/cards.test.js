@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { 
   SUITS,
   RANKS,
@@ -20,8 +20,8 @@ describe('Card System', () => {
   })
 
   describe('createDeck', () => {
-    it('should create deck with tarot cards when enabled', () => {
-      const deck = createDeck(true)
+    it('should create deck with tarot cards when enabled', async () => {
+      const deck = await createDeck(true)
       
       // Should have tarot cards + 52 regular cards
       expect(deck.length).toBeGreaterThan(52)
@@ -31,8 +31,8 @@ describe('Card System', () => {
       expect(tarotCards.length).toBeGreaterThan(0)
     })
 
-    it('should create deck without tarot cards when disabled', () => {
-      const deck = createDeck(false)
+    it('should create deck without tarot cards when disabled', async () => {
+      const deck = await createDeck(false)
       
       // Should have exactly 52 regular cards (4 suits × 13 ranks)
       expect(deck).toHaveLength(52)
@@ -42,8 +42,8 @@ describe('Card System', () => {
       expect(playingCards).toHaveLength(52)
     })
 
-    it('should create cards with correct properties', () => {
-      const deck = createDeck(false)
+    it('should create cards with correct properties', async () => {
+      const deck = await createDeck(false)
       
       deck.forEach(card => {
         expect(card).toHaveProperty('id')
@@ -58,8 +58,8 @@ describe('Card System', () => {
       })
     })
 
-    it('should mark face cards as runes', () => {
-      const deck = createDeck(false)
+    it('should mark face cards as runes', async () => {
+      const deck = await createDeck(false)
       const faceCards = deck.filter(card => ['J', 'Q', 'K', 'A'].includes(card.rank))
       
       faceCards.forEach(card => {
@@ -69,16 +69,21 @@ describe('Card System', () => {
   })
 
   describe('generatePack', () => {
+    let deckTemplate;
+    
+    beforeAll(async () => {
+      const fullDeck = await createDeck(false);
+      deckTemplate = fullDeck.filter(card => !card.isRune);
+    });
+
     it('should generate pack of specified size', () => {
-      const deck = createDeck(false)
-      const pack = generatePack(5, deck)
+      const pack = generatePack(5, deckTemplate)
       
       expect(pack).toHaveLength(5)
     })
 
     it('should not include duplicate cards', () => {
-      const deck = createDeck(false)
-      const pack = generatePack(10, deck)
+      const pack = generatePack(10, deckTemplate)
       
       const ids = pack.map(card => card.id)
       const uniqueIds = new Set(ids)
@@ -87,8 +92,7 @@ describe('Card System', () => {
     })
 
     it('should generate unique IDs for pack cards', () => {
-      const deck = createDeck(false)
-      const pack = generatePack(5, deck)
+      const pack = generatePack(5, deckTemplate)
       
       pack.forEach(card => {
         expect(card.id).toContain('-pack-')

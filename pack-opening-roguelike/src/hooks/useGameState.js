@@ -29,6 +29,7 @@ export const useGameState = () => {
   const [debugPackContents, setDebugPackContents] = useState(null); // Debug: predetermined pack contents
   const [keepDebugPack, setKeepDebugPack] = useState(false); // Debug: whether to keep debug pack
   const [scoringSpeedMultiplier, setScoringSpeedMultiplier] = useState(1.0); // Debug: animation speed multiplier
+  const [debugScenario, setDebugScenario] = useState(null); // Debug: test scenario data
   
   // Roguelike mode state
   const [gameMode, setGameMode] = useState('classic'); // 'classic' or 'roguelike'
@@ -693,6 +694,8 @@ export const useGameState = () => {
     applyCardXP,
     scoringSpeedMultiplier,
     setScoringSpeedMultiplier,
+    debugScenario,
+    setDebugScenario,
     // Roguelike mode
     gameMode,
     setGameMode,

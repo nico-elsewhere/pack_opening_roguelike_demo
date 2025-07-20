@@ -188,6 +188,20 @@ export const CREATURE_EFFECTS = {
         { type: 'tech_double_trigger' }
       ]
     }
+  },
+  
+  // PLACEHOLDER/DEBUG CREATURES
+  'Flitterfin': {
+    ability: 'No ability',
+    effect: {
+      type: 'none'
+    }
+  },
+  'TestCreature': {
+    ability: 'No ability',
+    effect: {
+      type: 'none'
+    }
   }
 };
 
@@ -277,35 +291,39 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         break;
         
       case 'multiply_tokens':
-        if (currentTokens[eff.token]) {
-          result.tokensGained[eff.token] = currentTokens[eff.token];
-        }
+        // Return special effect to handle at board level
+        result.specialEffect = { 
+          type: 'double_tokens', 
+          tokenType: eff.token 
+        };
         break;
         
       case 'convert_tokens':
         if (currentTokens[eff.from.token] >= eff.from.amount) {
-          result.tokensGained[eff.from.token] = -eff.from.amount;
-          result.tokensGained[eff.to.token] = eff.to.amount;
+          result.specialEffect = {
+            type: 'token_conversion',
+            from: eff.from.token,
+            to: eff.to.token,
+            amount: eff.from.amount,
+            multiplier: eff.to.amount / eff.from.amount
+          };
         }
         break;
         
       case 'convert_all_to':
-        const totalTokens = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
-        if (totalTokens > 0) {
-          // Clear all tokens
-          Object.keys(currentTokens).forEach(token => {
-            if (currentTokens[token] > 0) {
-              result.tokensGained[token] = -currentTokens[token];
-            }
-          });
-          // Add all as target token
-          result.tokensGained[eff.token] = totalTokens;
+        const totalTokenCount = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
+        if (totalTokenCount > 0) {
+          result.specialEffect = { type: 'convert_all_to_air' };
         }
         break;
         
       case 'score_per_token':
-        if (currentTokens[eff.token]) {
-          result.scoreModifier += currentTokens[eff.token] * eff.ppPerToken;
+        // Include both existing tokens and any we're about to gain
+        const existingTokens = currentTokens[eff.token] || 0;
+        const gainingTokens = result.tokensGained[eff.token] || 0;
+        const totalTokens = existingTokens + gainingTokens;
+        if (totalTokens > 0) {
+          result.scoreModifier += totalTokens * eff.ppPerToken;
         }
         break;
         
@@ -322,8 +340,8 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         break;
         
       case 'tokens_as_score':
-        const totalTokenCount = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
-        result.specialEffect = { type: 'override_score', value: totalTokenCount * eff.multiplier };
+        const tokenSum = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
+        result.specialEffect = { type: 'override_score', value: tokenSum * eff.multiplier };
         break;
         
       case 'random_tokens':
@@ -364,8 +382,14 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         break;
         
       case 'token_conversion':
-        if (currentTokens[eff.from] > 0) {
-          result.tokensGained[eff.to] = currentTokens[eff.from] * eff.rate;
+        // Check if this is the new format (with rate) or old format (with from/to objects)
+        if (eff.rate !== undefined) {
+          // Sapphungus-style conversion
+          result.specialEffect = {
+            type: 'auto_convert',
+            from: eff.from,
+            to: eff.to
+          };
         }
         break;
         
