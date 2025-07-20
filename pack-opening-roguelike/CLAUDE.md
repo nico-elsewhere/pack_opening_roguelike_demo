@@ -163,11 +163,112 @@ Every Gen 1 card should have a unique effect that creates strategic depth:
 - `npm test` - Run tests (if available)
 - `npm run build` - Build for production
 
+## Implementation Status
+
+### Completed Features
+1. **Token System Foundation** ✅
+   - TokenDisplay component shows active tokens
+   - Token state management in RoguelikeBoard
+   - Tokens reset between hands
+   - Token values calculated in final score
+
+2. **Card Size Improvements** ✅
+   - Cards are 1.5x larger in roguelike mode (180x252px)
+   - Effect text displays below creature image
+   - Responsive sizing maintained
+
+3. **Gen 1 Card Effects** ✅
+   - All Gen 1 creatures have unique effects
+   - Effects defined in creatureEffects.js
+   - Effects display on cards in roguelike mode
+   - Token generation, manipulation, and synergies implemented
+
+4. **Fusion Inheritance** ✅
+   - Gen 2 creatures inherit both parent effects
+   - Gen 3 creatures inherit all 4 grandparent effects
+   - PP values sum correctly (parent1 + parent2)
+   - Effect text shows combined effects with " & " separator
+
+5. **Scoring Integration** ✅
+   - Effects process during card reveal
+   - Tokens update in real-time
+   - Token values included in running total
+   - Final score includes all token contributions
+
+6. **Debug Test Scenario System** ✅
+   - Load test scenarios directly in game UI
+   - Categorized scenarios (fire, water, earth, etc.)
+   - Auto-fills to 5 creatures for valid scoring
+   - Shows expected vs actual results
+   - Handles Gen2/Gen3 creatures dynamically
+
+## Recent Progress (2025-07-20)
+
+### Debug Test Scenario System
+1. **Created comprehensive test scenario loader**
+   - Added UI in debug panel (🧪 button)
+   - Scenarios categorized by type (fire, water, earth, air, shadow, special, dream, edge)
+   - Auto-fills empty slots with Flitterfin to ensure 5 creatures
+   - Shows expected vs actual results panel
+
+2. **Fixed creature loading issues**
+   - Handles Gen2/Gen3 creatures that don't exist in collection yet
+   - Added TestCreature and Flitterfin to CREATURE_EFFECTS
+   - All creatures now have proper abilities, PP values, and metadata
+   - Better console logging for debugging
+
+3. **Test Integration**
+   - Created comprehensive test suites for roguelike mode
+   - Tests cover scoring, abilities, tokens, animations, and integration
+   - ~50% of creature ability tests currently passing
+
 ## Known Issues
-- None currently tracked
+- Gen 1 creature abilities are too complex with 12 different token types
+- Players struggle to understand token interactions and synergies
+- Too many tokens make strategic planning difficult
+
+## Next Steps - Ability System Redesign
+
+### Current Problems:
+1. **Too Many Token Types** (12 total):
+   - strength, fire, water, earth, air, shadow, light, chaos, order, wild, tech, void
+   - Overwhelming for players to track
+   - Hard to plan synergies
+
+2. **Unclear Token Roles**:
+   - Some tokens have similar effects
+   - Token conversion chains are confusing
+   - Not clear which tokens are "good" vs utility
+
+### Proposed Redesign:
+1. **Reduce to 5-6 Core Token Types**
+   - Keep thematically distinct tokens (fire, water, earth, air)
+   - Merge similar tokens (combine shadow/void, light/order)
+   - Make each token have clear, unique role
+
+2. **Clearer Ability Templates**:
+   - "Gain X [token]. Score +Y per [token]"
+   - "Convert X [token] to Y [token]"
+   - "Double all [token]"
+   - "If X+ [token]: [effect]"
+
+3. **Visual Token Hierarchy**:
+   - Basic tokens (elements): Common, direct scoring
+   - Advanced tokens (light/shadow): Rarer, multiplier effects
+   - Meta tokens (strength): Affect all scoring
+
+4. **Simplified Synergies**:
+   - Clear conversion paths (water→steam→air)
+   - Obvious combos (fire + earth = more fire)
+   - Token "families" that work together
 
 ## Future Considerations
+- Visual effects for token generation
+- Sound effects for abilities
+- Token animations when consumed/transformed
 - Persistent token effects (between hands)
 - Token-based dream effects
 - Archetype-specific token bonuses
-- Token trading/conversion mechanics
+- Simplified token UI with better grouping
+- In-game token guide/reference
+- Balance testing for all effects
