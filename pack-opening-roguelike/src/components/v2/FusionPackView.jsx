@@ -22,8 +22,6 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
       return card.generation === 'Gen1' || card.generation === 'Gen2';
     });
 
-    console.log('FusionPackView - eligible cards:', eligibleCards.length);
-    console.log('Collection:', collection);
 
     if (eligibleCards.length >= 2) {
       // Shuffle and pick up to 5 cards
@@ -134,15 +132,12 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
         if (selectedCard1.generation && selectedCard2.generation) {
           // Use creature breeding API
           const bredCreature = await breedCreatures(selectedCard1.id, selectedCard2.id);
-          console.log('Bred creature:', bredCreature);
           
           // Call the game's fuseCards to handle inventory management
           result = fuseCards(selectedCard1.id, selectedCard2.id, bredCreature);
           
           // Ensure the fused card has the inherited abilities
           if (result && result.success && result.fusedCard) {
-            console.log('Fusion result card:', result.fusedCard);
-            console.log('Card generation:', result.fusedCard.generation);
             // Add inherited abilities if not already present
             if (!result.fusedCard.ability) {
               let inheritedAbility = '';
@@ -189,7 +184,6 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
           result = fuseCards(selectedCard1.id, selectedCard2.id);
         }
         
-        console.log('Fusion result:', result);
         
         if (result && result.success) {
           setFusionResult(result.fusedCard);

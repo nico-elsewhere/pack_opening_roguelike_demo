@@ -25,10 +25,6 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
   const isFusedTarot = card.arcana && ['transcendent', 'empowered', 'enhanced-minor'].includes(card.arcana);
   const isCreature = card.arcana === 'creature';
   
-  // Debug log
-  if (!card.arcana) {
-    console.log('Card missing arcana:', card);
-  }
   
   // Get rarity color
   const getRarityColor = () => {

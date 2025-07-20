@@ -473,8 +473,6 @@ export const useGameState = () => {
           fusedCard.ability = abilities.join(' & ');
         }
       }
-      
-      console.log('Fused card after modification:', fusedCard);
     }
     
     // Check if this fusion already exists (skip for creatures as they can have duplicates)

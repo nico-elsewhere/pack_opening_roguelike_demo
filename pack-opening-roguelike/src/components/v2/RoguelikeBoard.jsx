@@ -48,6 +48,7 @@ const RoguelikeBoard = ({
   const [completedDreamNumber, setCompletedDreamNumber] = useState(null);
   const [wasNightmareDream, setWasNightmareDream] = useState(false);
   const [showDialogue, setShowDialogue] = useState(false);
+  const [discardedCards, setDiscardedCards] = useState([]);
   
   // Scoring animation state
   const [scoringIndex, setScoringIndex] = useState(-1);
@@ -72,9 +73,14 @@ const RoguelikeBoard = ({
   const boardIsFull = boardSlots.every(slot => slot !== null);
   const boardIsEmpty = boardSlots.every(slot => slot === null);
 
-  const handleOpenPack = () => {
-    if (remainingPacks <= 0 || hand.length > 0) return;
-    openPackToHand();
+  const handleOpenPack = (packCount = 1) => {
+    if (remainingPacks < packCount) return;
+    if (hand.length + (packCount * 5) > 10) return; // Would exceed hand limit
+    
+    // Open the requested number of packs
+    for (let i = 0; i < packCount; i++) {
+      openPackToHand();
+    }
   };
 
   const handleDragStart = (e, card, fromHand = true, boardIndex = null) => {
@@ -128,6 +134,32 @@ const RoguelikeBoard = ({
     newBoardSlots[draggedBoardIndex] = null;
     setBoardSlots(newBoardSlots);
     setHand([...hand, draggedCard]);
+    
+    setDraggedCard(null);
+    setDraggedFromBoard(false);
+    setDraggedBoardIndex(null);
+  };
+
+  const handleDropOnDiscard = (e) => {
+    e.preventDefault();
+    if (!draggedCard || draggedFromBoard) return; // Only accept cards from hand
+    
+    // Calculate minimum cards needed (board slots - cards already on board)
+    const cardsOnBoard = boardSlots.filter(slot => slot !== null).length;
+    const emptySlotsOnBoard = 5 - cardsOnBoard;
+    const minCardsNeeded = emptySlotsOnBoard;
+    
+    // Prevent discarding if it would leave too few cards
+    if (hand.length <= minCardsNeeded) {
+      // Could add a visual feedback here
+      return;
+    }
+    
+    // Add to discarded cards for visual feedback
+    setDiscardedCards([...discardedCards, draggedCard]);
+    
+    // Remove from hand
+    setHand(hand.filter(c => c !== draggedCard));
     
     setDraggedCard(null);
     setDraggedFromBoard(false);
@@ -518,8 +550,10 @@ const RoguelikeBoard = ({
   }, []);
 
   const handleContinue = () => {
-    // Clear the board
+    // Clear the board and hand
     setBoardSlots([null, null, null, null, null]);
+    setHand([]);
+    setDiscardedCards([]);
     setScoringComplete(false);
     setIsScoring(false);
     setTokens({ strength: 0 });
@@ -654,14 +688,38 @@ const RoguelikeBoard = ({
         {/* Pack Status */}
         {!isScoring && !scoringComplete && (
           <div className="pack-status">
-            <div className="packs-remaining">{remainingPacks} packs remaining</div>
-            {hand.length === 0 && boardIsEmpty && remainingPacks > 0 && (
-              <button 
-                className="open-pack-btn-tcg"
-                onClick={handleOpenPack}
-              >
-                Open Pack
-              </button>
+            <div className="pack-info">
+              <div className="packs-remaining">{remainingPacks} packs remaining</div>
+              {hand.length > 0 && (
+                <div className="hand-count">Hand: {hand.length}/10 cards</div>
+              )}
+            </div>
+            {boardIsEmpty && remainingPacks > 0 && (
+              <div className="pack-buttons">
+                <button 
+                  className="open-pack-btn-tcg"
+                  onClick={() => handleOpenPack(1)}
+                  disabled={hand.length > 5}
+                  title={hand.length > 5 ? `Need ${hand.length - 5} empty slots` : "Open 1 pack (5 cards)"}
+                >
+                  Open 1 Pack
+                </button>
+                {remainingPacks >= 2 && (
+                  <button 
+                    className="open-pack-btn-tcg open-two"
+                    onClick={() => handleOpenPack(2)}
+                    disabled={hand.length > 0}
+                    title={hand.length > 0 ? `Need ${hand.length} empty slots` : "Open 2 packs (10 cards)"}
+                  >
+                    Open 2 Packs
+                  </button>
+                )}
+              </div>
+            )}
+            {boardIsEmpty && hand.length > 0 && remainingPacks > 0 && (
+              <div className="pack-warning">
+                ⚠️ Unplayed cards will be discarded after scoring!
+              </div>
             )}
           </div>
         )}
@@ -761,32 +819,61 @@ const RoguelikeBoard = ({
 
         {/* Hand Area */}
         {!isScoring && !scoringComplete && (
-          <div 
-            className={`tcg-hand-area`}
-            onDragOver={handleDragOver}
-            onDrop={handleDropOnHand}
-          >
-            <div className="hand-container">
-              {hand.map((card, index) => (
-                <div
-                  key={`hand-${index}`}
-                  className={`tcg-hand-card ${hoveredCardIndex === index ? 'hovered' : ''}`}
-                  style={{
-                    '--card-index': index,
-                    '--total-cards': hand.length,
-                  }}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, card, true)}
-                  onMouseEnter={() => setHoveredCardIndex(index)}
-                  onMouseLeave={() => setHoveredCardIndex(null)}
-                >
-                  <Card card={card} showTooltip={true} showLevel={true} />
-                </div>
-              ))}
+          <div className="hand-and-discard-container">
+            <div 
+              className={`tcg-hand-area`}
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnHand}
+            >
+              <div className="hand-container">
+                {hand.map((card, index) => (
+                  <div
+                    key={`hand-${index}`}
+                    className={`tcg-hand-card ${hoveredCardIndex === index ? 'hovered' : ''}`}
+                    style={{
+                      '--card-index': index,
+                      '--total-cards': hand.length,
+                    }}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, card, true)}
+                    onMouseEnter={() => setHoveredCardIndex(index)}
+                    onMouseLeave={() => setHoveredCardIndex(null)}
+                  >
+                    <Card card={card} showTooltip={true} showLevel={true} />
+                  </div>
+                ))}
+              </div>
+              {hand.length === 0 && !boardIsEmpty && (
+                <div className="hand-empty-hint">Play all cards to the board</div>
+              )}
             </div>
-            {hand.length === 0 && !boardIsEmpty && (
-              <div className="hand-empty-hint">Play all cards to the board</div>
-            )}
+            
+            {/* Discard Pile */}
+            {(() => {
+              const cardsOnBoard = boardSlots.filter(slot => slot !== null).length;
+              const emptySlotsOnBoard = 5 - cardsOnBoard;
+              const canDiscard = hand.length > emptySlotsOnBoard;
+              const isDraggingFromHand = draggedCard && !draggedFromBoard;
+              
+              return (
+                <div 
+                  className={`discard-pile ${isDraggingFromHand ? (canDiscard ? 'highlight' : 'disabled') : ''}`}
+                  onDragOver={canDiscard ? handleDragOver : (e) => e.preventDefault()}
+                  onDrop={handleDropOnDiscard}
+                >
+                  <div className="discard-icon">{canDiscard || discardedCards.length > 0 ? '🗑️' : '🚫'}</div>
+                  {discardedCards.length === 0 ? (
+                    canDiscard ? (
+                      <div className="discard-hint">Drag cards here to discard</div>
+                    ) : (
+                      <div className="discard-hint disabled">Need {emptySlotsOnBoard} cards for board</div>
+                    )
+                  ) : (
+                    <div className="discard-count">{discardedCards.length} discarded</div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
