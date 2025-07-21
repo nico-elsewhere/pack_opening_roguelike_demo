@@ -15,15 +15,12 @@ const ArchetypeSelect = ({ selectArchetype, setCurrentScreen }) => {
   return (
     <div className="archetype-select">
       <div className="archetype-header">
-        <button className="back-button" onClick={handleBack}>
-          ← Back
-        </button>
         <h1>Choose Your Archetype</h1>
         <p className="archetype-subtitle">Select a guiding force for your journey through dreams</p>
       </div>
 
       <div className="archetype-grid">
-        {Object.values(ARCHETYPES).map(archetype => (
+        {Object.values(ARCHETYPES).filter(archetype => archetype.id === 'ruler').map(archetype => (
           <div 
             key={archetype.id} 
             className="archetype-card"

@@ -21,7 +21,7 @@ export const useGameState = () => {
   const [stagedPacks, setStagedPacks] = useState([]);
   const [openedCards, setOpenedCards] = useState([]);
   const [totalCardsOpened, setTotalCardsOpened] = useState(0);
-  const [currentScreen, setCurrentScreen] = useState('home');
+  const [currentScreen, setCurrentScreen] = useState('archetype');
   const [packSlots, setPackSlots] = useState(1);
   const [runeSlots, setRuneSlots] = useState(3);
   const [gameModifiers, setGameModifiers] = useState({});
@@ -32,7 +32,7 @@ export const useGameState = () => {
   const [debugScenario, setDebugScenario] = useState(null); // Debug: test scenario data
   
   // Roguelike mode state
-  const [gameMode, setGameMode] = useState('classic'); // 'classic' or 'roguelike'
+  const [gameMode, setGameMode] = useState('roguelike'); // 'classic' or 'roguelike'
   const [selectedArchetype, setSelectedArchetype] = useState(null);
   const [currentDream, setCurrentDream] = useState(1);
   const [dreamScore, setDreamScore] = useState(0);

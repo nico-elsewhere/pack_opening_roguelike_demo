@@ -1,6 +1,7 @@
 import { ALL_TAROT_CARDS } from './tarotCards.js';
 import { getCreature, getCreatures, getGen1CreatureIds } from './creatureAPI.js';
 import { applyPassiveEffects } from './creaturePassives.js';
+import { CREATURE_EFFECTS } from './creatureEffects';
 
 export const SUITS = ['fire', 'earth', 'water', 'air'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -67,10 +68,103 @@ const loadCreatures = async () => {
   return cachePromise;
 };
 
+// PP values based on rarity and abilities
+const calculateCreaturePPValue = (creature) => {
+  // Check if creature has abilities
+  const hasAbility = creature.ability || (creature.name && CREATURE_EFFECTS[creature.name]);
+  
+  // Base PP values by rarity
+  const rarityBasePP = {
+    common: 10,
+    uncommon: 15,
+    rare: 20,
+    epic: 25,
+    legendary: 35
+  };
+  
+  const basePP = rarityBasePP[creature.rarity || 'common'];
+  
+  // Adjust based on abilities
+  if (!hasAbility) {
+    // No ability = 80% more PP (these are vanilla creatures)
+    return Math.floor(basePP * 1.8);
+  }
+  
+  // Check for powerful abilities that should reduce PP
+  const ability = CREATURE_EFFECTS[creature.name];
+  if (ability && ability.effect) {
+    const effectType = ability.effect.type;
+    
+    // Token generators get reduced PP based on how many tokens
+    if (effectType === 'gain_token' || effectType === 'gain_token_position') {
+      const tokenAmount = ability.effect.amount || 1;
+      if (tokenAmount >= 2) {
+        return Math.floor(basePP * 0.5); // 50% PP for multi-token generators
+      }
+      return Math.floor(basePP * 0.7); // 30% less PP for single token
+    }
+    
+    // Complex effects with token generation
+    if (effectType === 'complex' && ability.effect.effects?.some(e => e.type === 'gain_token')) {
+      return Math.floor(basePP * 0.6); // 40% less PP
+    }
+    
+    // Powerful multipliers get significantly reduced PP
+    if (effectType === 'multiply_tokens' || effectType === 'conditional_multiplier') {
+      const multiplier = ability.effect.multiplier || 2;
+      if (multiplier >= 3) {
+        return Math.floor(basePP * 0.4); // 60% less PP for 3x+ multipliers
+      }
+      return Math.floor(basePP * 0.6); // 40% less PP for 2x multipliers
+    }
+    
+    // Token converters and manipulators
+    if (effectType === 'convert_tokens' || effectType === 'convert_all_to') {
+      return Math.floor(basePP * 0.7); // 30% less PP
+    }
+    
+    // Score manipulation effects
+    if (effectType === 'score_per_token' || effectType === 'token_diversity_bonus') {
+      return Math.floor(basePP * 0.8); // 20% less PP
+    }
+    
+    // Position-based or adjacent effects
+    if (effectType === 'adjacent_bonus' || effectType === 'position_multiplier') {
+      return Math.floor(basePP * 0.9); // 10% less PP
+    }
+    
+    // Special unique abilities
+    if (creature.name === 'Fred') {
+      // Fred has exponential scaling, very low base PP
+      return Math.floor(basePP * 0.3); // 70% less PP
+    }
+    
+    if (creature.name === 'Loopine') {
+      // Loopine can double the entire board score
+      return Math.floor(basePP * 0.4); // 60% less PP
+    }
+    
+    // Scaling effects based on other cards
+    if (effectType === 'scale_with_creatures' || effectType === 'per_creature_bonus') {
+      return Math.floor(basePP * 0.7); // 30% less PP
+    }
+  }
+  
+  return basePP;
+};
+
+
 export const createDeck = async (useTarot = true) => {
   // Load creatures from API
   const creatures = await loadCreatures();
-  return [...creatures]; // Return a copy
+  
+  // Assign PP values based on rarity and abilities
+  const creaturesWithPP = creatures.map(creature => ({
+    ...creature,
+    ppValue: calculateCreaturePPValue(creature)
+  }));
+  
+  return [...creaturesWithPP]; // Return a copy
 };
 
 export const generatePack = (packSize = 5, deckTemplate, rarityWeights = null) => {

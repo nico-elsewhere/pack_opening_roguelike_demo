@@ -65,12 +65,15 @@ const RoguelikeBoard = ({
   const countIntervalRef = useRef(null);
   
   // Token state
-  const [tokens, setTokens] = useState({ strength: 0 });
+  const [tokens, setTokens] = useState({});
   const [tokenAnimations, setTokenAnimations] = useState([]);
   const [showingMultiplier, setShowingMultiplier] = useState({});
   const [animatingScores, setAnimatingScores] = useState({}); // Track animated score values
   const [showingDreamEffect, setShowingDreamEffect] = useState({}); // Track dream effect display
   const [debugExpectedResults, setDebugExpectedResults] = useState(null); // Debug: expected results
+  const [isScoringTokens, setIsScoringTokens] = useState(false);
+  const [scoringTokenIndex, setScoringTokenIndex] = useState(-1);
+  const [tokenScores, setTokenScores] = useState({});
 
   const isCurrentNightmare = isNightmare(currentDream);
   const remainingPacks = packsPerRoom - packsOpenedThisRoom;
@@ -246,12 +249,13 @@ const RoguelikeBoard = ({
           equippedRunes || [],
           collection || {},
           dreamEffects,
-          tokens,
+          tokens || {},
           currentIndex // Pass the just revealed index
         );
         
         console.log('Calculated scores:', scores);
         console.log('Tokens gained:', tokensGained);
+        console.log('Current tokens before update:', tokens);
         
         // Get current card info
         const currentCardScore = scores[currentIndex];
@@ -455,6 +459,7 @@ const RoguelikeBoard = ({
               for (const [tokenType, amount] of Object.entries(thisCardTokens)) {
                 newTokens[tokenType] = (newTokens[tokenType] || 0) + amount;
               }
+              console.log('Updating tokens from:', prevTokens, 'to:', newTokens);
               return newTokens;
             });
             
@@ -529,18 +534,121 @@ const RoguelikeBoard = ({
             scoreNext();
           }, 1500 * speedMult);
         } else {
-          // Scoring complete
-          const finalTotal = currentTotal + Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
-          console.log('Scoring complete, total:', finalTotal);
-          const speedMult = 1 / scoringSpeedMultiplier;
-          setTimeout(() => {
-            handleScoringComplete(finalTotal);
-          }, 400 * speedMult);
+          // Calculate final tokens from all cards
+          const { tokensGained: finalTokens } = calculateDynamicScores(
+            validCards,
+            validCards,
+            equippedRunes || [],
+            collection || {},
+            dreamEffects,
+            {},
+            validCards.length - 1
+          );
+          
+          console.log('Final tokens calculated:', finalTokens);
+          
+          // Start token scoring phase
+          const creatureTotal = currentTotal + Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
+          console.log('Creature scoring complete, total:', creatureTotal);
+          
+          // Get active tokens (tokens with count > 0)
+          const activeTokens = Object.entries(finalTokens).filter(([_, count]) => count > 0);
+          
+          console.log('Active tokens for scoring:', activeTokens);
+          
+          if (activeTokens.length > 0) {
+            console.log('Starting token scoring phase with tokens:', activeTokens);
+            
+            // Update the token state to reflect final tokens
+            setTokens(finalTokens);
+            
+            const speedMult = 1 / scoringSpeedMultiplier;
+            
+            // Start token scoring after a brief pause
+            setTimeout(() => {
+              scoreTokens(creatureTotal, activeTokens);
+            }, 600 * speedMult);
+          } else {
+            // No tokens to score
+            const speedMult = 1 / scoringSpeedMultiplier;
+            setTimeout(() => {
+              handleScoringComplete(creatureTotal);
+            }, 400 * speedMult);
+          }
         }
       }
     };
     
     scoreNext();
+  };
+
+  const scoreTokens = (creatureTotal, activeTokens) => {
+    console.log('Starting token scoring animation');
+    setIsScoringTokens(true);
+    
+    const TOKEN_VALUE = 10; // Each token is worth 10 PP
+    let tokenIndex = 0;
+    let tokenTotal = creatureTotal;
+    const newTokenScores = {};
+    
+    const scoreNextToken = () => {
+      if (tokenIndex < activeTokens.length) {
+        const [tokenType, tokenCount] = activeTokens[tokenIndex];
+        const tokenScore = tokenCount * TOKEN_VALUE;
+        
+        console.log(`Scoring ${tokenCount} ${tokenType} tokens for ${tokenScore} PP`);
+        
+        // Set which token is currently scoring
+        setScoringTokenIndex(tokenIndex);
+        
+        // Calculate and store this token's score
+        newTokenScores[tokenType] = tokenScore;
+        setTokenScores(newTokenScores);
+        
+        // Animate the score addition
+        const speedMult = 1 / scoringSpeedMultiplier;
+        
+        // Show the token score for a moment
+        setTimeout(() => {
+          // Add to running total with animation
+          const steps = 20;
+          const increment = tokenScore / steps;
+          let step = 0;
+          
+          const animateTokenScore = () => {
+            step++;
+            if (step <= steps) {
+              const currentAddition = Math.floor(increment * step);
+              setRunningTotal(creatureTotal + currentAddition + 
+                Object.values(newTokenScores).reduce((sum, score, idx) => 
+                  idx < tokenIndex ? sum + score : sum, 0));
+              setTimeout(animateTokenScore, 20);
+            } else {
+              tokenTotal += tokenScore;
+              tokenIndex++;
+              
+              // Continue to next token
+              setTimeout(scoreNextToken, 300 * speedMult);
+            }
+          };
+          
+          animateTokenScore();
+        }, 400 * speedMult);
+        
+      } else {
+        // All tokens scored
+        console.log('Token scoring complete, final total:', tokenTotal);
+        setIsScoringTokens(false);
+        setScoringTokenIndex(-1);
+        
+        const speedMult = 1 / scoringSpeedMultiplier;
+        setTimeout(() => {
+          handleScoringComplete(tokenTotal);
+        }, 400 * speedMult);
+      }
+    };
+    
+    scoreNextToken();
   };
 
   const handleSpecialEffect = (effect) => {
@@ -835,9 +943,10 @@ const RoguelikeBoard = ({
     setDiscardedCards([]);
     setScoringComplete(false);
     setIsScoring(false);
-    setTokens({ strength: 0 });
+    setTokens({});
     setCardScoreDetails({});
     setTokenAnimations([]);
+    setTokenScores({});
     setShowingMultiplier({});
     setAnimatingScores({});
     setShowingDreamEffect({});
@@ -962,7 +1071,13 @@ const RoguelikeBoard = ({
         )}
         
         {/* Token Display */}
-        <TokenDisplay tokens={tokens} isVisible={isScoring} />
+        <TokenDisplay 
+          tokens={tokens} 
+          isVisible={isScoring || scoringComplete} 
+          isScoringTokens={isScoringTokens}
+          scoringTokenIndex={scoringTokenIndex}
+          tokenScores={tokenScores}
+        />
         
         {/* Pack Status */}
         {!isScoring && !scoringComplete && (
@@ -1081,8 +1196,13 @@ const RoguelikeBoard = ({
           )}
           
           {scoringComplete && (
-            <div className="scoring-total review">
-              Total: <span className="total-value">+{lastScoreGained} PP</span>
+            <div className="scoring-complete-container">
+              <div className="scoring-total review">
+                Total: <span className="total-value">+{lastScoreGained} PP</span>
+              </div>
+              <button className="continue-btn-compact" onClick={handleContinue}>
+                {dreamScore >= dreamThreshold ? 'Next Dream' : (remainingPacks > 0 ? 'Next Hand' : 'End Run')}
+              </button>
             </div>
           )}
           
@@ -1156,17 +1276,6 @@ const RoguelikeBoard = ({
           </div>
         )}
 
-        {/* Scoring Complete - Compact notification */}
-        {scoringComplete && (
-          <div className="score-notification">
-            <div className="score-notification-content">
-              <span className="score-gained-text">+{lastScoreGained} PP</span>
-              <button className="continue-btn-compact" onClick={handleContinue}>
-                {dreamScore >= dreamThreshold ? 'Next Dream' : (remainingPacks > 0 ? 'Next Hand' : 'End Run')}
-              </button>
-            </div>
-          </div>
-        )}
         
         {/* Debug Expected Results */}
         {debugExpectedResults && (

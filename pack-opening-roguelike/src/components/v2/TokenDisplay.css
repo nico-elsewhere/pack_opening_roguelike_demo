@@ -99,3 +99,61 @@
     transform: translateY(-100px) scale(0.8);
   }
 }
+
+/* Token scoring animations */
+.token-badge.scoring {
+  animation: tokenScoring 0.6s ease-out;
+  transform: scale(1.15);
+  z-index: 10;
+}
+
+.token-badge.scored {
+  opacity: 0.7;
+}
+
+@keyframes tokenScoring {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 40px var(--token-color);
+  }
+  100% {
+    transform: scale(1.15);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.35), 0 0 30px var(--token-color);
+  }
+}
+
+.token-score-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.5rem;
+  background: rgba(16, 185, 129, 0.95);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: scorePopup 0.8s ease-out;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes scorePopup {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}

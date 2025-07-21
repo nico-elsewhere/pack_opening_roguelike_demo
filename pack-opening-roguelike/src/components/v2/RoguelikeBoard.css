@@ -197,13 +197,13 @@
 
 .board-slots {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
 .board-slot {
-  width: 120px;
-  height: 168px;
+  width: 180px;
+  height: 252px;
   border: 2px dashed rgba(139, 92, 246, 0.3);
   border-radius: 0.5rem;
   position: relative;
@@ -240,8 +240,11 @@
   cursor: grab;
   transition: transform 0.2s ease;
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 180px;
+  height: 252px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .board-card:hover {
@@ -278,12 +281,18 @@
   gap: 2rem;
   margin-top: auto;
   padding-bottom: 1rem;
+  width: 100%;
+}
+
+/* Hide discard pile temporarily */
+.discard-pile {
+  display: none !important;
 }
 
 /* TCG Hand Area - Bottom */
 .tcg-hand-area {
   position: relative;
-  height: 200px;
+  height: 240px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -295,7 +304,10 @@
   display: flex;
   align-items: flex-end;
   height: 100%;
-  padding: 0 2rem;
+  padding: 0 4rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* TCG Hand Card Styling */
@@ -308,13 +320,13 @@
   cursor: grab;
   
   /* Dynamic spacing based on hand size */
-  --base-spacing: 60px;
-  --spacing: calc(var(--base-spacing) - max(0px, (var(--total-cards) - 5) * 6px));
+  --base-spacing: 90px;
+  --spacing: calc(var(--base-spacing) - max(0px, (var(--total-cards) - 5) * 5px));
   
   /* Calculate position based on index */
-  --rotation: calc((var(--card-index) - (var(--total-cards) - 1) / 2) * 8deg);
+  --rotation: calc((var(--card-index) - (var(--total-cards) - 1) / 2) * 5deg);
   --offset-x: calc((var(--card-index) - (var(--total-cards) - 1) / 2) * var(--spacing));
-  --offset-y: calc(abs((var(--card-index) - (var(--total-cards) - 1) / 2)) * 5px);
+  --offset-y: calc(abs((var(--card-index) - (var(--total-cards) - 1) / 2)) * 8px);
   
   transform: 
     translateX(calc(-50% + var(--offset-x))) 
@@ -528,8 +540,8 @@
   }
   
   .board-slot {
-    width: 90px;
-    height: 126px;
+    width: 140px;
+    height: 196px;
   }
   
   .tcg-hand-card {
@@ -576,14 +588,14 @@
 
 /* Ensure cards scale properly */
 .board-slot .card {
-  width: 100% !important;
-  height: 100% !important;
+  width: 180px !important;
+  height: 252px !important;
 }
 
 
 .tcg-hand-card .card {
-  width: 120px !important;
-  height: 168px !important;
+  width: 140px !important;
+  height: 196px !important;
 }
 
 /* CSS math function polyfill for abs() */
@@ -671,6 +683,35 @@
   color: white;
   text-align: center;
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Scoring complete container */
+.scoring-complete-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.scoring-complete-container .scoring-total {
+  margin-top: 0;
+}
+
+.scoring-complete-container .continue-btn-compact {
+  animation: slideInRight 0.4s ease-out 0.2s both;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .total-value {
