@@ -23,7 +23,7 @@ const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringToken
       {activeTokens.map((tokenType, index) => {
         const isCurrentlyScoring = isScoringTokens && scoringTokenType === tokenType.type;
         const tokenScore = tokenScores[tokenType.type];
-        const hasScore = tokenScore !== undefined && tokenScore > 0;
+        const hasScore = tokenScore !== undefined && tokenScore !== 0;
         
         return (
           <div 
@@ -34,9 +34,9 @@ const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringToken
             <span className="token-icon">{tokenType.icon}</span>
             <span className="token-count">{tokens[tokenType.type]}</span>
             <span className="token-label">{tokenType.label}</span>
-            {(isCurrentlyScoring || hasScore) && tokenScore !== undefined && tokenScore > 0 && (
+            {(isCurrentlyScoring || hasScore) && tokenScore !== undefined && tokenScore !== 0 && (
               <div className="token-score-popup">
-                +{tokenScore} PP
+                {tokenScore > 0 ? '+' : ''}{tokenScore} PP
               </div>
             )}
           </div>

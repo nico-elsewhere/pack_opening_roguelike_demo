@@ -22,14 +22,15 @@ const FusionPackView = ({ collection, fuseCards, pp, onComplete, onBack, gameMod
       return card.generation === 'Gen1' || card.generation === 'Gen2';
     });
 
-
+    console.log('FusionPackView - eligible cards:', eligibleCards.length, 'from collection size:', Object.keys(collection).length);
+    
     if (eligibleCards.length >= 2) {
       // Shuffle and pick up to 5 cards
       const shuffled = [...eligibleCards].sort(() => 0.5 - Math.random());
       setSelectedCards(shuffled.slice(0, Math.min(5, shuffled.length)));
     }
     // Don't automatically go back - let player see the issue and manually go back
-  }, []); // Empty dependency - only select cards once on mount
+  }, [collection]); // Re-run when collection changes
 
   useEffect(() => {
     // Generate preview when both cards are selected

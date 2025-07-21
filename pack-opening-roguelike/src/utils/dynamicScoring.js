@@ -141,7 +141,18 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
       currentValue = Math.floor((currentValue + creatureScoreModifier) * creatureMultiplier);
     }
     
-    // Store base value before token multipliers
+    // Apply shadow/light modifiers to creature scoring (additive, before multipliers)
+    let lightShadowModifier = 0;
+    if (cumulativeTokens.shadow > 0) {
+      lightShadowModifier -= cumulativeTokens.shadow * 5; // -5 per shadow token
+      currentValue -= cumulativeTokens.shadow * 5;
+    }
+    if (cumulativeTokens.light > 0) {
+      lightShadowModifier += cumulativeTokens.light * 5; // +5 per light token
+      currentValue += cumulativeTokens.light * 5;
+    }
+    
+    // Store base value before token multipliers (but after light/shadow)
     const baseValueBeforeTokens = currentValue;
     
     // Apply earth multiplier from tokens accumulated so far
@@ -150,18 +161,10 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
       currentValue = Math.floor(currentValue * earthMultiplier);
     }
     
-    // Apply shadow/light modifiers to creature scoring
-    if (cumulativeTokens.shadow > 0) {
-      currentValue -= cumulativeTokens.shadow * 5; // -5 per shadow token
-    }
-    if (cumulativeTokens.light > 0) {
-      currentValue += cumulativeTokens.light * 5; // +5 per light token
-    }
-    
     // Ensure score doesn't go below 0
     currentValue = Math.max(0, currentValue);
     
-    // Process this card's creature effect (add tokens) - only for the just revealed card
+    // Process this card's creature effect to get tokens (but don't add them yet)
     let cardTokensGenerated = {};
     let specialEffectTriggered = null;
     
@@ -179,35 +182,9 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
         cardTokensGenerated = creatureResult.tokensGained;
       }
       
-      // Apply the tokens from this card
-      Object.entries(cardTokensGenerated).forEach(([tokenType, amount]) => {
-        cumulativeTokens[tokenType] = (cumulativeTokens[tokenType] || 0) + amount;
-      });
-      
       // Track special effects that need board-level handling
       if (creatureResult.specialEffect) {
         specialEffectTriggered = creatureResult.specialEffect;
-        
-        // Handle special token manipulation effects immediately
-        switch (specialEffectTriggered.type) {
-          case 'double_tokens':
-            // Pyrrhus effect - double specific token type
-            if (cumulativeTokens[specialEffectTriggered.tokenType]) {
-              cumulativeTokens[specialEffectTriggered.tokenType] *= 2;
-            }
-            break;
-            
-            
-          case 'token_conversion':
-            // Escarglow effect - convert specific tokens
-            if (cumulativeTokens[specialEffectTriggered.from] >= specialEffectTriggered.amount) {
-              cumulativeTokens[specialEffectTriggered.from] -= specialEffectTriggered.amount;
-              cumulativeTokens[specialEffectTriggered.to] = (cumulativeTokens[specialEffectTriggered.to] || 0) + 
-                Math.floor(specialEffectTriggered.amount * specialEffectTriggered.multiplier);
-            }
-            break;
-            
-        }
       }
     }
     
@@ -237,10 +214,39 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
       isAdditiveDream,
       effects: cardEffects,
       tokenMultiplier: cumulativeTokens.earth > 0 ? (1 + cumulativeTokens.earth) : 1,
+      lightShadowModifier: lightShadowModifier !== 0 ? lightShadowModifier : null,
       tokensGenerated: cardTokensGenerated,
       wasJustRevealed: index === justRevealedIndex,
       specialEffect: specialEffectTriggered
     });
+    
+    // NOW add the tokens from the just-revealed card (after score calculation)
+    if (index === justRevealedIndex && cardTokensGenerated) {
+      Object.entries(cardTokensGenerated).forEach(([tokenType, amount]) => {
+        cumulativeTokens[tokenType] = (cumulativeTokens[tokenType] || 0) + amount;
+      });
+      
+      // Handle special token manipulation effects after adding tokens
+      if (specialEffectTriggered) {
+        switch (specialEffectTriggered.type) {
+          case 'double_tokens':
+            // Pyrrhus effect - double specific token type
+            if (cumulativeTokens[specialEffectTriggered.tokenType]) {
+              cumulativeTokens[specialEffectTriggered.tokenType] *= 2;
+            }
+            break;
+            
+          case 'token_conversion':
+            // Escarglow effect - convert specific tokens
+            if (cumulativeTokens[specialEffectTriggered.from] >= specialEffectTriggered.amount) {
+              cumulativeTokens[specialEffectTriggered.from] -= specialEffectTriggered.amount;
+              cumulativeTokens[specialEffectTriggered.to] = (cumulativeTokens[specialEffectTriggered.to] || 0) + 
+                Math.floor(specialEffectTriggered.amount * specialEffectTriggered.multiplier);
+            }
+            break;
+        }
+      }
+    }
   });
   
   // Second pass: Apply position-dependent effects (like adjacent bonuses)

@@ -8,6 +8,11 @@
   flex-shrink: 0;
 }
 
+/* Hide the glass header */
+.header.glass {
+  display: none;
+}
+
 /* Left Section - Logo */
 .header-left {
   flex-shrink: 0;

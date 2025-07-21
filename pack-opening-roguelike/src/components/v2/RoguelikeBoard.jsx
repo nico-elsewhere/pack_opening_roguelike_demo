@@ -82,6 +82,7 @@ const RoguelikeBoard = ({
   const [showingMultiplier, setShowingMultiplier] = useState({});
   const [animatingScores, setAnimatingScores] = useState({}); // Track animated score values
   const [showingDreamEffect, setShowingDreamEffect] = useState({}); // Track dream effect display
+  const [showingLightShadow, setShowingLightShadow] = useState({}); // Track light/shadow modifier display
   const [debugExpectedResults, setDebugExpectedResults] = useState(null); // Debug: expected results
   const [isScoringTokens, setIsScoringTokens] = useState(false);
   const [scoringTokenType, setScoringTokenType] = useState(null);
@@ -377,7 +378,8 @@ const RoguelikeBoard = ({
         const hasEffects = currentCardScore && 
           ((currentCardScore.dreamMultiplier && currentCardScore.dreamMultiplier !== 1) || 
            (currentCardScore.dreamAddition && currentCardScore.dreamAddition !== 0) || 
-           currentCardScore.tokenMultiplier > 1);
+           currentCardScore.tokenMultiplier > 1 ||
+           currentCardScore.lightShadowModifier);
         if (hasEffects) {
           totalAnimationDelay += 200 * speedMult; // Extra delay to see base score first
         }
@@ -431,7 +433,31 @@ const RoguelikeBoard = ({
             totalAnimationDelay = phaseDelay;
           }
           
-          // Phase 2: Token multipliers
+          // Phase 2: Light/Shadow modifiers (additive, before multipliers)
+          if (currentCardScore.lightShadowModifier) {
+            const lightShadowDuration = 600 * speedMult;
+            const lightShadowFadeDuration = 200 * speedMult;
+            
+            setTimeout(() => {
+              setShowingLightShadow(prev => ({ ...prev, [boardIndex]: true }));
+              
+              // Animate from current score to score with light/shadow
+              const from = cardScores[boardIndex];
+              const to = from + currentCardScore.lightShadowModifier;
+              animateScore(boardIndex, from, to, lightShadowDuration, () => {
+                // Keep modifier visible briefly then hide
+                setTimeout(() => {
+                  setShowingLightShadow(prev => ({ ...prev, [boardIndex]: false }));
+                }, lightShadowFadeDuration);
+              });
+            }, phaseDelay);
+            
+            // Update phase delay
+            phaseDelay += lightShadowDuration + lightShadowFadeDuration + (100 * speedMult);
+            totalAnimationDelay = phaseDelay;
+          }
+          
+          // Phase 3: Token multipliers (earth tokens)
           if (currentCardScore.tokenMultiplier > 1 && currentCardScore.baseValueBeforeTokens !== currentCardScore.currentValue) {
             const tokenAnimDuration = 800 * speedMult;
             const tokenFadeDuration = 200 * speedMult;
@@ -651,6 +677,12 @@ const RoguelikeBoard = ({
     console.log('Starting token scoring animation');
     setIsScoringTokens(true);
     
+    // Get token counts for purge calculation
+    const tokenCounts = {};
+    activeTokens.forEach(([tokenType, count]) => {
+      tokenCounts[tokenType] = count;
+    });
+    
     const getTokenValue = (tokenType, tokenCount = 1) => {
   if (tokenType === 'chaos') {
     // Chaos tokens are worth random 1 to (count * 30)
@@ -661,7 +693,11 @@ const RoguelikeBoard = ({
   if (tokenType === 'fire' || tokenType === 'water') {
     return 10;
   }
-  // All other tokens (earth, shadow, light, arcane) provide 0 PP
+  // Shadow and light tokens don't provide direct PP
+  if (tokenType === 'shadow' || tokenType === 'light') {
+    return 0; // They modify creature scores instead
+  }
+  // All other tokens (earth, arcane) provide 0 PP
   return 0;
 };
     let tokenIndex = 0;
@@ -678,7 +714,7 @@ const RoguelikeBoard = ({
         
         console.log(`Scoring ${tokenCount} ${tokenType} tokens: value=${tokenValue}, total=${tokenScore} PP`);
         
-        // Skip tokens with 0 PP value
+        // Skip tokens with exactly 0 PP value
         if (tokenScore === 0) {
           tokenIndex++;
           scoreNextToken(); // Move to next token immediately
@@ -1166,15 +1202,9 @@ const RoguelikeBoard = ({
           tokenScores={tokenScores}
         />
         
-        {/* Pack Status */}
+        {/* Pack Status - Removed dream info, only show pack buttons */}
         {!isScoring && !scoringComplete && (
           <div className="pack-status">
-            <div className="pack-info">
-              <div className="packs-remaining">{remainingPacks} packs remaining</div>
-              {hand.length > 0 && (
-                <div className="hand-count">Hand: {hand.length}/10 cards</div>
-              )}
-            </div>
             {boardIsEmpty && remainingPacks > 0 && (
               <div className="pack-buttons">
                 <button 
@@ -1248,6 +1278,13 @@ const RoguelikeBoard = ({
                          showingMultiplier[index] && (
                           <span className={`score-multiplier ${showingMultiplier[index] ? 'active' : ''}`}>
                             ×{cardScoreDetails[index].tokenMultiplier}
+                          </span>
+                        )}
+                        {cardScoreDetails[index] && 
+                         cardScoreDetails[index].lightShadowModifier && 
+                         showingLightShadow[index] && (
+                          <span className={`light-shadow-modifier ${showingLightShadow[index] ? 'active' : ''}`}>
+                            {cardScoreDetails[index].lightShadowModifier > 0 ? '+' : ''}{cardScoreDetails[index].lightShadowModifier}
                           </span>
                         )}
                       </div>

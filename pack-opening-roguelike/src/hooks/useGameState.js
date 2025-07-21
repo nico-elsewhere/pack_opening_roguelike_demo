@@ -97,6 +97,33 @@ export const useGameState = () => {
     };
     loadDeck();
   }, []);
+
+  // Initialize roguelike collection when deck loads and archetype is selected
+  useEffect(() => {
+    if (selectedArchetype && deckTemplate.length > 0 && gameMode === 'roguelike') {
+      // Only initialize if collection is empty (first time setup)
+      if (Object.keys(collection).length === 0) {
+        const newCollection = {};
+        deckTemplate.forEach(card => {
+          // All cards in deckTemplate are Gen1 creatures
+          const ability = getCreatureAbilityText(card.name);
+          const cardId = card.id || `gen1_${card.name.toLowerCase().replace(/\s+/g, '_')}`;
+          newCollection[cardId] = {
+            ...card,
+            id: cardId,
+            generation: 'Gen1', // Explicitly set generation
+            level: 1,
+            xp: 0,
+            xpToNextLevel: 100,
+            ability: ability || card.ability || 'No ability',
+            arcana: 'creature'
+          };
+        });
+        setCollection(newCollection);
+        console.log(`Initialized roguelike collection with ${Object.keys(newCollection).length} Gen1 creatures (from effect)`);
+      }
+    }
+  }, [selectedArchetype, deckTemplate, gameMode]);
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -618,20 +645,33 @@ export const useGameState = () => {
     
     // Initialize collection with all Gen1 cards for roguelike mode
     const newCollection = {};
+    
+    // Check if deckTemplate is loaded
+    if (!deckTemplate || deckTemplate.length === 0) {
+      console.warn('DeckTemplate not loaded yet, collection will be empty');
+      setCollection(newCollection);
+      return;
+    }
+    
     deckTemplate.forEach(card => {
-      if (card.generation === 'Gen1') {
-        // Get the ability text for this creature
-        const ability = getCreatureAbilityText(card.name);
-        newCollection[card.id] = {
-          ...card,
-          level: 1,
-          xp: 0,
-          xpToNextLevel: 100,
-          ability: ability || card.ability // Ensure ability is set
-        };
-      }
+      // All cards in deckTemplate are Gen1 creatures
+      // Get the ability text for this creature
+      const ability = getCreatureAbilityText(card.name);
+      const cardId = card.id || `gen1_${card.name.toLowerCase().replace(/\s+/g, '_')}`;
+      newCollection[cardId] = {
+        ...card,
+        id: cardId,
+        generation: 'Gen1', // Explicitly set generation
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 100,
+        ability: ability || card.ability || 'No ability', // Ensure ability is set
+        arcana: 'creature'
+      };
     });
     setCollection(newCollection);
+    
+    console.log(`Initialized roguelike collection with ${Object.keys(newCollection).length} Gen1 creatures`);
     
     // Initialize first dream
     setCurrentDream(1);
