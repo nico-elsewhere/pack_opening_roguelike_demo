@@ -15,7 +15,7 @@ const suitSymbols = {
   ice: '❄️'
 };
 
-const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true, alwaysShowLevel = false, isRoguelikeMode = false }) => {
+const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgress = false, showTooltip = true, alwaysShowLevel = false, isRoguelikeMode = false, previewBonus = 0 }) => {
   const suitClass = card.suit; // fire, earth, water, or air
   const xpProgress = (card.xp / card.xpToNextLevel) * 100;
   
@@ -124,7 +124,9 @@ const Card = ({ card, onClick, isEquipped = false, showLevel = true, showProgres
         </div>
         
         <div className="card-bottom">
-          <div className="pp-value">+{card.ppValue * (card.level || 1)} PP</div>
+          <div className={`pp-value ${previewBonus > 0 ? 'preview' : ''}`}>
+            +{card.ppValue * (card.level || 1) + previewBonus} PP
+          </div>
           {showLevel && (alwaysShowLevel || (card.level || 1) > 1) && <div className="level">Lv.{card.level || 1}</div>}
         </div>
         

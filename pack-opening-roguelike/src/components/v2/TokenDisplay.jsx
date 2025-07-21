@@ -33,7 +33,7 @@ const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringToken
             <span className="token-icon">{tokenType.icon}</span>
             <span className="token-count">{tokens[tokenType.type]}</span>
             <span className="token-label">{tokenType.label}</span>
-            {isScoring && (
+            {isScoring && tokenScore !== undefined && (
               <div className="token-score-popup">
                 +{tokenScore} PP
               </div>

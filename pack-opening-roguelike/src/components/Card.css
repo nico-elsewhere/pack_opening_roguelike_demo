@@ -99,6 +99,12 @@
   border-radius: 4px;
   font-size: 0.85em;
   white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.pp-value.preview {
+  color: #2ecc71;
+  text-shadow: 0 0 4px rgba(46, 204, 113, 0.5);
 }
 
 .card.rune .pp-value {

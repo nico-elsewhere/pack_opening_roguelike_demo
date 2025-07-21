@@ -7,7 +7,7 @@ import TokenDisplay from './TokenDisplay';
 import { isNightmare } from '../../utils/dreams';
 import { shouldShuffleHand, getHandLimit } from '../../utils/dreamEffects';
 import { calculateDynamicScores } from '../../utils/dynamicScoring';
-import { getCreatureAbilityText } from '../../utils/creatureEffects';
+import { getCreatureAbilityText, CREATURE_EFFECTS } from '../../utils/creatureEffects';
 
 // Token emoji mapping
 const TOKEN_EMOJIS = {
@@ -59,6 +59,7 @@ const RoguelikeBoard = ({
   const [lastScoreGained, setLastScoreGained] = useState(0);
   const [hoveredCardIndex, setHoveredCardIndex] = useState(null);
   const [showRewards, setShowRewards] = useState(false);
+  const [previewBonuses, setPreviewBonuses] = useState({});
   const [completedDreamNumber, setCompletedDreamNumber] = useState(null);
   const [wasNightmareDream, setWasNightmareDream] = useState(false);
   const [showDialogue, setShowDialogue] = useState(false);
@@ -183,6 +184,59 @@ const RoguelikeBoard = ({
     setDraggedFromBoard(false);
     setDraggedBoardIndex(null);
   };
+
+  // Calculate preview bonuses based on current board state
+  const calculatePreviewBonuses = (slots) => {
+    const bonuses = {};
+    
+    slots.forEach((card, index) => {
+      if (!card) return;
+      
+      // Get the creature's effect
+      const creatureName = card.name;
+      const effect = CREATURE_EFFECTS[creatureName];
+      
+      // Check for adjacent bonus effects
+      if (effect && effect.effect) {
+        let hasAdjacentBonus = false;
+        let bonusValue = 0;
+        
+        // Handle complex effects that contain multiple sub-effects
+        if (effect.effect.type === 'complex' && effect.effect.effects) {
+          const adjacentEffect = effect.effect.effects.find(e => e.type === 'adjacent_bonus');
+          if (adjacentEffect) {
+            hasAdjacentBonus = true;
+            bonusValue = adjacentEffect.bonus || 5;
+          }
+        }
+        // Handle direct adjacent_bonus effects
+        else if (effect.effect.type === 'adjacent_bonus') {
+          hasAdjacentBonus = true;
+          bonusValue = effect.effect.bonus || 5;
+        }
+        
+        // Apply bonus to adjacent slots
+        if (hasAdjacentBonus) {
+          // Left adjacent
+          if (index > 0 && slots[index - 1]) {
+            bonuses[index - 1] = (bonuses[index - 1] || 0) + bonusValue;
+          }
+          // Right adjacent
+          if (index < 4 && slots[index + 1]) {
+            bonuses[index + 1] = (bonuses[index + 1] || 0) + bonusValue;
+          }
+        }
+      }
+    });
+    
+    return bonuses;
+  };
+
+  // Update preview bonuses whenever board slots change
+  useEffect(() => {
+    const newBonuses = calculatePreviewBonuses(boardSlots);
+    setPreviewBonuses(newBonuses);
+  }, [boardSlots]);
 
   const handleScoreHand = () => {
     if (!boardIsFull) return;
@@ -607,7 +661,8 @@ const RoguelikeBoard = ({
   if (tokenType === 'fire' || tokenType === 'water') {
     return 10;
   }
-  return 0; // Other tokens provide 0 PP (they affect creature scores instead)
+  // All other tokens (earth, shadow, light, arcane) provide 0 PP
+  return 0;
 };
     let tokenIndex = 0;
     let tokenTotal = creatureTotal;
@@ -616,11 +671,12 @@ const RoguelikeBoard = ({
     const scoreNextToken = () => {
       if (tokenIndex < activeTokens.length) {
         const [tokenType, tokenCount] = activeTokens[tokenIndex];
+        const tokenValue = getTokenValue(tokenType);
         const tokenScore = tokenType === 'chaos' 
           ? getTokenValue(tokenType, tokenCount)
-          : tokenCount * getTokenValue(tokenType);
+          : tokenCount * tokenValue;
         
-        console.log(`Scoring ${tokenCount} ${tokenType} tokens for ${tokenScore} PP`);
+        console.log(`Scoring ${tokenCount} ${tokenType} tokens: value=${tokenValue}, total=${tokenScore} PP`);
         
         // Skip tokens with 0 PP value
         if (tokenScore === 0) {
@@ -634,7 +690,7 @@ const RoguelikeBoard = ({
         
         // Calculate and store this token's score
         newTokenScores[tokenType] = tokenScore;
-        setTokenScores(newTokenScores);
+        setTokenScores({...newTokenScores});
         
         // Animate the score addition
         const speedMult = 1 / scoringSpeedMultiplier;
@@ -1165,7 +1221,13 @@ const RoguelikeBoard = ({
                     draggable={!isScoring && !scoringComplete}
                     onDragStart={!isScoring && !scoringComplete ? (e) => handleDragStart(e, card, false, index) : undefined}
                   >
-                    <Card card={card} showTooltip={true} showLevel={true} isRoguelikeMode={true} />
+                    <Card 
+                      card={card} 
+                      showTooltip={true} 
+                      showLevel={true} 
+                      isRoguelikeMode={true}
+                      previewBonus={previewBonuses[index] || 0}
+                    />
                     {(isScoring && index <= scoringIndex && cardScores[index] !== undefined) && (
                       <div className="card-score-overlay">
                         <span className={`score-value ${showingMultiplier[index] ? 'multiplying' : ''} ${showingDreamEffect[index] ? 'dream-multiplying' : ''}`}>
