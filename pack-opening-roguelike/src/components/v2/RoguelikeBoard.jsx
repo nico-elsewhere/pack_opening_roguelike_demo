@@ -9,6 +9,17 @@ import { shouldShuffleHand, getHandLimit } from '../../utils/dreamEffects';
 import { calculateDynamicScores } from '../../utils/dynamicScoring';
 import { getCreatureAbilityText } from '../../utils/creatureEffects';
 
+// Token emoji mapping
+const TOKEN_EMOJIS = {
+  fire: '🔥',
+  water: '💧',
+  earth: '🌍',
+  shadow: '🌑',
+  light: '✨',
+  chaos: '🎲',
+  arcane: '🔮'
+};
+
 const RoguelikeBoard = ({
   // Game state
   gameMode,
@@ -586,7 +597,18 @@ const RoguelikeBoard = ({
     console.log('Starting token scoring animation');
     setIsScoringTokens(true);
     
-    const TOKEN_VALUE = 10; // Each token is worth 10 PP
+    const getTokenValue = (tokenType, tokenCount = 1) => {
+  if (tokenType === 'chaos') {
+    // Chaos tokens are worth random 1 to (count * 30)
+    const maxValue = tokenCount * 30;
+    return Math.floor(Math.random() * maxValue) + 1;
+  }
+  // Only fire and water tokens provide PP
+  if (tokenType === 'fire' || tokenType === 'water') {
+    return 10;
+  }
+  return 0; // Other tokens provide 0 PP (they affect creature scores instead)
+};
     let tokenIndex = 0;
     let tokenTotal = creatureTotal;
     const newTokenScores = {};
@@ -594,9 +616,18 @@ const RoguelikeBoard = ({
     const scoreNextToken = () => {
       if (tokenIndex < activeTokens.length) {
         const [tokenType, tokenCount] = activeTokens[tokenIndex];
-        const tokenScore = tokenCount * TOKEN_VALUE;
+        const tokenScore = tokenType === 'chaos' 
+          ? getTokenValue(tokenType, tokenCount)
+          : tokenCount * getTokenValue(tokenType);
         
         console.log(`Scoring ${tokenCount} ${tokenType} tokens for ${tokenScore} PP`);
+        
+        // Skip tokens with 0 PP value
+        if (tokenScore === 0) {
+          tokenIndex++;
+          scoreNextToken(); // Move to next token immediately
+          return;
+        }
         
         // Set which token is currently scoring
         setScoringTokenIndex(tokenIndex);
@@ -1174,7 +1205,7 @@ const RoguelikeBoard = ({
                       <div key={anim.id} className="token-gain-animation">
                         {Object.entries(anim.tokens).map(([tokenType, amount]) => (
                           <div key={tokenType} className="token-popup">
-                            +{amount} {tokenType}
+                            +{amount} {TOKEN_EMOJIS[tokenType] || tokenType}
                           </div>
                         ))}
                       </div>

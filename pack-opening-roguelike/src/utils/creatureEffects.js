@@ -9,35 +9,33 @@ export const CREATURE_EFFECTS = {
     }
   },
   'Magmaduke': {
-    ability: 'Gain 1 Fire. +2 PP per Fire token',
+    ability: 'Gain 2 Fire',
     effect: {
-      type: 'complex',
-      effects: [
-        { type: 'gain_token', token: 'fire', amount: 1 },
-        { type: 'score_per_token', token: 'fire', ppPerToken: 2 }
-      ]
+      type: 'gain_token',
+      token: 'fire',
+      amount: 2
     }
   },
   'Escarglow': {
-    ability: 'Convert 2 Water to 3 Fire',
+    ability: '+10 PP per Fire token',
     effect: {
-      type: 'convert_tokens',
-      from: { token: 'water', amount: 2 },
-      to: { token: 'fire', amount: 3 }
+      type: 'score_per_token',
+      token: 'fire',
+      ppPerToken: 10
+    }
+  },
+  'Snarlboro': {
+    ability: 'Gain 3 Fire and 1 Shadow',
+    effect: {
+      type: 'complex',
+      effects: [
+        { type: 'gain_token', token: 'fire', amount: 3 },
+        { type: 'gain_token', token: 'shadow', amount: 1 }
+      ]
     }
   },
   
   // WATER CREATURES
-  'Aquara': {
-    ability: 'Gain 1 Water. +5 PP per Water token',
-    effect: {
-      type: 'complex',
-      effects: [
-        { type: 'gain_token', token: 'water', amount: 1 },
-        { type: 'score_per_token', token: 'water', ppPerToken: 5 }
-      ]
-    }
-  },
   'Buuevo': {
     ability: 'Gain Water equal to position (1-5)',
     effect: {
@@ -47,23 +45,20 @@ export const CREATURE_EFFECTS = {
     }
   },
   'Hippeye': {
-    ability: 'If 3+ Water: Score x3',
+    ability: 'Score x Water tokens',
     effect: {
-      type: 'conditional_multiplier',
-      condition: { type: 'token_threshold', token: 'water', amount: 3 },
-      multiplier: 3
+      type: 'multiply_by_token_count',
+      token: 'water'
     }
   },
   
   // EARTH CREATURES
   'Sapphungus': {
-    ability: 'Gain 2 Earth. Earth tokens give +1 Strength',
+    ability: 'Gain 2 Earth',
     effect: {
-      type: 'complex',
-      effects: [
-        { type: 'gain_token', token: 'earth', amount: 2 },
-        { type: 'token_conversion', from: 'earth', to: 'strength', rate: 1 }
-      ]
+      type: 'gain_token',
+      token: 'earth',
+      amount: 2
     }
   },
   'Lumlin': {
@@ -84,34 +79,21 @@ export const CREATURE_EFFECTS = {
     }
   },
   
-  // AIR CREATURES
-  'Tempest': {
-    ability: 'Convert all tokens to Air',
-    effect: {
-      type: 'convert_all_to',
-      token: 'air'
-    }
-  },
+  // POSITION-BASED CREATURES
   'Lileye': {
-    ability: 'Gain 1 Air. Shuffle positions if 5+ Air',
+    ability: 'Position 1: Gain 1 Earth. Position 5: Gain 3 Water',
     effect: {
-      type: 'complex',
-      effects: [
-        { type: 'gain_token', token: 'air', amount: 1 },
-        { type: 'conditional_shuffle', condition: { token: 'air', amount: 5 } }
-      ]
+      type: 'position_based_tokens'
     }
   },
   
   // SHADOW CREATURES
   'Stitchhead': {
-    ability: 'Gain 2 Shadow. Shadow = -1 PP but x2 effects',
+    ability: 'Gain 2 Shadow',
     effect: {
-      type: 'complex',
-      effects: [
-        { type: 'gain_token', token: 'shadow', amount: 2 },
-        { type: 'shadow_modifier' }
-      ]
+      type: 'gain_token',
+      token: 'shadow',
+      amount: 2
     }
   },
   'Siameow': {
@@ -124,20 +106,21 @@ export const CREATURE_EFFECTS = {
   
   // LIGHT CREATURES
   'Serafuzz': {
-    ability: 'Gain 1 Light. Light purges Shadow for +20 PP each',
+    ability: 'Gain 1 Light. Light purges Shadow for +50 PP each',
     effect: {
       type: 'complex',
       effects: [
         { type: 'gain_token', token: 'light', amount: 1 },
-        { type: 'purge_bonus', from: 'shadow', to: 'light', ppPerPurge: 20 }
+        { type: 'purge_bonus', from: 'shadow', to: 'light', ppPerPurge: 50 }
       ]
     }
   },
   'Kelvian': {
-    ability: 'Double value of cards with no tokens',
+    ability: 'Gain Shadow equal to position (1-5)',
     effect: {
-      type: 'no_token_multiplier',
-      multiplier: 2
+      type: 'gain_token_position',
+      token: 'shadow',
+      multiplier: 1
     }
   },
   
@@ -151,10 +134,10 @@ export const CREATURE_EFFECTS = {
     }
   },
   'Boastun': {
-    ability: 'Score = total tokens x5 (base 0 PP)',
+    ability: 'Score +5 PP per token',
     effect: {
-      type: 'tokens_as_score',
-      multiplier: 5
+      type: 'score_per_all_tokens',
+      ppPerToken: 5
     }
   },
   
@@ -172,20 +155,20 @@ export const CREATURE_EFFECTS = {
     }
   },
   'Manaclite': {
-    ability: 'Gain 1 Strength',
+    ability: 'Gain 1 Earth',
     effect: {
       type: 'gain_token',
-      token: 'strength',
+      token: 'earth',
       amount: 1
     }
   },
   'Elwick': {
-    ability: 'Gain 1 Tech. Tech tokens trigger abilities twice',
+    ability: 'Convert 1 Fire to 1 Arcane. Arcane doubles abilities',
     effect: {
       type: 'complex',
       effects: [
-        { type: 'gain_token', token: 'tech', amount: 1 },
-        { type: 'tech_double_trigger' }
+        { type: 'convert_tokens', from: { token: 'fire', amount: 1 }, to: { token: 'arcane', amount: 1 } },
+        { type: 'arcane_double_trigger' }
       ]
     }
   },
@@ -290,6 +273,14 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         }
         break;
         
+      case 'position_based_tokens':
+        if (boardContext.position === 0) { // First position
+          result.tokensGained['earth'] = 1;
+        } else if (boardContext.position === 4) { // Last position
+          result.tokensGained['water'] = 3;
+        }
+        break;
+        
       case 'multiply_tokens':
         // Return special effect to handle at board level
         result.specialEffect = { 
@@ -310,12 +301,6 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         }
         break;
         
-      case 'convert_all_to':
-        const totalTokenCount = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
-        if (totalTokenCount > 0) {
-          result.specialEffect = { type: 'convert_all_to_air' };
-        }
-        break;
         
       case 'score_per_token':
         // Include both existing tokens and any we're about to gain
@@ -334,18 +319,25 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         }
         break;
         
+      case 'multiply_by_token_count':
+        const tokenCount = currentTokens[eff.token] || 0;
+        if (tokenCount > 0) {
+          result.specialEffect = { type: 'multiplier', value: tokenCount };
+        }
+        break;
+        
       case 'token_diversity_bonus':
         const uniqueTokens = Object.keys(currentTokens).filter(token => currentTokens[token] > 0).length;
         result.scoreModifier += uniqueTokens * eff.ppPerType;
         break;
         
-      case 'tokens_as_score':
+      case 'score_per_all_tokens':
         const tokenSum = Object.values(currentTokens).reduce((sum, val) => sum + val, 0);
-        result.specialEffect = { type: 'override_score', value: tokenSum * eff.multiplier };
+        result.scoreModifier += tokenSum * eff.ppPerToken;
         break;
         
       case 'random_tokens':
-        const tokenTypes = ['fire', 'water', 'earth', 'air', 'shadow', 'light', 'chaos', 'order', 'wild'];
+        const tokenTypes = ['fire', 'water', 'earth', 'shadow', 'light', 'chaos', 'arcane'];
         const numTokens = Math.floor(Math.random() * (eff.max - eff.min + 1)) + eff.min;
         for (let i = 0; i < numTokens; i++) {
           const randomToken = tokenTypes[Math.floor(Math.random() * tokenTypes.length)];
@@ -365,36 +357,18 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         result.specialEffect = { type: 'adjacent_bonus', value: eff.bonus };
         break;
         
-      case 'no_token_multiplier':
-        result.specialEffect = { type: 'no_token_multiplier', value: eff.multiplier };
-        break;
-        
-      case 'shadow_modifier':
-        result.specialEffect = { type: 'shadow_modifier' };
-        break;
-        
       case 'purge_bonus':
         if (currentTokens[eff.from] > 0 && currentTokens[eff.to] > 0) {
           const purgeAmount = Math.min(currentTokens[eff.from], currentTokens[eff.to]);
           result.tokensGained[eff.from] = -purgeAmount;
+          result.tokensGained[eff.to] = -purgeAmount;
           result.scoreModifier += purgeAmount * eff.ppPerPurge;
         }
         break;
         
-      case 'token_conversion':
-        // Check if this is the new format (with rate) or old format (with from/to objects)
-        if (eff.rate !== undefined) {
-          // Sapphungus-style conversion
-          result.specialEffect = {
-            type: 'auto_convert',
-            from: eff.from,
-            to: eff.to
-          };
-        }
-        break;
         
-      case 'tech_double_trigger':
-        result.specialEffect = { type: 'tech_double_trigger' };
+      case 'arcane_double_trigger':
+        result.specialEffect = { type: 'arcane_double_trigger' };
         break;
         
       case 'conditional_shuffle':
