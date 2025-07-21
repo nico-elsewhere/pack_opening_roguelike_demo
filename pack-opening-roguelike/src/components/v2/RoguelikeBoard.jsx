@@ -1298,16 +1298,17 @@ const RoguelikeBoard = ({
               </button>
             </div>
           )}
-          
-          {boardIsFull && !isScoring && !scoringComplete && (
-            <button 
-              className="score-board-btn"
-              onClick={handleScoreHand}
-            >
-              Score Board
-            </button>
-          )}
         </div>
+
+        {/* Score Button - Outside board area */}
+        {boardIsFull && !isScoring && !scoringComplete && (
+          <button 
+            className="score-board-btn"
+            onClick={handleScoreHand}
+          >
+            Score Board
+          </button>
+        )}
 
         {/* Hand Area */}
         {!isScoring && !scoringComplete && (

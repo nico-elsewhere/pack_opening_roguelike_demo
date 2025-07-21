@@ -201,6 +201,7 @@
   flex-direction: column;
   align-items: center;
   z-index: 10;
+  overflow: visible;
 }
 
 .board-slots {
@@ -264,7 +265,7 @@
 
 .score-board-btn {
   position: absolute;
-  top: calc(45% + 150px);
+  top: calc(45% + 200px);
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
@@ -277,7 +278,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-  z-index: 15;
+  z-index: 30;
+  pointer-events: auto;
 }
 
 .score-board-btn:hover {
@@ -297,6 +299,12 @@
   gap: 2rem;
   padding: 1rem;
   z-index: 20;
+  max-height: 40vh;
+  pointer-events: none;
+}
+
+.hand-and-discard-container > * {
+  pointer-events: auto;
 }
 
 /* Hide discard pile temporarily */
