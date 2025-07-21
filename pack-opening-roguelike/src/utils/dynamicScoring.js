@@ -153,12 +153,12 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     }
     
     // Store base value before token multipliers (but after light/shadow)
-    const baseValueBeforeTokens = currentValue;
+    const baseValueBeforeTokens = Math.max(0, currentValue); // Ensure never negative
     
     // Apply earth multiplier from tokens accumulated so far
     if (cumulativeTokens.earth > 0) {
       const earthMultiplier = 1 + cumulativeTokens.earth;
-      currentValue = Math.floor(currentValue * earthMultiplier);
+      currentValue = Math.floor(Math.max(0, currentValue) * earthMultiplier); // Ensure non-negative before multiplying
     }
     
     // Ensure score doesn't go below 0
@@ -249,7 +249,7 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
     }
   });
   
-  // Second pass: Apply position-dependent effects (like adjacent bonuses)
+  // Second pass: Apply position-dependent effects (like adjacent bonuses and directional modifiers)
   scores.forEach((score, index) => {
     const card = revealedCards[index];
     if (!shouldDisableAbilities(dreamEffects)) {
@@ -268,6 +268,26 @@ export function calculateDynamicScores(revealedCards, allCardsInPack, equippedRu
           scores[index].currentValue += rightEffect.specialEffect.value;
         }
       }
+      
+      // Check all cards for directional modifiers that affect this position
+      revealedCards.forEach((otherCard, otherIndex) => {
+        if (otherIndex !== index) {
+          const otherEffect = processCreatureEffect(otherCard, cumulativeTokens, { position: otherIndex });
+          if (otherEffect.specialEffect?.type === 'directional_modifier') {
+            // Apply modifier based on relative position
+            if (index < otherIndex) {
+              // This card is to the left of the modifier card
+              scores[index].currentValue += otherEffect.specialEffect.leftModifier;
+            } else if (index > otherIndex) {
+              // This card is to the right of the modifier card
+              scores[index].currentValue += otherEffect.specialEffect.rightModifier;
+            }
+          }
+        }
+      });
+      
+      // Ensure score doesn't go below 0 after position effects
+      scores[index].currentValue = Math.max(0, scores[index].currentValue);
     }
   });
   

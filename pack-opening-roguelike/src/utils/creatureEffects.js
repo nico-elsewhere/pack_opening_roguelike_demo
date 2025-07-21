@@ -69,12 +69,12 @@ export const CREATURE_EFFECTS = {
     }
   },
   'Rachmite': {
-    ability: 'Gain 1 Earth. Adjacent cards score +5',
+    ability: 'Gain 1 Earth. Adjacent cards score +10',
     effect: {
       type: 'complex',
       effects: [
         { type: 'gain_token', token: 'earth', amount: 1 },
-        { type: 'adjacent_bonus', bonus: 5 }
+        { type: 'adjacent_bonus', bonus: 10 }
       ]
     }
   },
@@ -96,11 +96,12 @@ export const CREATURE_EFFECTS = {
       amount: 2
     }
   },
-  'Siameow': {
-    ability: 'Clone leftmost card\'s tokens',
+  'Siammeow': {
+    ability: 'Cards to the left -5 PP, cards to the right +5 PP',
     effect: {
-      type: 'clone_tokens',
-      position: 'leftmost'
+      type: 'directional_modifier',
+      leftModifier: -5,
+      rightModifier: 5
     }
   },
   
@@ -363,6 +364,14 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         
       case 'adjacent_bonus':
         result.specialEffect = { type: 'adjacent_bonus', value: eff.bonus };
+        break;
+        
+      case 'directional_modifier':
+        result.specialEffect = { 
+          type: 'directional_modifier', 
+          leftModifier: eff.leftModifier,
+          rightModifier: eff.rightModifier
+        };
         break;
         
       case 'purge_bonus':

@@ -227,6 +227,26 @@ const RoguelikeBoard = ({
             bonuses[index + 1] = (bonuses[index + 1] || 0) + bonusValue;
           }
         }
+        
+        // Handle directional modifier effects (Siammeow)
+        if (effect.effect.type === 'directional_modifier') {
+          const leftMod = effect.effect.leftModifier || 0;
+          const rightMod = effect.effect.rightModifier || 0;
+          
+          // Apply to all cards to the left
+          for (let i = 0; i < index; i++) {
+            if (slots[i]) {
+              bonuses[i] = (bonuses[i] || 0) + leftMod;
+            }
+          }
+          
+          // Apply to all cards to the right
+          for (let i = index + 1; i < 5; i++) {
+            if (slots[i]) {
+              bonuses[i] = (bonuses[i] || 0) + rightMod;
+            }
+          }
+        }
       }
     });
     
@@ -290,7 +310,6 @@ const RoguelikeBoard = ({
     let currentIndex = 0;
     let currentTotal = 0;
     let isLoopPass = false;
-    const loopPassScores = {}; // Track additional scores from loop pass
     
     const scoreNext = () => {
       if (currentIndex < validCards.length) {
@@ -334,23 +353,24 @@ const RoguelikeBoard = ({
           newScoreDetails[boardIndex] = score;
           
           if (isLoopPass && idx >= loopineIndex) {
-            // During loop pass, add to existing scores
-            const baseScore = cardScores[boardIndex] || 0;
-            const loopAddition = score.currentValue;
-            loopPassScores[boardIndex] = loopAddition;
-            newScores[boardIndex] = baseScore + loopAddition;
+            // During loop pass, show original score (not doubled)
+            // The running total will continue from where it left off
+            newScores[boardIndex] = score.currentValue;
           } else if (!isLoopPass) {
             // For current card being revealed, always show base score first
             if (idx === currentIndex) {
               newScores[boardIndex] = score.baseValueBeforeEffects;
-              // Track if we need animations
-              if (score.dreamMultiplier || (score.tokenMultiplier > 1 && score.baseValueBeforeTokens !== score.currentValue)) {
+              // Track if we need animations (including light/shadow)
+              if (score.dreamMultiplier || 
+                  (score.tokenMultiplier > 1 && score.baseValueBeforeTokens !== score.currentValue) ||
+                  score.lightShadowModifier) {
                 setAnimatingScores(prev => ({ ...prev, [boardIndex]: {
                   from: score.baseValueBeforeEffects,
                   to: score.currentValue,
                   current: score.baseValueBeforeEffects,
                   phases: {
                     dream: score.dreamMultiplier,
+                    lightShadow: score.lightShadowModifier,
                     tokens: score.tokenMultiplier > 1 ? score.tokenMultiplier : null
                   }
                 }}));
@@ -441,9 +461,14 @@ const RoguelikeBoard = ({
             setTimeout(() => {
               setShowingLightShadow(prev => ({ ...prev, [boardIndex]: true }));
               
+              // Get the current displayed score for this card
+              // Use the value after dream effects if they were applied, otherwise base value
+              const currentDisplayedScore = currentCardScore.dreamMultiplier || currentCardScore.dreamAddition ? 
+                currentCardScore.baseValueBeforeTokens : currentCardScore.baseValueBeforeEffects;
+              
               // Animate from current score to score with light/shadow
-              const from = cardScores[boardIndex];
-              const to = from + currentCardScore.lightShadowModifier;
+              const from = currentDisplayedScore;
+              const to = Math.max(0, from + currentCardScore.lightShadowModifier); // Ensure non-negative
               animateScore(boardIndex, from, to, lightShadowDuration, () => {
                 // Keep modifier visible briefly then hide
                 setTimeout(() => {
@@ -524,10 +549,15 @@ const RoguelikeBoard = ({
         
         // Update running total
         if (isLoopPass) {
-          // Add loop pass scores to existing total
-          const loopAddition = Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
-          setRunningTotal(currentTotal + loopAddition);
+          // During loop pass, continue from where we left off
+          // Just add the current card's value to the existing total
+          if (currentIndex >= loopineIndex) {
+            const currentCardValue = scores[currentIndex].currentValue;
+            currentTotal += currentCardValue;
+            setRunningTotal(currentTotal);
+          }
         } else {
+          // Normal scoring - accumulate all scores
           currentTotal = scores.reduce((sum, score) => sum + score.currentValue, 0);
           setRunningTotal(currentTotal);
         }
@@ -639,7 +669,7 @@ const RoguelikeBoard = ({
           console.log('Final tokens calculated:', finalTokens);
           
           // Start token scoring phase
-          const creatureTotal = currentTotal + Object.values(loopPassScores).reduce((sum, val) => sum + val, 0);
+          const creatureTotal = currentTotal; // Use the running total directly
           console.log('Creature scoring complete, total:', creatureTotal);
           
           // Get active tokens (tokens with count > 0)
