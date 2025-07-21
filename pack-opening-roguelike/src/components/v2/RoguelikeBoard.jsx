@@ -793,6 +793,7 @@ const RoguelikeBoard = ({
         console.log('Token scoring complete, final total:', tokenTotal);
         setIsScoringTokens(false);
         setScoringTokenType(null);
+        setRunningTotal(tokenTotal); // Ensure final total includes tokens
         
         const speedMult = 1 / scoringSpeedMultiplier;
         setTimeout(() => {
