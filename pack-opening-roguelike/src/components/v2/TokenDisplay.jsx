@@ -1,7 +1,7 @@
 import React from 'react';
 import './TokenDisplay.css';
 
-const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringTokenIndex = -1, tokenScores = {} }) => {
+const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringTokenType = null, tokenScores = {} }) => {
   const tokenTypes = [
     { type: 'fire', icon: '🔥', color: '#f97316', label: 'Fire' },
     { type: 'water', icon: '💧', color: '#3b82f6', label: 'Water' },
@@ -21,19 +21,20 @@ const TokenDisplay = ({ tokens, isVisible, isScoringTokens = false, scoringToken
   return (
     <div className="token-display">
       {activeTokens.map((tokenType, index) => {
-        const isScoring = isScoringTokens && scoringTokenIndex === index;
+        const isCurrentlyScoring = isScoringTokens && scoringTokenType === tokenType.type;
         const tokenScore = tokenScores[tokenType.type];
+        const hasScore = tokenScore !== undefined && tokenScore > 0;
         
         return (
           <div 
             key={tokenType.type}
-            className={`token-badge ${isScoring ? 'scoring' : ''} ${tokenScore !== undefined ? 'scored' : ''}`}
+            className={`token-badge ${isCurrentlyScoring ? 'scoring' : ''} ${hasScore ? 'scored' : ''}`}
             style={{ '--token-color': tokenType.color }}
           >
             <span className="token-icon">{tokenType.icon}</span>
             <span className="token-count">{tokens[tokenType.type]}</span>
             <span className="token-label">{tokenType.label}</span>
-            {isScoring && tokenScore !== undefined && (
+            {(isCurrentlyScoring || hasScore) && tokenScore !== undefined && tokenScore > 0 && (
               <div className="token-score-popup">
                 +{tokenScore} PP
               </div>

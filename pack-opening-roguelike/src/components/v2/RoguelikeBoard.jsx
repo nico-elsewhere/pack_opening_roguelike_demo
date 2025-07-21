@@ -84,7 +84,7 @@ const RoguelikeBoard = ({
   const [showingDreamEffect, setShowingDreamEffect] = useState({}); // Track dream effect display
   const [debugExpectedResults, setDebugExpectedResults] = useState(null); // Debug: expected results
   const [isScoringTokens, setIsScoringTokens] = useState(false);
-  const [scoringTokenIndex, setScoringTokenIndex] = useState(-1);
+  const [scoringTokenType, setScoringTokenType] = useState(null);
   const [tokenScores, setTokenScores] = useState({});
 
   const isCurrentNightmare = isNightmare(currentDream);
@@ -686,7 +686,7 @@ const RoguelikeBoard = ({
         }
         
         // Set which token is currently scoring
-        setScoringTokenIndex(tokenIndex);
+        setScoringTokenType(tokenType);
         
         // Calculate and store this token's score
         newTokenScores[tokenType] = tokenScore;
@@ -726,7 +726,7 @@ const RoguelikeBoard = ({
         // All tokens scored
         console.log('Token scoring complete, final total:', tokenTotal);
         setIsScoringTokens(false);
-        setScoringTokenIndex(-1);
+        setScoringTokenType(null);
         
         const speedMult = 1 / scoringSpeedMultiplier;
         setTimeout(() => {
@@ -1162,7 +1162,7 @@ const RoguelikeBoard = ({
           tokens={tokens} 
           isVisible={isScoring || scoringComplete} 
           isScoringTokens={isScoringTokens}
-          scoringTokenIndex={scoringTokenIndex}
+          scoringTokenType={scoringTokenType}
           tokenScores={tokenScores}
         />
         

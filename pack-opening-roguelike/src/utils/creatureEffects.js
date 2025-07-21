@@ -143,9 +143,11 @@ export const CREATURE_EFFECTS = {
   
   // SPECIAL SYNERGY CREATURES
   'Fred': {
-    ability: 'Fredmaxxing - Each Fred x2 the next',
+    ability: 'First position: Gain 1 Earth',
     effect: {
-      type: 'fredmaxxing'
+      type: 'first_position_bonus',
+      token: 'earth',
+      amount: 1
     }
   },
   'Loopine': {
@@ -281,6 +283,12 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         }
         break;
         
+      case 'first_position_bonus':
+        if (boardContext.position === 0) {
+          result.tokensGained[eff.token] = eff.amount;
+        }
+        break;
+        
       case 'multiply_tokens':
         // Return special effect to handle at board level
         result.specialEffect = { 
@@ -375,10 +383,6 @@ const processEffectData = (effectData, currentTokens, boardContext) => {
         if (currentTokens[eff.condition.token] >= eff.condition.amount) {
           result.specialEffect = { type: 'shuffle_board' };
         }
-        break;
-        
-      case 'fredmaxxing':
-        result.specialEffect = { type: 'fredmaxxing' };
         break;
         
       case 'time_loop':
